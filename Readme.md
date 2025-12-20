@@ -19,6 +19,10 @@ Found and [downloaded a LuaTeX version](https://gitlab.lisn.upsaclay.fr/texlive/
 which works independently of the huge TeX Live system. To build it on Debian Bookworm x64 without errors, the command 
 `export MAKEINFO=true; CFLAGS="-O2 -fcommon" ./build.sh` must be used (to avoid texinfo dependency and an issue added to GCC 10.
 
+### How to build
+
+Use the following command on Linux: `export MAKEINFO=true; CFLAGS="-O2 -fcommon" ./build.sh`
+
 ### Additional Credits
 
 - This work is based on the [LuaTeX 1.10 (2019)](https://gitlab.lisn.upsaclay.fr/texlive/luatex/-/tree/1.10.0?ref_type=tags) engine. 
