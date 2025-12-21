@@ -225,7 +225,7 @@ fi
 
 
 ### Dirty trick to check  Darwin X86_64
-# TARGET_TESTARCH=$( ($TARGET_CC $TARGET_TCFLAGS -E source/libs/luajit/luajit-2.0.2/src/lj_arch.h -dM|grep -q LJ_TARGET_X64 && echo x64) || echo NO)
+# TARGET_TESTARCH=$( ($TARGET_CC $TARGET_TCFLAGS -E luatex/libs/luajit/luajit-2.0.2/src/lj_arch.h -dM|grep -q LJ_TARGET_X64 && echo x64) || echo NO)
 # HOST_SYS=$(uname -s)
 # echo HOST_SYS=$HOST_SYS
 # echo TARGET_TESTARCH=$TARGET_TESTARCH
@@ -268,9 +268,9 @@ fi
 # get a new svn version header
 #if [ "$WARNINGS" = "max" ]
 #then
-#    rm -f source/texk/web2c/luatexdir/luatex_svnversion.h
+#    rm -f luatex/texk/web2c/luatexdir/luatex_svnversion.h
 #fi
-#( cd source  ; ./texk/web2c/luatexdir/getluatexsvnversion.sh )
+#( cd luatex  ; ./texk/web2c/luatexdir/getluatexsvnversion.sh )
 
 cd "$B"
 
@@ -300,7 +300,7 @@ LUA53ENABLE=--enable-luatex
 
 if [ "$ONLY_MAKE" = "FALSE" ]
 then
-TL_MAKE=$MAKE ../source/configure  $TEXLIVEOPT $CONFHOST $CONFBUILD  $WARNINGFLAGS\
+TL_MAKE=$MAKE ../luatex/configure  $TEXLIVEOPT $CONFHOST $CONFBUILD  $WARNINGFLAGS\
     --enable-silent-rules \
     --disable-all-pkgs \
     --disable-shared    \
