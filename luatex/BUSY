@@ -1,0 +1,980 @@
+let config : Config {
+    .defines += [ "LUA_COMPAT_5_1" "LUA_COMPAT_5_2" ]
+    if target_toolchain == `gcc {
+        .lib_names += [ "m" "stdc++" ]
+        .ldflags += "-shared-libgcc"
+        .cflags += "-fcommon"
+    }else if target_toolchain == `msvc {
+        # nothing to do
+    }else {
+        error("target toolchain not supported")
+    }
+}
+
+let zlib : SourceSet {
+    .configs += config;
+    .sources = [
+    ./libs/zlib/zlib-src/uncompr.c
+    ./libs/zlib/zlib-src/adler32.c
+    ./libs/zlib/zlib-src/inffast.c
+    ./libs/zlib/zlib-src/gzclose.c
+    ./libs/zlib/zlib-src/crc32.c
+    ./libs/zlib/zlib-src/zutil.c
+    ./libs/zlib/zlib-src/gzwrite.c
+    ./libs/zlib/zlib-src/inftrees.c
+    ./libs/zlib/zlib-src/deflate.c
+    ./libs/zlib/zlib-src/compress.c
+    ./libs/zlib/zlib-src/gzread.c
+    ./libs/zlib/zlib-src/trees.c
+    ./libs/zlib/zlib-src/inflate.c
+    ./libs/zlib/zlib-src/infback.c
+    ./libs/zlib/zlib-src/gzlib.c
+    ]
+}
+
+let zziplib : SourceSet {
+    .configs += config;
+    .include_dirs += [
+        ./libs/zziplib/include
+        ./libs/zziplib/zziplib-src
+     ]
+    .sources = [
+    ./libs/zziplib/zziplib-src/zzip/dir.c
+    ./libs/zziplib/zziplib-src/zzip/stat.c
+    ./libs/zziplib/zziplib-src/zzip/file.c
+    ./libs/zziplib/zziplib-src/zzip/err.c
+    ./libs/zziplib/zziplib-src/zzip/zip.c
+    ./libs/zziplib/zziplib-src/zzip/plugin.c
+    ./libs/zziplib/zziplib-src/zzip/info.c
+    ./libs/zziplib/zziplib-src/zzip/write.c
+    ./libs/zziplib/zziplib-src/zzip/fetch.c
+    ]
+}
+
+let lua53 : SourceSet {
+    .configs += config;
+    .sources = [
+    ./libs/lua53/lua53-src/src/lcode.c
+    ./libs/lua53/lua53-src/src/ldblib.c
+    ./libs/lua53/lua53-src/src/lopcodes.c
+    ./libs/lua53/lua53-src/src/ltablib.c
+    ./libs/lua53/lua53-src/src/lparser.c
+    ./libs/lua53/lua53-src/src/ldebug.c
+    ./libs/lua53/lua53-src/src/ltm.c
+    ./libs/lua53/lua53-src/src/liolib.c
+    ./libs/lua53/lua53-src/src/loadlib.c
+    ./libs/lua53/lua53-src/src/lvm.c
+    ./libs/lua53/lua53-src/src/lutf8lib.c
+    ./libs/lua53/lua53-src/src/linit.c
+    ./libs/lua53/lua53-src/src/lbaselib.c
+    ./libs/lua53/lua53-src/src/lauxlib.c
+    ./libs/lua53/lua53-src/src/lfunc.c
+    #./libs/lua53/lua53-src/src/lua.c
+    ./libs/lua53/lua53-src/src/ldo.c
+    ./libs/lua53/lua53-src/src/lapi.c
+    ./libs/lua53/lua53-src/src/lzio.c
+    ./libs/lua53/lua53-src/src/lgc.c
+    ./libs/lua53/lua53-src/src/lstring.c
+    ./libs/lua53/lua53-src/src/loslib.c
+    ./libs/lua53/lua53-src/src/lcorolib.c
+    ./libs/lua53/lua53-src/src/lmem.c
+    ./libs/lua53/lua53-src/src/ldump.c
+    ./libs/lua53/lua53-src/src/llex.c
+    ./libs/lua53/lua53-src/src/lundump.c
+    ./libs/lua53/lua53-src/src/ltable.c
+    ./libs/lua53/lua53-src/src/lstrlib.c
+    ./libs/lua53/lua53-src/src/lobject.c
+    ./libs/lua53/lua53-src/src/lmathlib.c
+    ./libs/lua53/lua53-src/src/lstate.c
+    ./libs/lua53/lua53-src/src/lbitlib.c
+    ./libs/lua53/lua53-src/src/lctype.c
+    ]
+}
+
+let libpng : SourceSet {
+    .configs += config;
+    .sources = [
+    ./libs/libpng/libpng-src/pngget.c
+    ./libs/libpng/libpng-src/pngrtran.c
+    ./libs/libpng/libpng-src/pngwrite.c
+    ./libs/libpng/libpng-src/pngrutil.c
+    ./libs/libpng/libpng-src/pngread.c
+    ./libs/libpng/libpng-src/pngerror.c
+    ./libs/libpng/libpng-src/png.c
+    ./libs/libpng/libpng-src/pngtrans.c
+    ./libs/libpng/libpng-src/pngmem.c
+    ./libs/libpng/libpng-src/pngpread.c
+    ./libs/libpng/libpng-src/pngwutil.c
+    ./libs/libpng/libpng-src/pngwio.c
+    ./libs/libpng/libpng-src/pngwtran.c
+    ./libs/libpng/libpng-src/pngset.c
+    ./libs/libpng/libpng-src/pngrio.c
+    ]
+}
+
+let kpathsea : SourceSet {
+    .configs += config;
+    .include_dirs += ./texk
+    .defines += [ "MAKE_KPSE_DLL" ]
+    .sources = [
+    ./texk/kpathsea/absolute.c
+    ./texk/kpathsea/atou.c
+    ./texk/kpathsea/cnf.c
+    ./texk/kpathsea/concat.c
+    ./texk/kpathsea/concat3.c
+    ./texk/kpathsea/concatn.c
+    ./texk/kpathsea/db.c
+    ./texk/kpathsea/debug.c
+    ./texk/kpathsea/dir.c
+    ./texk/kpathsea/elt-dirs.c
+    ./texk/kpathsea/expand.c
+    ./texk/kpathsea/extend-fname.c
+    ./texk/kpathsea/file-p.c
+    ./texk/kpathsea/find-suffix.c
+    ./texk/kpathsea/fn.c
+    ./texk/kpathsea/fontmap.c
+    ./texk/kpathsea/getopt.c
+    ./texk/kpathsea/getopt1.c
+    ./texk/kpathsea/hash.c
+    ./texk/kpathsea/kdefault.c
+    ./texk/kpathsea/kpathsea.c
+    ./texk/kpathsea/line.c
+    ./texk/kpathsea/magstep.c
+    ./texk/kpathsea/make-suffix.c
+    ./texk/kpathsea/path-elt.c
+    ./texk/kpathsea/pathsearch.c
+    ./texk/kpathsea/proginit.c
+    ./texk/kpathsea/progname.c
+    ./texk/kpathsea/readable.c
+    ./texk/kpathsea/rm-suffix.c
+    ./texk/kpathsea/str-list.c
+    ./texk/kpathsea/str-llist.c
+    ./texk/kpathsea/tex-file.c
+    ./texk/kpathsea/tex-glyph.c
+    ./texk/kpathsea/tex-hush.c
+    ./texk/kpathsea/tex-make.c
+    ./texk/kpathsea/tilde.c
+    ./texk/kpathsea/uppercasify.c
+    ./texk/kpathsea/variable.c
+    ./texk/kpathsea/version.c
+    ./texk/kpathsea/xbasename.c
+    ./texk/kpathsea/xcalloc.c
+    ./texk/kpathsea/xdirname.c
+    ./texk/kpathsea/xfopen.c
+    ./texk/kpathsea/xfseek.c
+    ./texk/kpathsea/xfseeko.c
+    ./texk/kpathsea/xftell.c
+    ./texk/kpathsea/xftello.c
+    ./texk/kpathsea/xgetcwd.c
+    ./texk/kpathsea/xmalloc.c
+    ./texk/kpathsea/xopendir.c
+    ./texk/kpathsea/xputenv.c
+    ./texk/kpathsea/xrealloc.c
+    ./texk/kpathsea/xstat.c
+    ./texk/kpathsea/xstrdup.c
+    ]
+}
+
+let web2c : SourceSet {
+    .configs += config;
+    .include_dirs += [ ./texk ./texk/web2c ./texk/web2c/mplibdir ]
+    .sources = [
+    ./texk/web2c/lib/basechsuffix.c
+    ./texk/web2c/lib/chartostring.c
+    ./texk/web2c/lib/coredump.c
+    ./texk/web2c/lib/eofeoln.c
+    ./texk/web2c/lib/fprintreal.c
+    ./texk/web2c/lib/input2int.c
+    ./texk/web2c/lib/inputint.c
+    #./texk/web2c/lib/main.c
+    ./texk/web2c/lib/openclose.c
+    ./texk/web2c/lib/printversion.c
+    ./texk/web2c/lib/setupvar.c
+    ./texk/web2c/lib/uexit.c
+    ./texk/web2c/lib/usage.c
+    ./texk/web2c/lib/version.c
+    ./texk/web2c/lib/zround.c
+
+    ./texk/web2c/mp.c
+    ./texk/web2c/mpmath.c
+    ./texk/web2c/mpmathdecimal.c
+    ./texk/web2c/mpmathdouble.c
+    ./texk/web2c/mpstrings.c
+    ./texk/web2c/psout.c
+    ./texk/web2c/tfmin.c
+    ]
+}
+
+let web2c_config : Config {
+    .include_dirs += [ ./texk/web2c/luatexdir ./texk/web2c ./texk ./libs/lua53/lua53-src/src ./texk/web2c/synctexdir ]
+}
+
+let dvi : SourceSet {
+    .configs += [ config web2c_config ]
+    .sources = [
+        ./texk/web2c/luatexdir/dvi/dvigen.c
+    ]
+}
+
+let font : SourceSet {
+    .configs += [ config web2c_config ]
+    .sources = [
+    ./texk/web2c/luatexdir/font/dofont.c
+    ./texk/web2c/luatexdir/font/luafont.c
+    ./texk/web2c/luatexdir/font/mapfile.c
+    ./texk/web2c/luatexdir/font/pkin.c
+    ./texk/web2c/luatexdir/font/sfnt.c
+    ./texk/web2c/luatexdir/font/texfont.c
+    ./texk/web2c/luatexdir/font/tfmofm.c
+    ./texk/web2c/luatexdir/font/tounicode.c
+    ./texk/web2c/luatexdir/font/tt_glyf.c
+    ./texk/web2c/luatexdir/font/tt_table.c
+    ./texk/web2c/luatexdir/font/vfovf.c
+    ./texk/web2c/luatexdir/font/vfpacket.c
+    ./texk/web2c/luatexdir/font/writecff.c
+    ./texk/web2c/luatexdir/font/writeenc.c
+    ./texk/web2c/luatexdir/font/writefont.c
+    ./texk/web2c/luatexdir/font/writet1.c
+    ./texk/web2c/luatexdir/font/writet3.c
+    ./texk/web2c/luatexdir/font/writettf.c
+    ./texk/web2c/luatexdir/font/writetype0.c
+    ./texk/web2c/luatexdir/font/writetype2.c
+    ]
+}
+
+let image : SourceSet {
+    .configs += [ config web2c_config ]
+    .include_dirs += [ ./texk/web2c/kpathsea ./texk/web2c/luatexdir/luapplib/util ]
+    .sources = [
+    ./texk/web2c/luatexdir/image/pdftoepdf.c
+    ./texk/web2c/luatexdir/image/writeimg.c
+    ./texk/web2c/luatexdir/image/writejbig2.c
+    ./texk/web2c/luatexdir/image/writejp2.c
+    ./texk/web2c/luatexdir/image/writejpg.c
+    ./texk/web2c/luatexdir/image/writepng.c
+    ]
+}
+
+let lang : SourceSet {
+    .configs += [ config web2c_config ]
+    .sources = [
+    ./texk/web2c/luatexdir/lang/hnjalloc.c
+    ./texk/web2c/luatexdir/lang/hyphen.c
+    ./texk/web2c/luatexdir/lang/texlang.c
+    ]
+}
+
+let luabind : SourceSet {
+    .configs += [ config web2c_config ]
+    .include_dirs += [ ./texk/web2c/kpathsea ./texk/web2c/luatexdir/luapplib/util ]
+    .sources = [
+    ./texk/web2c/luatexdir/lua/helpers.c
+    ./texk/web2c/luatexdir/lua/lcallbacklib.c
+    ./texk/web2c/luatexdir/lua/lfontlib.c
+    ./texk/web2c/luatexdir/lua/limglib.c
+    ./texk/web2c/luatexdir/lua/liolibext.c
+    ./texk/web2c/luatexdir/lua/lkpselib.c
+    ./texk/web2c/luatexdir/lua/llanglib.c
+    ./texk/web2c/luatexdir/lua/llualib.c
+    ./texk/web2c/luatexdir/lua/lnewtokenlib.c
+    ./texk/web2c/luatexdir/lua/lnodelib.c
+    ./texk/web2c/luatexdir/lua/loslibext.c
+    ./texk/web2c/luatexdir/lua/lpdfelib.c
+    ./texk/web2c/luatexdir/lua/lpdflib.c
+    ./texk/web2c/luatexdir/lua/lpdfscannerlib.c
+    ./texk/web2c/luatexdir/lua/lstatslib.c
+    ./texk/web2c/luatexdir/lua/lstrlibext.c
+    ./texk/web2c/luatexdir/lua/ltexiolib.c
+    ./texk/web2c/luatexdir/lua/ltexlib.c
+    ./texk/web2c/luatexdir/lua/luainit.c
+    ./texk/web2c/luatexdir/lua/luanode.c
+    ./texk/web2c/luatexdir/lua/luastuff.c
+    ./texk/web2c/luatexdir/lua/luatex-core.c
+    ./texk/web2c/luatexdir/lua/luatoken.c
+    ./texk/web2c/luatexdir/lua/mplibstuff.c
+    ./texk/web2c/luatexdir/lua/texluac.c
+    ]
+}
+
+let luaffi : SourceSet {
+    .configs += [ config web2c_config ]
+    .sources = [
+    ./texk/web2c/luatexdir/luaffi/call.c
+    ./texk/web2c/luatexdir/luaffi/ctype.c
+    ./texk/web2c/luatexdir/luaffi/ffi.c
+    ./texk/web2c/luatexdir/luaffi/parser.c
+    ]
+}
+
+let luafilesystem : SourceSet {
+    .configs += [ config web2c_config ]
+    .sources = [
+    ./texk/web2c/luatexdir/luafilesystem/src/lfs.c
+    ]
+}
+
+let fontforge : SourceSet {
+    .configs += [ config web2c_config ]
+    .include_dirs += [ ./texk/web2c/luatexdir/luafontloader/fontforge/inc ./texk/web2c/luatexdir/unilib ]
+    .defines += [ "USE_OUR_MEMORY" "_NO_PYTHON" "LUA_FF_LIB" "X_DISPLAY_MISSING" ]
+    .sources = [
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/autohint.c
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/clipnoui.c
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/cvundoes.c
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/dumppfa.c
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/encoding.c
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/featurefile.c
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/fontviewbase.c
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/fvcomposit.c
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/fvfonts.c
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/lookups.c
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/macbinary.c
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/macenc.c
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/mathconstants.c
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/memory.c
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/mm.c
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/namelist.c
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/noprefs.c
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/nouiutil.c
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/parsepfa.c
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/parsettf.c
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/parsettfatt.c
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/psread.c
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/pua.c
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/python.c
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/sfd1.c
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/splinechar.c
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/splinefill.c
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/splinefont.c
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/splineorder2.c
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/splineoverlap.c
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/splinerefigure.c
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/splinesave.c
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/splinesaveafm.c
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/splinestroke.c
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/splineutil.c
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/splineutil2.c
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/start.c
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/stemdb.c
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/tottf.c
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/tottfgpos.c
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/ttfspecial.c
+    ./texk/web2c/luatexdir/luafontloader/fontforge/gutils/fsys.c
+    ]
+}
+
+let luafontloader : SourceSet {
+    .configs += [ config web2c_config ]
+    .include_dirs += [ ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge
+        ./texk/web2c/luatexdir/luafontloader/fontforge/inc
+        ./texk/web2c/luatexdir/unilib ]
+    .sources = [
+    ./texk/web2c/luatexdir/luafontloader/src/ffdummies.c
+    ./texk/web2c/luatexdir/luafontloader/src/luafflib.c
+    ]
+}
+
+let luamd5 : SourceSet {
+    .configs += [ config web2c_config ]
+    .sources = [
+    ./texk/web2c/luatexdir/luamd5/md5.c
+    ./texk/web2c/luatexdir/luamd5/md5lib.c
+    ]
+}
+
+let luapeg : SourceSet {
+    .configs += [ config web2c_config ]
+    .sources = [
+    ./texk/web2c/luatexdir/luapeg/lpeg.c
+    ]
+}
+
+let luapplib : SourceSet {
+    .configs += [ config web2c_config ]
+    .include_dirs += ./texk/web2c/luatexdir/luapplib/util
+    .sources = [
+    ./texk/web2c/luatexdir/luapplib/pparray.c
+    ./texk/web2c/luatexdir/luapplib/ppcrypt.c
+    ./texk/web2c/luatexdir/luapplib/ppdict.c
+    ./texk/web2c/luatexdir/luapplib/ppheap.c
+    ./texk/web2c/luatexdir/luapplib/ppload.c
+    ./texk/web2c/luatexdir/luapplib/ppstream.c
+    #./texk/web2c/luatexdir/luapplib/pptest1.c
+    #./texk/web2c/luatexdir/luapplib/pptest2.c
+    #./texk/web2c/luatexdir/luapplib/pptest3.c
+    ./texk/web2c/luatexdir/luapplib/ppxref.c
+    ./texk/web2c/luatexdir/luapplib/util/utilbasexx.c
+    ./texk/web2c/luatexdir/luapplib/util/utilcrypt.c
+    ./texk/web2c/luatexdir/luapplib/util/utilflate.c
+    ./texk/web2c/luatexdir/luapplib/util/utilfpred.c
+    ./texk/web2c/luatexdir/luapplib/util/utiliof.c
+    ./texk/web2c/luatexdir/luapplib/util/utillog.c
+    ./texk/web2c/luatexdir/luapplib/util/utillzw.c
+    ./texk/web2c/luatexdir/luapplib/util/utilmd5.c
+    ./texk/web2c/luatexdir/luapplib/util/utilmem.c
+    ./texk/web2c/luatexdir/luapplib/util/utilnumber.c
+    ./texk/web2c/luatexdir/luapplib/util/utilsha.c
+    ]
+}
+
+let luasocket : SourceSet {
+    .configs += [ config web2c_config ]
+    .sources = [
+    ./texk/web2c/luatexdir/luasocket/src/auxiliar.c
+    ./texk/web2c/luatexdir/luasocket/src/buffer.c
+    ./texk/web2c/luatexdir/luasocket/src/compat.c
+    ./texk/web2c/luatexdir/luasocket/src/except.c
+    ./texk/web2c/luatexdir/luasocket/src/inet.c
+    ./texk/web2c/luatexdir/luasocket/src/io.c
+    ./texk/web2c/luatexdir/luasocket/src/lua_preload.c
+    ./texk/web2c/luatexdir/luasocket/src/luasocket.c
+    ./texk/web2c/luatexdir/luasocket/src/mime.c
+    ./texk/web2c/luatexdir/luasocket/src/options.c
+    ./texk/web2c/luatexdir/luasocket/src/select.c
+    ./texk/web2c/luatexdir/luasocket/src/serial.c
+    ./texk/web2c/luatexdir/luasocket/src/socket.c
+    ./texk/web2c/luatexdir/luasocket/src/tcp.c
+    ./texk/web2c/luatexdir/luasocket/src/timeout.c
+    ./texk/web2c/luatexdir/luasocket/src/udp.c
+    ]
+}
+
+let luazip : SourceSet {
+    .configs += [ config web2c_config ]
+    .include_dirs += [ ./libs/zziplib/zziplib-src ./libs/zziplib/include ]
+    .sources = [
+    ./texk/web2c/luatexdir/luazip/src/luazip.c
+    ./texk/web2c/luatexdir/luazlib/lgzip.c
+    ./texk/web2c/luatexdir/luazlib/lzlib.c
+    ]
+}
+
+let pdf : SourceSet {
+    .configs += [ config web2c_config ]
+    .include_dirs += ./texk/web2c/libmd5
+    .sources = [
+    ./texk/web2c/luatexdir/pdf/pdfaction.c
+    ./texk/web2c/luatexdir/pdf/pdfannot.c
+    ./texk/web2c/luatexdir/pdf/pdfcolorstack.c
+    ./texk/web2c/luatexdir/pdf/pdfdest.c
+    ./texk/web2c/luatexdir/pdf/pdffont.c
+    ./texk/web2c/luatexdir/pdf/pdfgen.c
+    ./texk/web2c/luatexdir/pdf/pdfglyph.c
+    ./texk/web2c/luatexdir/pdf/pdfimage.c
+    ./texk/web2c/luatexdir/pdf/pdflink.c
+    ./texk/web2c/luatexdir/pdf/pdflistout.c
+    ./texk/web2c/luatexdir/pdf/pdfliteral.c
+    ./texk/web2c/luatexdir/pdf/pdfobj.c
+    ./texk/web2c/luatexdir/pdf/pdfoutline.c
+    ./texk/web2c/luatexdir/pdf/pdfpage.c
+    ./texk/web2c/luatexdir/pdf/pdfpagetree.c
+    ./texk/web2c/luatexdir/pdf/pdfrule.c
+    ./texk/web2c/luatexdir/pdf/pdfsaverestore.c
+    ./texk/web2c/luatexdir/pdf/pdfsetmatrix.c
+    ./texk/web2c/luatexdir/pdf/pdfshipout.c
+    ./texk/web2c/luatexdir/pdf/pdftables.c
+    ./texk/web2c/luatexdir/pdf/pdfthread.c
+    ./texk/web2c/luatexdir/pdf/pdfxform.c
+    ]
+}
+
+let slnunicode : SourceSet {
+    .configs += [ config web2c_config ]
+    .sources = [
+    ./texk/web2c/luatexdir/slnunicode/slnunico.c
+    ]
+}
+
+let tex : SourceSet {
+    .configs += [ config web2c_config ]
+    .sources = [
+    ./texk/web2c/luatexdir/tex/align.c
+    ./texk/web2c/luatexdir/tex/arithmetic.c
+    ./texk/web2c/luatexdir/tex/backend.c
+    ./texk/web2c/luatexdir/tex/buildpage.c
+    ./texk/web2c/luatexdir/tex/commands.c
+    ./texk/web2c/luatexdir/tex/conditional.c
+    ./texk/web2c/luatexdir/tex/directions.c
+    ./texk/web2c/luatexdir/tex/dumpdata.c
+    ./texk/web2c/luatexdir/tex/equivalents.c
+    ./texk/web2c/luatexdir/tex/errors.c
+    ./texk/web2c/luatexdir/tex/expand.c
+    ./texk/web2c/luatexdir/tex/extensions.c
+    ./texk/web2c/luatexdir/tex/filename.c
+    ./texk/web2c/luatexdir/tex/inputstack.c
+    ./texk/web2c/luatexdir/tex/linebreak.c
+    ./texk/web2c/luatexdir/tex/mainbody.c
+    ./texk/web2c/luatexdir/tex/maincontrol.c
+    ./texk/web2c/luatexdir/tex/mathcodes.c
+    ./texk/web2c/luatexdir/tex/memoryword.c
+    ./texk/web2c/luatexdir/tex/mlist.c
+    ./texk/web2c/luatexdir/tex/nesting.c
+    ./texk/web2c/luatexdir/tex/packaging.c
+    ./texk/web2c/luatexdir/tex/postlinebreak.c
+    ./texk/web2c/luatexdir/tex/primitive.c
+    ./texk/web2c/luatexdir/tex/printing.c
+    ./texk/web2c/luatexdir/tex/scanning.c
+    ./texk/web2c/luatexdir/tex/stringpool.c
+    ./texk/web2c/luatexdir/tex/texdeffont.c
+    ./texk/web2c/luatexdir/tex/texfileio.c
+    ./texk/web2c/luatexdir/tex/texmath.c
+    ./texk/web2c/luatexdir/tex/texnodes.c
+    ./texk/web2c/luatexdir/tex/textcodes.c
+    ./texk/web2c/luatexdir/tex/textoken.c
+    ]
+}
+
+let unilib : SourceSet {
+    .configs += [ config web2c_config ]
+    .include_dirs += ./texk/web2c/luatexdir/unilib
+    .sources = [
+    ./texk/web2c/luatexdir/unilib/alphabet.c
+    ./texk/web2c/luatexdir/unilib/ArabicForms.c
+    ./texk/web2c/luatexdir/unilib/char.c
+    ./texk/web2c/luatexdir/unilib/cjk.c
+    ./texk/web2c/luatexdir/unilib/gwwiconv.c
+    ./texk/web2c/luatexdir/unilib/ucharmap.c
+    ./texk/web2c/luatexdir/unilib/unialt.c
+    ./texk/web2c/luatexdir/unilib/usprintf.c
+    ./texk/web2c/luatexdir/unilib/ustring.c
+    ./texk/web2c/luatexdir/unilib/utype.c
+    ]
+}
+
+let utils : SourceSet {
+    .configs += [ config web2c_config ]
+    .include_dirs += ./texk/web2c/libmd5
+    .sources = [
+    ./texk/web2c/luatexdir/utils/avl.c
+    ./texk/web2c/luatexdir/utils/avlstuff.c
+    ./texk/web2c/luatexdir/utils/managed-sa.c
+    ./texk/web2c/luatexdir/utils/unistring.c
+    ./texk/web2c/luatexdir/utils/utils.c
+    ]
+}
+
+let mplibdir : SourceSet {
+    .configs += [ config web2c_config ]
+    .sources = [
+    ./texk/web2c/mplibdir/avl.c
+    ./texk/web2c/mplibdir/decContext.c
+    ./texk/web2c/mplibdir/decNumber.c
+    ./texk/web2c/mplibdir/lmplib.c
+    ]
+}
+
+let libmd5 : SourceSet {
+    .configs += [ config web2c_config ]
+    .sources = [
+    ./texk/web2c/libmd5/md5.c
+    ]
+}
+
+let synctexdir : SourceSet {
+    .configs += [ config web2c_config ]
+    .include_dirs += ./texk/web2c/mplibdir
+    .sources = [
+    ./texk/web2c/synctexdir/synctex.c
+    ]
+}
+
+let luatexdir : SourceSet {
+    .configs += [ config web2c_config ]
+    .sources = [
+    ./texk/web2c/luatexdir/luatex.c
+    ]
+}
+
+let all_headers : SourceSet {
+    .sources = [
+    ./texk/web2c/web2c/web2c-parser.h
+    ./texk/web2c/web2c/web2c.h
+    ./texk/web2c/web2c/coerce.h
+    ./texk/web2c/w2c/config.h
+    ./texk/web2c/w2c/c-auto.h
+    ./texk/web2c/synctexdir/synctex-luatex.h
+    ./texk/web2c/synctexdir/synctex-common.h
+    ./texk/web2c/synctexdir/synctex.h
+    ./texk/web2c/mplibdir/decNumberLocal.h
+    ./texk/web2c/mplibdir/decNumber.h
+    ./texk/web2c/mplibdir/decContext.h
+    ./texk/web2c/mplibdir/avl.h
+    ./texk/web2c/luatexdir/utils/utils.h
+    ./texk/web2c/luatexdir/utils/unistring.h
+    ./texk/web2c/luatexdir/utils/managed-sa.h
+    ./texk/web2c/luatexdir/utils/avlstuff.h
+    ./texk/web2c/luatexdir/utils/avl.h
+    ./texk/web2c/luatexdir/unilib/utype.h
+    ./texk/web2c/luatexdir/unilib/ustring.h
+    ./texk/web2c/luatexdir/unilib/unibasics.h
+    ./texk/web2c/luatexdir/unilib/gwwiconv.h
+    ./texk/web2c/luatexdir/unilib/combiners.h
+    ./texk/web2c/luatexdir/unilib/charset.h
+    ./texk/web2c/luatexdir/unilib/chardata.h
+    ./texk/web2c/luatexdir/tex/textoken.h
+    ./texk/web2c/luatexdir/tex/textcodes.h
+    ./texk/web2c/luatexdir/tex/texnodes.h
+    ./texk/web2c/luatexdir/tex/texmath.h
+    ./texk/web2c/luatexdir/tex/texfileio.h
+    ./texk/web2c/luatexdir/tex/texdeffont.h
+    ./texk/web2c/luatexdir/tex/stringpool.h
+    ./texk/web2c/luatexdir/tex/scanning.h
+    ./texk/web2c/luatexdir/tex/printing.h
+    ./texk/web2c/luatexdir/tex/primitive.h
+    ./texk/web2c/luatexdir/tex/postlinebreak.h
+    ./texk/web2c/luatexdir/tex/packaging.h
+    ./texk/web2c/luatexdir/tex/nesting.h
+    ./texk/web2c/luatexdir/tex/mlist.h
+    ./texk/web2c/luatexdir/tex/memoryword.h
+    ./texk/web2c/luatexdir/tex/mathcodes.h
+    ./texk/web2c/luatexdir/tex/maincontrol.h
+    ./texk/web2c/luatexdir/tex/mainbody.h
+    ./texk/web2c/luatexdir/tex/linebreak.h
+    ./texk/web2c/luatexdir/tex/inputstack.h
+    ./texk/web2c/luatexdir/tex/filename.h
+    ./texk/web2c/luatexdir/tex/extensions.h
+    ./texk/web2c/luatexdir/tex/expand.h
+    ./texk/web2c/luatexdir/tex/errors.h
+    ./texk/web2c/luatexdir/tex/equivalents.h
+    ./texk/web2c/luatexdir/tex/dumpdata.h
+    ./texk/web2c/luatexdir/tex/directions.h
+    ./texk/web2c/luatexdir/tex/conditional.h
+    ./texk/web2c/luatexdir/tex/commands.h
+    ./texk/web2c/luatexdir/tex/buildpage.h
+    ./texk/web2c/luatexdir/tex/backend.h
+    ./texk/web2c/luatexdir/tex/arithmetic.h
+    ./texk/web2c/luatexdir/tex/align.h
+    ./texk/web2c/luatexdir/pdf/pdfxform.h
+    ./texk/web2c/luatexdir/pdf/pdftypes.h
+    ./texk/web2c/luatexdir/pdf/pdfthread.h
+    ./texk/web2c/luatexdir/pdf/pdftables.h
+    ./texk/web2c/luatexdir/pdf/pdfshipout.h
+    ./texk/web2c/luatexdir/pdf/pdfsetmatrix.h
+    ./texk/web2c/luatexdir/pdf/pdfsaverestore.h
+    ./texk/web2c/luatexdir/pdf/pdfrule.h
+    ./texk/web2c/luatexdir/pdf/pdfpagetree.h
+    ./texk/web2c/luatexdir/pdf/pdfpage.h
+    ./texk/web2c/luatexdir/pdf/pdfoutline.h
+    ./texk/web2c/luatexdir/pdf/pdfobj.h
+    ./texk/web2c/luatexdir/pdf/pdfliteral.h
+    ./texk/web2c/luatexdir/pdf/pdflistout.h
+    ./texk/web2c/luatexdir/pdf/pdflink.h
+    ./texk/web2c/luatexdir/pdf/pdfimage.h
+    ./texk/web2c/luatexdir/pdf/pdfglyph.h
+    ./texk/web2c/luatexdir/pdf/pdfgen.h
+    ./texk/web2c/luatexdir/pdf/pdffont.h
+    ./texk/web2c/luatexdir/pdf/pdfdest.h
+    ./texk/web2c/luatexdir/pdf/pdfcolorstack.h
+    ./texk/web2c/luatexdir/pdf/pdfannot.h
+    ./texk/web2c/luatexdir/pdf/pdfaction.h
+    ./texk/web2c/luatexdir/luazip/vc7/resource.h
+    ./texk/web2c/luatexdir/luazip/vc6/resource.h
+    ./texk/web2c/luatexdir/luazip/src/luazip.h
+    ./texk/web2c/luatexdir/luasocket/src/wsocket.h
+    ./texk/web2c/luatexdir/luasocket/src/usocket.h
+    ./texk/web2c/luatexdir/luasocket/src/unixstream.h
+    ./texk/web2c/luatexdir/luasocket/src/unixdgram.h
+    ./texk/web2c/luatexdir/luasocket/src/unix.h
+    ./texk/web2c/luatexdir/luasocket/src/udp.h
+    ./texk/web2c/luatexdir/luasocket/src/timeout.h
+    ./texk/web2c/luatexdir/luasocket/src/tcp.h
+    ./texk/web2c/luatexdir/luasocket/src/socket.h
+    ./texk/web2c/luatexdir/luasocket/src/select.h
+    ./texk/web2c/luatexdir/luasocket/src/pierror.h
+    ./texk/web2c/luatexdir/luasocket/src/options.h
+    ./texk/web2c/luatexdir/luasocket/src/mime.h
+    ./texk/web2c/luatexdir/luasocket/src/luasocket.h
+    ./texk/web2c/luatexdir/luasocket/src/io.h
+    ./texk/web2c/luatexdir/luasocket/src/inet.h
+    ./texk/web2c/luatexdir/luasocket/src/except.h
+    ./texk/web2c/luatexdir/luasocket/src/compat.h
+    ./texk/web2c/luatexdir/luasocket/src/buffer.h
+    ./texk/web2c/luatexdir/luasocket/src/auxiliar.h
+    ./texk/web2c/luatexdir/luapplib/util/utilsha.h
+    ./texk/web2c/luatexdir/luapplib/util/utilplat.h
+    ./texk/web2c/luatexdir/luapplib/util/utilnumber.h
+    ./texk/web2c/luatexdir/luapplib/util/utilmem.h
+    ./texk/web2c/luatexdir/luapplib/util/utilmd5.h
+    ./texk/web2c/luatexdir/luapplib/util/utillzw.h
+    ./texk/web2c/luatexdir/luapplib/util/utillog.h
+    ./texk/web2c/luatexdir/luapplib/util/utiliof.h
+    ./texk/web2c/luatexdir/luapplib/util/utilfpred.h
+    ./texk/web2c/luatexdir/luapplib/util/utilflate.h
+    ./texk/web2c/luatexdir/luapplib/util/utildecl.h
+    ./texk/web2c/luatexdir/luapplib/util/utilcryptdef.h
+    ./texk/web2c/luatexdir/luapplib/util/utilcrypt.h
+    ./texk/web2c/luatexdir/luapplib/util/utilbasexx.h
+    ./texk/web2c/luatexdir/luapplib/util/utilarm.h
+    ./texk/web2c/luatexdir/luapplib/ppxref.h
+    ./texk/web2c/luatexdir/luapplib/ppstream.h
+    ./texk/web2c/luatexdir/luapplib/ppload.h
+    ./texk/web2c/luatexdir/luapplib/pplib.h
+    ./texk/web2c/luatexdir/luapplib/ppheap.h
+    ./texk/web2c/luatexdir/luapplib/ppfilter.h
+    ./texk/web2c/luatexdir/luapplib/ppdict.h
+    ./texk/web2c/luatexdir/luapplib/ppcrypt.h
+    ./texk/web2c/luatexdir/luapplib/ppconf.h
+    ./texk/web2c/luatexdir/luapplib/pparray.h
+    ./texk/web2c/luatexdir/luapplib/ppapi.h
+    ./texk/web2c/luatexdir/luapeg/lpeg.h
+    ./texk/web2c/luatexdir/luamd5/luamd5.h
+    ./texk/web2c/luatexdir/luafontloader/src/ffdummies.h
+    ./texk/web2c/luatexdir/luafontloader/fontforge/inc/intl.h
+    ./texk/web2c/luatexdir/luafontloader/fontforge/inc/gimage.h
+    ./texk/web2c/luatexdir/luafontloader/fontforge/inc/gfile.h
+    ./texk/web2c/luatexdir/luafontloader/fontforge/inc/basics.h
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/unicoderange.h
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/uiinterface.h
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/ttf.h
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/stemdb.h
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/splinefont.h
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/sfd1.h
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/sd.h
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/scripting.h
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/psfont.h
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/plugins.h
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/PfEd.h
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/pfaedit.h
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/mm.h
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/lookups.h
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/fontforgevw.h
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/encoding.h
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/edgelist2.h
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/edgelist.h
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/configure-pfaedit.h
+    ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge/baseviews.h
+    ./texk/web2c/luatexdir/luafilesystem/src/lfs.h
+    ./texk/web2c/luatexdir/luaffi/msvc/stdint.h
+    ./texk/web2c/luatexdir/luaffi/msvc/stdbool.h
+    ./texk/web2c/luatexdir/luaffi/msvc/inttypes.h
+    ./texk/web2c/luatexdir/luaffi/dynasm/dasm_x86.h
+    ./texk/web2c/luatexdir/luaffi/dynasm/dasm_proto.h
+    ./texk/web2c/luatexdir/luaffi/dynasm/dasm_ppc.h
+    ./texk/web2c/luatexdir/luaffi/dynasm/dasm_arm.h
+    ./texk/web2c/luatexdir/luaffi/ffi.h
+    ./texk/web2c/luatexdir/luaffi/call_x86.h
+    ./texk/web2c/luatexdir/luaffi/call_x64win.h
+    ./texk/web2c/luatexdir/luaffi/call_x64.h
+    ./texk/web2c/luatexdir/luaffi/call_arm.h
+    ./texk/web2c/luatexdir/lua/luatex-api.h
+    ./texk/web2c/luatexdir/lua/lauxlib_bridge.h
+    ./texk/web2c/luatexdir/lang/texlang.h
+    ./texk/web2c/luatexdir/lang/hyphen.h
+    ./texk/web2c/luatexdir/lang/hnjalloc.h
+    ./texk/web2c/luatexdir/image/writepng.h
+    ./texk/web2c/luatexdir/image/writejpg.h
+    ./texk/web2c/luatexdir/image/writejp2.h
+    ./texk/web2c/luatexdir/image/writejbig2.h
+    ./texk/web2c/luatexdir/image/writeimg.h
+    ./texk/web2c/luatexdir/image/pdftoepdf.h
+    ./texk/web2c/luatexdir/image/image.h
+    ./texk/web2c/luatexdir/image/epdf.h
+    ./texk/web2c/luatexdir/font/writettf.h
+    ./texk/web2c/luatexdir/font/writecff.h
+    ./texk/web2c/luatexdir/font/tt_table.h
+    ./texk/web2c/luatexdir/font/tt_glyf.h
+    ./texk/web2c/luatexdir/font/texfont.h
+    ./texk/web2c/luatexdir/font/sfnt.h
+    ./texk/web2c/luatexdir/font/mapfile.h
+    ./texk/web2c/luatexdir/font/luatexfont.h
+    ./texk/web2c/luatexdir/dvi/dvigen.h
+    ./texk/web2c/luatexdir/ptexlib.h
+    ./texk/web2c/luatexdir/luatex_svnversion.h
+    ./texk/web2c/luatexdir/luatex-common.h
+    ./texk/web2c/luatexdir/luatexcallbackids.h
+    ./texk/web2c/luatexdir/luatex.h
+    ./texk/web2c/libmd5/md5.h
+    ./texk/web2c/lib/lib.h
+    ./texk/web2c/cwebdir/comm-w2c.h
+    ./texk/web2c/cwebdir/common.h
+    ./texk/web2c/texmfmp-help.h
+    ./texk/web2c/texmfmp.h
+    ./texk/web2c/texmfmem.h
+    ./texk/web2c/mpsvgout.h
+    ./texk/web2c/mpstrings.h
+    ./texk/web2c/mppsout.h
+    ./texk/web2c/mppngout.h
+    ./texk/web2c/mpmp.h
+    ./texk/web2c/mpmathdouble.h
+    ./texk/web2c/mpmathdecimal.h
+    ./texk/web2c/mpmathbinary.h
+    ./texk/web2c/mpmath.h
+    ./texk/web2c/mplibsvg.h
+    ./texk/web2c/mplibps.h
+    ./texk/web2c/mplibpng.h
+    ./texk/web2c/mplib.h
+    ./texk/web2c/help.h
+    ./texk/web2c/gftodmem.h
+    ./texk/web2c/ff-config.h
+    ./texk/web2c/cpascal.h
+    ./texk/web2c/c-auto.h
+    ./texk/kpathsea/win32/mktex.h
+    ./texk/kpathsea/xstat.h
+    ./texk/kpathsea/xopendir.h
+    ./texk/kpathsea/win32lib.h
+    ./texk/kpathsea/version.h
+    ./texk/kpathsea/variable.h
+    ./texk/kpathsea/types.h
+    ./texk/kpathsea/tilde.h
+    ./texk/kpathsea/tex-make.h
+    ./texk/kpathsea/tex-hush.h
+    ./texk/kpathsea/tex-glyph.h
+    ./texk/kpathsea/tex-file.h
+    ./texk/kpathsea/systypes.h
+    ./texk/kpathsea/str-llist.h
+    ./texk/kpathsea/str-list.h
+    ./texk/kpathsea/simpletypes.h
+    ./texk/kpathsea/readable.h
+    ./texk/kpathsea/progname.h
+    ./texk/kpathsea/proginit.h
+    ./texk/kpathsea/pathsearch.h
+    ./texk/kpathsea/paths.h
+    ./texk/kpathsea/mingw32.h
+    ./texk/kpathsea/magstep.h
+    ./texk/kpathsea/line.h
+    ./texk/kpathsea/lib.h
+    ./texk/kpathsea/kpathsea.h
+    ./texk/kpathsea/knj.h
+    ./texk/kpathsea/hash.h
+    ./texk/kpathsea/getopt.h
+    ./texk/kpathsea/fontmap.h
+    ./texk/kpathsea/fn.h
+    ./texk/kpathsea/expand.h
+    ./texk/kpathsea/default.h
+    ./texk/kpathsea/debug.h
+    ./texk/kpathsea/db.h
+    ./texk/kpathsea/c-unistd.h
+    ./texk/kpathsea/c-std.h
+    ./texk/kpathsea/c-stat.h
+    ./texk/kpathsea/c-proto.h
+    ./texk/kpathsea/c-pathmx.h
+    ./texk/kpathsea/c-pathch.h
+    ./texk/kpathsea/config.h
+    ./texk/kpathsea/concatn.h
+    ./texk/kpathsea/cnf.h
+    ./texk/kpathsea/c-namemx.h
+    ./texk/kpathsea/c-minmax.h
+    ./texk/kpathsea/c-memstr.h
+    ./texk/kpathsea/c-limits.h
+    ./texk/kpathsea/c-fopen.h
+    ./texk/kpathsea/c-errno.h
+    ./texk/kpathsea/c-dir.h
+    ./texk/kpathsea/c-ctype.h
+    ./texk/kpathsea/c-auto.h
+    ./texk/kpathsea/absolute.h
+    ./libs/zziplib/zziplib-src/zzipwrap/wrap.h
+    ./libs/zziplib/zziplib-src/zzip/zzip32.h
+    ./libs/zziplib/zziplib-src/zzip/zzip.h
+    ./libs/zziplib/zziplib-src/zzip/write.h
+    ./libs/zziplib/zziplib-src/zzip/types.h
+    ./libs/zziplib/zziplib-src/zzip/__string.h
+    ./libs/zziplib/zziplib-src/zzip/stdint.h
+    ./libs/zziplib/zziplib-src/zzip/plugin.h
+    ./libs/zziplib/zziplib-src/zzip/mmapped.h
+    ./libs/zziplib/zziplib-src/zzip/__mmap.h
+    ./libs/zziplib/zziplib-src/zzip/__mkdir.h
+    ./libs/zziplib/zziplib-src/zzip/memdisk.h
+    ./libs/zziplib/zziplib-src/zzip/lib.h
+    ./libs/zziplib/zziplib-src/zzip/info.h
+    ./libs/zziplib/zziplib-src/zzip/__hints.h
+    ./libs/zziplib/zziplib-src/zzip/fseeko.h
+    ./libs/zziplib/zziplib-src/zzip/format.h
+    ./libs/zziplib/zziplib-src/zzip/__fnmatch.h
+    ./libs/zziplib/zziplib-src/zzip/file.h
+    ./libs/zziplib/zziplib-src/zzip/fetch.h
+    ./libs/zziplib/zziplib-src/zzip/__errno.h
+    ./libs/zziplib/zziplib-src/zzip/__dirent.h
+    ./libs/zziplib/zziplib-src/zzip/__debug.h
+    ./libs/zziplib/zziplib-src/zzip/conf.h
+    ./libs/zziplib/zziplib-src/zzip/autoconf.h
+    ./libs/zziplib/zziplib-src/SDL/SDL_rwops_zzip.h
+    ./libs/zziplib/zziplib-src/bins/zzipmake-zip.h
+    ./libs/zziplib/zziplib-src/bins/unzzip-states.h
+    ./libs/zziplib/zziplib-src/bins/unzzipdir-zip.h
+    ./libs/zziplib/zziplib-src/bins/unzzipcat-zip.h
+    ./libs/zziplib/include/zzip/_msvc.h
+    ./libs/zziplib/include/zzip/_config.h
+    ./libs/zziplib/config.h
+    ./libs/zlib/zlib-src/examples/gzlog.h
+    ./libs/zlib/zlib-src/contrib/puff/puff.h
+    ./libs/zlib/zlib-src/contrib/minizip/zip.h
+    ./libs/zlib/zlib-src/contrib/minizip/unzip.h
+    ./libs/zlib/zlib-src/contrib/minizip/mztools.h
+    ./libs/zlib/zlib-src/contrib/minizip/iowin32.h
+    ./libs/zlib/zlib-src/contrib/minizip/ioapi.h
+    ./libs/zlib/zlib-src/contrib/minizip/crypt.h
+    ./libs/zlib/zlib-src/contrib/iostream3/zfstream.h
+    ./libs/zlib/zlib-src/contrib/iostream2/zstream.h
+    ./libs/zlib/zlib-src/contrib/iostream/zfstream.h
+    ./libs/zlib/zlib-src/contrib/infback9/inftree9.h
+    ./libs/zlib/zlib-src/contrib/infback9/inflate9.h
+    ./libs/zlib/zlib-src/contrib/infback9/inffix9.h
+    ./libs/zlib/zlib-src/contrib/infback9/infback9.h
+    ./libs/zlib/zlib-src/contrib/blast/blast.h
+    ./libs/zlib/zlib-src/zutil.h
+    ./libs/zlib/zlib-src/zlib.h
+    ./libs/zlib/zlib-src/trees.h
+    ./libs/zlib/zlib-src/inftrees.h
+    ./libs/zlib/zlib-src/inflate.h
+    ./libs/zlib/zlib-src/inffixed.h
+    ./libs/zlib/zlib-src/inffast.h
+    ./libs/zlib/zlib-src/gzguts.h
+    ./libs/zlib/zlib-src/deflate.h
+    ./libs/zlib/zlib-src/crc32.h
+    ./libs/zlib/zconf.h
+    ./libs/zlib/config.h
+    ./libs/lua53/lua53-src/src/lzio.h
+    ./libs/lua53/lua53-src/src/lvm.h
+    ./libs/lua53/lua53-src/src/lundump.h
+    ./libs/lua53/lua53-src/src/lualib.h
+    ./libs/lua53/lua53-src/src/luaconf.h
+    ./libs/lua53/lua53-src/src/lua.h
+    ./libs/lua53/lua53-src/src/ltm.h
+    ./libs/lua53/lua53-src/src/ltable.h
+    ./libs/lua53/lua53-src/src/lstring.h
+    ./libs/lua53/lua53-src/src/lstate.h
+    ./libs/lua53/lua53-src/src/lprefix.h
+    ./libs/lua53/lua53-src/src/lparser.h
+    ./libs/lua53/lua53-src/src/lopcodes.h
+    ./libs/lua53/lua53-src/src/lobject.h
+    ./libs/lua53/lua53-src/src/lmem.h
+    ./libs/lua53/lua53-src/src/llimits.h
+    ./libs/lua53/lua53-src/src/llex.h
+    ./libs/lua53/lua53-src/src/lgc.h
+    ./libs/lua53/lua53-src/src/lfunc.h
+    ./libs/lua53/lua53-src/src/ldo.h
+    ./libs/lua53/lua53-src/src/ldebug.h
+    ./libs/lua53/lua53-src/src/lctype.h
+    ./libs/lua53/lua53-src/src/lcode.h
+    ./libs/lua53/lua53-src/src/lauxlib.h
+    ./libs/lua53/lua53-src/src/lapi.h
+    ./libs/lua53/config.h
+    ./libs/libpng/libpng-src/contrib/visupng/resource.h
+    ./libs/libpng/libpng-src/contrib/visupng/PngFile.h
+    ./libs/libpng/libpng-src/contrib/visupng/cexcept.h
+    ./libs/libpng/libpng-src/contrib/tools/sRGB.h
+    ./libs/libpng/libpng-src/contrib/pngminim/preader/pngusr.h
+    ./libs/libpng/libpng-src/contrib/pngminim/encoder/pngusr.h
+    ./libs/libpng/libpng-src/contrib/pngminim/decoder/pngusr.h
+    ./libs/libpng/libpng-src/contrib/libtests/pngstest-errors.h
+    ./libs/libpng/libpng-src/contrib/gregbook/writepng.h
+    ./libs/libpng/libpng-src/contrib/gregbook/readpng2.h
+    ./libs/libpng/libpng-src/contrib/gregbook/readpng.h
+    ./libs/libpng/libpng-src/pngstruct.h
+    ./libs/libpng/libpng-src/pngpriv.h
+    ./libs/libpng/libpng-src/pnglibconf.h
+    ./libs/libpng/libpng-src/pnginfo.h
+    ./libs/libpng/libpng-src/pngdebug.h
+    ./libs/libpng/libpng-src/pngconf.h
+    ./libs/libpng/libpng-src/png.h
+    ./libs/libpng/config.h
+    ]
+}
+
+let luatex ! : Executable {
+    .configs += config;
+    .deps += [ zlib zziplib lua53 libpng kpathsea web2c dvi font image lang luabind luaffi luafilesystem fontforge
+                luafontloader luamd5 luapeg luapplib luasocket luazip pdf slnunicode tex unilib utils mplibdir
+                libmd5 synctexdir luatexdir ]
+    # NOTE: main is in luatex.c
+}

@@ -23,6 +23,7 @@
 *  @author Taco Hoekwater
 */
 
+#include "cpascal.h"
 #include "pfaedit.h"
 #include "ustring.h"
 #include "lib/lib.h"            /* web2c's lib, for recorder_record_input */

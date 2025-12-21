@@ -130,7 +130,7 @@ return;
 	fieldwidth = state->args[-state->args[arg].fieldwidth-1].ival;
     if ( fieldwidth<0 ) {
 	fieldwidth = -fieldwidth;
-	state->args[arg].is_leftadj = true;
+    state->args[arg].is_leftadj = true;
     }
 
     switch ( state->args[arg].format ) {
@@ -146,7 +146,7 @@ return;
 	trans = state->args[arg].format=='X'?HEX:hex;
 	pt = buf+sizeof(buf)/sizeof(buf[0])-1;
 	*pt-- = '\0';
-	neg = false;
+    neg = false;
 	radix = state->args[arg].format=='d' || state->args[arg].format=='i' ||
 		    state->args[arg].format=='u'?10:
 		state->args[arg].format=='o'?8:16;
@@ -274,7 +274,7 @@ int u_vsnprintf(unichar_t *str, int len, const unichar_t *format, va_list ap ) {
 		for ( arg=0; isdigit(*pt); ++pt )
 		    arg = 10*arg + tovalue(*pt);
 		if ( *pt=='$' ) {
-		    hadarg = true;
+            hadarg = true;
 		    ++pt;
 		} else
 		    temp.fieldwidth = arg;

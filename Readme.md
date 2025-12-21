@@ -7,7 +7,8 @@ NOTE that this project is in an early stage and work-in-progress.
 ### Planned features
 
 - [x] Build a stand-alone version of LuaTeX and verify that it works
-- [ ] Remove all unused parts from the repository
+- [ ] Remove all unused parts from the repository (WIP)
+- [ ] Replace build system by BUSY (WIP)
 - [ ] Remove the TeX frontend and the mktexfmt machinery 
 - [ ] Replace kpathsea and ptexenc by LeanQt 
 - [ ] Specify a statically (gradually) typed typesetting language in the Oberon+/Luon lineage
@@ -21,7 +22,8 @@ which works independently of the huge TeX Live system. To build it on Debian Boo
 
 ### How to build
 
-Use the following command on Linux: `export MAKEINFO=true; CFLAGS="-O2 -fcommon" ./build.sh`
+- Use the following command on Linux: `export MAKEINFO=true; CFLAGS="-O2 -fcommon" ./build.sh`
+- Or use the [BUSY build system](https://github.com/rochus-keller/busy/) or open the BUSY file with [LeanCreator](https://github.com/rochus-keller/leancreator/)
 
 ### Additional Credits
 

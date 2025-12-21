@@ -46,8 +46,8 @@
 # define real		long double
 # define bigreal	long double
 #elif defined( FONTFORGE_CONFIG_USE_DOUBLE )
-# define real		double
-# define bigreal	double
+# define real       double
+# define bigreal    double
 #else
 # define real		float
 # define bigreal	double

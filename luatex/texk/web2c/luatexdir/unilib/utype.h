@@ -133,6 +133,8 @@ extern const uint32	____codepointassigned[];	/* 1bit_boolean_flag x 32 = exists 
 
 #define isdecompositionnormative(ch) (____utype[(ch)+1]&____DECOMPNORM)
 
+#define true 1
+#define false 0
 
 
 extern struct arabicforms {

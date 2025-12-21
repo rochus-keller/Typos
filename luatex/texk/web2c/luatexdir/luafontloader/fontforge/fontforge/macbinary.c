@@ -33,6 +33,7 @@
 #include <sys/stat.h>
 #include <time.h>
 #include <ustring.h>
+#include <assert.h>
 #include "ttf.h"
 #include "psfont.h"
 #ifdef LUA_FF_LIB

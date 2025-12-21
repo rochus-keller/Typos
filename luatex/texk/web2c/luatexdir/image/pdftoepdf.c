@@ -24,6 +24,7 @@ with LuaTeX; if not, see <http://www.gnu.org/licenses/>.
 
 #include "image/epdf.h"
 #include "luatexcallbackids.h"
+#include <inttypes.h>
 
 /* to be sorted out, we cannot include */
 
