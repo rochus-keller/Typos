@@ -7,8 +7,8 @@ NOTE that this project is in an early stage and work-in-progress.
 ### Planned features
 
 - [x] Build a stand-alone version of LuaTeX and verify that it works
-- [ ] Remove all unused parts from the repository (WIP)
-- [ ] Replace build system by BUSY (WIP)
+- [x] Replace build system by BUSY
+- [ ] Remove all unused parts from the repository including the autotools build (WIP)
 - [ ] Remove the TeX frontend and the mktexfmt machinery 
 - [ ] Replace kpathsea and ptexenc by LeanQt 
 - [ ] Specify a statically (gradually) typed typesetting language in the Oberon+/Luon lineage
@@ -19,6 +19,12 @@ NOTE that this project is in an early stage and work-in-progress.
 Found and [downloaded a LuaTeX version](https://gitlab.lisn.upsaclay.fr/texlive/luatex/-/archive/1.10.0/luatex-1.10.0.tar.gz?ref_type=tags)
 which works independently of the huge TeX Live system. To build it on Debian Bookworm x64 without errors, the command 
 `export MAKEINFO=true; CFLAGS="-O2 -fcommon" ./build.sh` must be used (to avoid texinfo dependency and an issue added to GCC 10.
+
+### Status on December 21, 2025
+
+Now we have a working BUSY build which is complete, fast and works well with the source level debugger. The test case renders the same results
+as if built with the original build.sh script. I will soon remove the autotools build so that I can make configuration changes without the need to 
+update two build systems.
 
 ### How to build
 

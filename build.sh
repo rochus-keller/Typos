@@ -301,7 +301,7 @@ LUA53ENABLE=--enable-luatex
 if [ "$ONLY_MAKE" = "FALSE" ]
 then
 TL_MAKE=$MAKE ../luatex/configure  $TEXLIVEOPT $CONFHOST $CONFBUILD  $WARNINGFLAGS\
-    --enable-silent-rules \
+    --disable-silent-rules \
     --disable-all-pkgs \
     --disable-shared    \
     --disable-ptex \

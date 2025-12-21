@@ -1,5 +1,5 @@
 let config : Config {
-    .defines += [ "LUA_COMPAT_5_1" "LUA_COMPAT_5_2" ]
+    .defines += [ "HAVE_CONFIG_H" ] # not used: "NO_DEBUG"
     if target_toolchain == `gcc {
         .lib_names += [ "m" "stdc++" ]
         .ldflags += "-shared-libgcc"
@@ -13,6 +13,7 @@ let config : Config {
 
 let zlib : SourceSet {
     .configs += config;
+    .defines += "USE_MMAP"
     .sources = [
     ./libs/zlib/zlib-src/uncompr.c
     ./libs/zlib/zlib-src/adler32.c
@@ -34,6 +35,7 @@ let zlib : SourceSet {
 
 let zziplib : SourceSet {
     .configs += config;
+    .defines += "USE_MMAP"
     .include_dirs += [
         ./libs/zziplib/include
         ./libs/zziplib/zziplib-src
@@ -51,8 +53,12 @@ let zziplib : SourceSet {
     ]
 }
 
+let luaconfig : Config {
+    .defines += [ "LUA_COMPAT_MODULE" "LUA_COMPAT_5_2" "LUAI_HASHLIMIT=6" "LUA_USE_POSIX" "LUA_USE_DLOPEN" ]
+}
+
 let lua53 : SourceSet {
-    .configs += config;
+    .configs += [ config luaconfig ]
     .sources = [
     ./libs/lua53/lua53-src/src/lcode.c
     ./libs/lua53/lua53-src/src/ldblib.c
@@ -93,6 +99,8 @@ let lua53 : SourceSet {
 
 let libpng : SourceSet {
     .configs += config;
+    .defines += [ "PNG_CONFIGURE_LIBPNG" "PNG_NO_MMX_CODE" ]
+    .include_dirs += ./libs/libpng
     .sources = [
     ./libs/libpng/libpng-src/pngget.c
     ./libs/libpng/libpng-src/pngrtran.c
@@ -114,7 +122,7 @@ let libpng : SourceSet {
 
 let kpathsea : SourceSet {
     .configs += config;
-    .include_dirs += ./texk
+    .include_dirs += [ ./texk ./texk/kpathsea ]
     .defines += [ "MAKE_KPSE_DLL" ]
     .sources = [
     ./texk/kpathsea/absolute.c
@@ -207,6 +215,7 @@ let web2c : SourceSet {
 
 let web2c_config : Config {
     .include_dirs += [ ./texk/web2c/luatexdir ./texk/web2c ./texk ./libs/lua53/lua53-src/src ./texk/web2c/synctexdir ]
+    .defines += [ "pdfTeX" "LUA_FF_LIB=1" ]
 }
 
 let dvi : SourceSet {
@@ -265,7 +274,7 @@ let lang : SourceSet {
 }
 
 let luabind : SourceSet {
-    .configs += [ config web2c_config ]
+    .configs += [ config web2c_config luaconfig ]
     .include_dirs += [ ./texk/web2c/kpathsea ./texk/web2c/luatexdir/luapplib/util ]
     .sources = [
     ./texk/web2c/luatexdir/lua/helpers.c
@@ -297,7 +306,7 @@ let luabind : SourceSet {
 }
 
 let luaffi : SourceSet {
-    .configs += [ config web2c_config ]
+    .configs += [ config web2c_config luaconfig ]
     .sources = [
     ./texk/web2c/luatexdir/luaffi/call.c
     ./texk/web2c/luatexdir/luaffi/ctype.c
@@ -307,7 +316,7 @@ let luaffi : SourceSet {
 }
 
 let luafilesystem : SourceSet {
-    .configs += [ config web2c_config ]
+    .configs += [ config web2c_config luaconfig ]
     .sources = [
     ./texk/web2c/luatexdir/luafilesystem/src/lfs.c
     ]
@@ -364,7 +373,7 @@ let fontforge : SourceSet {
 }
 
 let luafontloader : SourceSet {
-    .configs += [ config web2c_config ]
+    .configs += [ config web2c_config luaconfig ]
     .include_dirs += [ ./texk/web2c/luatexdir/luafontloader/fontforge/fontforge
         ./texk/web2c/luatexdir/luafontloader/fontforge/inc
         ./texk/web2c/luatexdir/unilib ]
@@ -375,7 +384,7 @@ let luafontloader : SourceSet {
 }
 
 let luamd5 : SourceSet {
-    .configs += [ config web2c_config ]
+    .configs += [ config web2c_config luaconfig ]
     .sources = [
     ./texk/web2c/luatexdir/luamd5/md5.c
     ./texk/web2c/luatexdir/luamd5/md5lib.c
@@ -383,14 +392,14 @@ let luamd5 : SourceSet {
 }
 
 let luapeg : SourceSet {
-    .configs += [ config web2c_config ]
+    .configs += [ config web2c_config luaconfig ]
     .sources = [
     ./texk/web2c/luatexdir/luapeg/lpeg.c
     ]
 }
 
 let luapplib : SourceSet {
-    .configs += [ config web2c_config ]
+    .configs += [ config web2c_config luaconfig ]
     .include_dirs += ./texk/web2c/luatexdir/luapplib/util
     .sources = [
     ./texk/web2c/luatexdir/luapplib/pparray.c
@@ -418,7 +427,7 @@ let luapplib : SourceSet {
 }
 
 let luasocket : SourceSet {
-    .configs += [ config web2c_config ]
+    .configs += [ config web2c_config luaconfig ]
     .sources = [
     ./texk/web2c/luatexdir/luasocket/src/auxiliar.c
     ./texk/web2c/luatexdir/luasocket/src/buffer.c
@@ -440,7 +449,7 @@ let luasocket : SourceSet {
 }
 
 let luazip : SourceSet {
-    .configs += [ config web2c_config ]
+    .configs += [ config web2c_config luaconfig ]
     .include_dirs += [ ./libs/zziplib/zziplib-src ./libs/zziplib/include ]
     .sources = [
     ./texk/web2c/luatexdir/luazip/src/luazip.c
@@ -479,7 +488,7 @@ let pdf : SourceSet {
 }
 
 let slnunicode : SourceSet {
-    .configs += [ config web2c_config ]
+    .configs += [ config web2c_config luaconfig ]
     .sources = [
     ./texk/web2c/luatexdir/slnunicode/slnunico.c
     ]
@@ -554,7 +563,7 @@ let utils : SourceSet {
 }
 
 let mplibdir : SourceSet {
-    .configs += [ config web2c_config ]
+    .configs += [ config web2c_config luaconfig ]
     .sources = [
     ./texk/web2c/mplibdir/avl.c
     ./texk/web2c/mplibdir/decContext.c
