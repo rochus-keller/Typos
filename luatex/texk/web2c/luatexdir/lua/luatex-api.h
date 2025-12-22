@@ -84,24 +84,11 @@ extern int luapdfprint(lua_State * L);
 extern lua_State *luatex_error(lua_State * L, int fatal);
 
 extern int luaopen_unicode(lua_State * L);
-extern int luaopen_zip(lua_State * L);
-extern int luaopen_lfs(lua_State * L);
-extern int luaopen_lpeg(lua_State * L);
 extern int luaopen_md5(lua_State * L);
 extern int luaopen_sha2(lua_State * L);
 
-#ifndef LuajitTeX
- extern int luaopen_ffi(lua_State * L);
-#endif
-
-extern int luaopen_zlib(lua_State * L);
-extern int luaopen_gzip(lua_State * L);
 extern int luaopen_ff(lua_State * L);
 extern int luaopen_profiler(lua_State * L);
-
-extern int luaopen_socket_core(lua_State * L);
-extern int luaopen_mime_core(lua_State * L);
-extern void luatex_socketlua_open(lua_State * L);
 
 extern int luaopen_img(lua_State * L);
 extern int l_new_image(lua_State * L);
@@ -215,7 +202,6 @@ extern void preset_environment(lua_State * L, const parm_struct * p, const char 
 
 extern char *startup_filename;
 extern int safer_option;
-extern int nosocket_option;
 extern int utc_option;
 
 extern char *last_source_name;

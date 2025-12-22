@@ -165,7 +165,6 @@ static const luaL_Reg lualibs[] = {
     { "string",    luaopen_string },
     { "math",      luaopen_math },
     { "debug",     luaopen_debug },
-    { "lpeg",      luaopen_lpeg },
     { "bit32",     luaopen_bit32 },
 #ifdef LuajitTeX
     /*tex |bit| is only in \LUAJIT */
@@ -179,15 +178,12 @@ static const luaL_Reg lualibs[] = {
 #endif
     /*tex additional (public) libraries */
     { "unicode",   luaopen_unicode },
-    { "zip",       luaopen_zip },
     { "md5",       luaopen_md5 },
     { "sha2",      luaopen_sha2 },
-    { "lfs",       luaopen_lfs },
     /*tex extra standard lua libraries */
 #ifdef LuajitTeX
     { "jit",       luaopen_jit },
 #endif
-    { "ffi",       luaopen_ffi },
     /*tex more libraries will be loaded later */
     { NULL,        NULL }
 };
@@ -322,32 +318,6 @@ void luainterpreter(void)
         load-time dependency that has to be worked around for luatex, where the C
         module is loaded way before the lua module.
     */
-    if (!nosocket_option) {
-        /* todo: move this to common */
-        lua_getglobal(L, "package");
-        lua_getfield(L, -1, "loaded");
-        if (!lua_istable(L, -1)) {
-            lua_newtable(L);
-            lua_setfield(L, -2, "loaded");
-            lua_getfield(L, -1, "loaded");
-        }
-        /*tex |package.loaded.socket = nil| */
-        luaopen_socket_core(L);
-        lua_setfield(L, -2, "socket.core");
-        lua_pushnil(L);
-        lua_setfield(L, -2, "socket");
-        /*tex |package.loaded.mime = nil| */
-        luaopen_mime_core(L);
-        lua_setfield(L, -2, "mime.core");
-        lua_pushnil(L);
-        lua_setfield(L, -2, "mime");
-        /*tex pop the tables */
-        lua_pop(L, 2);
-        /*tex preload the pure \LUA\ modules */
-        luatex_socketlua_open(L);
-    }
-    luaopen_zlib(L);
-    luaopen_gzip(L);
     /*tex our own libraries register themselves */
     luaopen_fio(L);
     luaopen_ff(L);
