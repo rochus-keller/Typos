@@ -28,8 +28,11 @@ update two build systems.
 
 ### How to build
 
-- Use the following command on Linux: `export MAKEINFO=true; CFLAGS="-O2 -fcommon" ./build.sh`
-- Or use the [BUSY build system](https://github.com/rochus-keller/busy/) or open the BUSY file with [LeanCreator](https://github.com/rochus-keller/leancreator/)
+Use the [BUSY build system](https://github.com/rochus-keller/busy/) or open the BUSY file with [LeanCreator](https://github.com/rochus-keller/leancreator/).
+So far there is only a BUSY file in the luatex subdirectory.
+
+The build was successfully tested on Linux x64. It is likely to also work on Linux x86 or macOS. 
+Win32 has not been tested yet and likely doesn't build without changes.
 
 ### Additional Credits
 

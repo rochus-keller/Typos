@@ -596,9 +596,6 @@ let luatexdir : SourceSet {
 
 let all_headers : SourceSet {
     .sources = [
-    ./texk/web2c/web2c/web2c-parser.h
-    ./texk/web2c/web2c/web2c.h
-    ./texk/web2c/web2c/coerce.h
     ./texk/web2c/w2c/config.h
     ./texk/web2c/w2c/c-auto.h
     ./texk/web2c/synctexdir/synctex-luatex.h
@@ -794,8 +791,6 @@ let all_headers : SourceSet {
     ./texk/web2c/luatexdir/luatex.h
     ./texk/web2c/libmd5/md5.h
     ./texk/web2c/lib/lib.h
-    ./texk/web2c/cwebdir/comm-w2c.h
-    ./texk/web2c/cwebdir/common.h
     ./texk/web2c/texmfmp-help.h
     ./texk/web2c/texmfmp.h
     ./texk/web2c/texmfmem.h
