@@ -277,7 +277,6 @@ let luabind : SourceSet {
     .configs += [ config web2c_config luaconfig ]
     .include_dirs += [ ./texk/web2c/kpathsea ./texk/web2c/luatexdir/luapplib/util ]
     .sources = [
-    ./texk/web2c/luatexdir/lua/helpers.c
     ./texk/web2c/luatexdir/lua/lcallbacklib.c
     ./texk/web2c/luatexdir/lua/lfontlib.c
     ./texk/web2c/luatexdir/lua/limglib.c

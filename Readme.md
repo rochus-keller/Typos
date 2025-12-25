@@ -2,7 +2,10 @@
 
 This repository will slowly evolve into a new statically typed document language and typesetting system.
 
-NOTE that this project is in an early stage and work-in-progress.
+**Motivation for this project:**
+LuaTeX produces excellent typography, but with a terrible document description language. Typst seems to be a much better language, but the quality of the typography is still far from LuaTeX. Why has no one created a decent document description language for LuaTeX yet? It's about time someone gave it a try.
+
+**NOTE** that this project is in an early stage and work-in-progress.
 
 ### Planned features
 

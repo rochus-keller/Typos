@@ -23,6 +23,7 @@ with LuaTeX; if not, see <http://www.gnu.org/licenses/>.
 
 #include "ptexlib.h"
 #include "lua/luatex-api.h"
+#include "tex/commands.h"
 
 command_item command_names[] = {
     { relax_cmd,                NULL, 0},
