@@ -313,7 +313,7 @@ fi
 if [ "$ONLY_MAKE" = "FALSE" ]
 then
 TL_MAKE=$MAKE ../source/configure  $TEXLIVEOPT $CONFHOST $CONFBUILD  $WARNINGFLAGS\
-    --enable-silent-rules \
+    --disable-silent-rules \
     --disable-all-pkgs \
     --disable-shared    \
     --disable-ptex \
