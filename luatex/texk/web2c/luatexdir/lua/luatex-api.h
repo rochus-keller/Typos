@@ -84,6 +84,8 @@ extern int luapdfprint(lua_State * L);
 extern lua_State *luatex_error(lua_State * L, int fatal);
 
 extern int luaopen_unicode(lua_State * L);
+extern int luaopen_lfs(lua_State * L);
+extern int luaopen_lpeg(lua_State * L);
 extern int luaopen_md5(lua_State * L);
 extern int luaopen_sha2(lua_State * L);
 

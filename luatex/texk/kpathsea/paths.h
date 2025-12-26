@@ -1,6 +1,7 @@
 /* paths.h: Generated from texmf.cnf. */
 #ifndef DEFAULT_TEXMFROOT
-#define DEFAULT_TEXMFROOT "$SELFAUTOPARENT"
+//#define DEFAULT_TEXMFROOT "$SELFAUTOPARENT"
+#define DEFAULT_TEXMFROOT ""
 #endif
 
 #ifndef DEFAULT_TEXMFDIST
@@ -12,7 +13,8 @@
 #endif
 
 #ifndef DEFAULT_TEXMFLOCAL
-#define DEFAULT_TEXMFLOCAL "$SELFAUTOGRANDPARENT/texmf-local"
+//#define DEFAULT_TEXMFLOCAL "$SELFAUTOGRANDPARENT/texmf-local"
+#define DEFAULT_TEXMFLOCAL ""
 #endif
 
 #ifndef DEFAULT_TEXMFSYSVAR
@@ -168,7 +170,8 @@
 #endif
 
 #ifndef DEFAULT_OSFONTDIR
-#define DEFAULT_OSFONTDIR "/please/set/osfontdir/in/the/environment"
+//#define DEFAULT_OSFONTDIR "/please/set/osfontdir/in/the/environment"
+#define DEFAULT_OSFONTDIR ""
 #endif
 
 #ifndef DEFAULT_T1FONTS
@@ -232,7 +235,8 @@
 #endif
 
 #ifndef DEFAULT_TRFONTS
-#define DEFAULT_TRFONTS "/usr{/local,}/share/groff/{current/font,site-font}/devps"
+//#define DEFAULT_TRFONTS "/usr{/local,}/share/groff/{current/font,site-font}/devps"
+#define DEFAULT_TRFONTS ""
 #endif
 
 #ifndef DEFAULT_MPSUPPORT
@@ -332,7 +336,8 @@
 #endif
 
 #ifndef DEFAULT_CLUAINPUTS
-#define DEFAULT_CLUAINPUTS "$TEXMFDOTDIR:$SELFAUTOLOC/lib/{$progname,$engine,}/lua//"
+//#define DEFAULT_CLUAINPUTS "$TEXMFDOTDIR:$SELFAUTOLOC/lib/{$progname,$engine,}/lua//"
+#define DEFAULT_CLUAINPUTS ""
 #endif
 
 #ifndef DEFAULT_TEXMFSCRIPTS

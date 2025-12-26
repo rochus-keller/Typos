@@ -165,6 +165,7 @@ static const luaL_Reg lualibs[] = {
     { "string",    luaopen_string },
     { "math",      luaopen_math },
     { "debug",     luaopen_debug },
+    { "lpeg",      luaopen_lpeg },
     { "bit32",     luaopen_bit32 },
 #ifdef LuajitTeX
     /*tex |bit| is only in \LUAJIT */
@@ -180,6 +181,7 @@ static const luaL_Reg lualibs[] = {
     { "unicode",   luaopen_unicode },
     { "md5",       luaopen_md5 },
     { "sha2",      luaopen_sha2 },
+    { "lfs",       luaopen_lfs },
     /*tex extra standard lua libraries */
 #ifdef LuajitTeX
     { "jit",       luaopen_jit },

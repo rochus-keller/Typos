@@ -1,0 +1,36 @@
+% --- 1. CORE SETUP ---
+\catcode`\{=1 \catcode`\}=2 \catcode`\#=6 \catcode`\^=7 
+\catcode`\ =10 % SPACE IS SPACE
+\catcode`\%=14 \catcode`\&=4 \catcode`\$=3
+\catcode`\~=13 \catcode`\_=8 \catcode`\\=0
+
+\directlua{tex.enableprimitives('',tex.extraprimitives())}
+\outputmode=1
+\pagewidth=8.5in \pageheight=11in 
+\hsize=6.5in \vsize=9in
+
+% --- 2. FONT LOADER ---
+\directlua{
+   local kpse = kpse or {}
+   kpse.expand_var = function(s) return "." end
+   if not utf then utf = unicode.utf8 end
+   dofile("luatex-fonts-merged.lua")
+}
+
+% --- 3. FONT DEFINITION ---
+\font\tenrm="file:DejaVuSans.ttf" at 10pt
+\tenrm
+
+% --- 4. TYPESETTING DEFAULTS ---
+\baselineskip=12pt   % Line height
+\parindent=0pt       % No indent
+\rightskip=0pt plus 1fil % Ragged right (prevents stretching)
+\spaceskip=3.33pt plus 2pt minus 1pt % Force space size
+
+% --- 5. CONTENT ---
+Hello World!
+
+\par
+
+\end
+

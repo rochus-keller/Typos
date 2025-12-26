@@ -304,6 +304,13 @@ let luabind : SourceSet {
     ]
 }
 
+let luafilesystem : SourceSet {
+    .configs += [ config web2c_config luaconfig ]
+    .sources = [
+    ./texk/web2c/luatexdir/luafilesystem/lfs.c
+    ]
+}
+
 let fontforge : SourceSet {
     .configs += [ config web2c_config ]
     .include_dirs += [ ./texk/web2c/luatexdir/luafontloader/fontforge/inc ./texk/web2c/luatexdir/unilib ]
@@ -370,6 +377,13 @@ let luamd5 : SourceSet {
     .sources = [
     ./texk/web2c/luatexdir/luamd5/md5.c
     ./texk/web2c/luatexdir/luamd5/md5lib.c
+    ]
+}
+
+let luapeg : SourceSet {
+    .configs += [ config web2c_config luaconfig ]
+    .sources = [
+    ./texk/web2c/luatexdir/luapeg/lpeg.c
     ]
 }
 
@@ -881,7 +895,7 @@ let all_headers : SourceSet {
 let luatex ! : Executable {
     .configs += config;
     .deps += [ zlib zziplib lua53 libpng kpathsea web2c dvi font image lang luabind fontforge
-                luafontloader luamd5 luapplib pdf slnunicode tex unilib utils mplibdir
-                libmd5 synctexdir luatexdir ]
+                luafontloader luamd5 luapplib pdf slnunicode tex unilib utils mplibdir luapeg
+                libmd5 synctexdir luatexdir luafilesystem ]
     # NOTE: main is in luatex.c
 }
