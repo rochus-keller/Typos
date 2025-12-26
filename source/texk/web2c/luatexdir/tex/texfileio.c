@@ -92,17 +92,12 @@ int read_file_callback_id[17];
 static char *find_in_output_directory(const char *s)
 {
     if (output_directory && !kpse_absolute_p(s, false)) {
-        FILE *f_ptr;
         char *ftemp = concat3(output_directory, DIR_SEP_STRING, s);
+	char *ret_val = NULL ;
         /*tex This code is used for input files only. */
-        f_ptr = fopen(ftemp, "rb");
-        if (f_ptr) {
-            fclose(f_ptr);
-            return ftemp;
-        } else {
-            free(ftemp);
-
-        }
+	ret_val = kpse_find_file(ftemp, kpse_tex_format, 1);
+	free(ftemp);
+	return ret_val;
     }
     return NULL;
 }
@@ -316,7 +311,7 @@ boolean lua_a_open_in(alpha_file * f, char *fn, int n)
         }
     } else {
         /*tex no read callback */
-        if (openinnameok(fnam)) {
+        if (openinnameok(fn)) {
             ret = open_in_or_pipe(f, fnam, kpse_tex_format, FOPEN_RBIN_MODE, (n == 0 ? true : false));
         } else {
             /*tex open failed */
@@ -332,14 +327,13 @@ boolean lua_a_open_in(alpha_file * f, char *fn, int n)
 boolean lua_a_open_out(alpha_file * f, char *fn, int n)
 {
     boolean test;
-    str_number fnam;
+    char *fnam = NULL;
     int callback_id;
     boolean ret = false;
     callback_id = callback_defined(find_write_file_callback);
     if (callback_id > 0) {
-        fnam = 0;
-        test = run_callback(callback_id, "dS->s", n, fn, &fnam);
-        if ((test) && (fnam != 0) && (str_length(fnam) > 0)) {
+        test = run_callback(callback_id, "dS->R", n, fn, &fnam);
+        if ((test) && (fnam != NULL) && (strlen(fnam) > 0)) {
             /*tex
 
                 There is no message here because if that is needed the macro
@@ -347,11 +341,12 @@ boolean lua_a_open_out(alpha_file * f, char *fn, int n)
                 messaging is left to \LUA\ then.
 
             */
-            ret = open_outfile(f, fn, FOPEN_W_MODE);
+            ret = open_outfile(f, fnam, FOPEN_W_MODE);
+            free(fnam);
         }
     } else {
         if (openoutnameok(fn)) {
-            if (n > 0 && selector != term_only) {
+            if (n > 0 && selector != term_only && log_file) {
                 /*tex
 
                     This message to the log is for downward compatibility with
@@ -371,15 +366,15 @@ boolean lua_a_open_out(alpha_file * f, char *fn, int n)
 boolean lua_b_open_out(alpha_file * f, char *fn)
 {
     boolean test;
-    str_number fnam;
+    char *fnam = NULL;
     int callback_id;
     boolean ret = false;
     callback_id = callback_defined(find_output_file_callback);
     if (callback_id > 0) {
-        fnam = 0;
-        test = run_callback(callback_id, "S->s", fn, &fnam);
-        if ((test) && (fnam != 0) && (str_length(fnam) > 0)) {
-            ret = open_outfile(f, fn, FOPEN_WBIN_MODE);
+        test = run_callback(callback_id, "S->R", fn, &fnam);
+        if ((test) && (fnam != NULL) && (strlen(fnam) > 0)) {
+            ret = open_outfile(f, fnam, FOPEN_WBIN_MODE);
+            free(fnam);
         }
     } else {
         if (openoutnameok(fn)) {
@@ -637,8 +632,11 @@ void term_input(void)
     int k;
     /*tex Now the user sees the prompt for sure: */
     update_terminal();
-    if (!input_ln(term_in, true))
+    if (!input_ln(term_in, true)) {
+        /*tex  initialize limit to avoid printing some garbage. */
+        ilimit=0;
         fatal_error("End of file on the terminal!");
+    }
     /*tex The user's line ended with \.{<return>}: */
     term_offset = 0;
     /*tex Prepare to echo the input. */
@@ -937,7 +935,7 @@ void open_log_file(void)
     /*tex should be done always */
     flush_loggable_info();
     /*tex should be done always */
-    selector = old_setting + 2; 
+    selector = old_setting + 2;
 }
 
 /*tex

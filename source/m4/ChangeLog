@@ -1,3 +1,95 @@
+2024-02-01  Luigi Scarso  <luigi.scarso@gmail.com>
+
+	* kpse-pkgs.m4 (kpse_libs_pkgs): add mpfi (new subdir).
+	(KPSE_ALL_SYSTEM_FLAGS): add AC_REQUIRE([KPSE_MPFI_SYSTEM_FLAGS]).
+	* kpse-mpfi-flags.m4: new file.
+
+2023-12-21  Karl Berry  <karl@freefriends.org>
+
+	* kpse-common.m4 (KPSE_COMMON): remove AC_HEADER_STDC, an obsolete
+	no-op as of autoconf 2.70.
+
+2023-06-18  Karl Berry  <karl@freefriends.org>
+
+	* kpse-common.m4 (KPSE_BASIC, KPSE_COMMON): more tldbg.
+	(KPSE_COMMON): call AM_PROG_AR before LT_INIT here to avoid warning:
+	  configure.ac:46: warning: LT_INIT was called before AM_PROG_AR
+	(_KPSE_USE_LIBTOOL): instead of here.
+
+2023-03-01  Karl Berry  <karl@freefriends.org>
+
+	* kpse-common.m4 (_KPSE_USE_LIBTOOL): tldbg output libtool
+	version; include AM_PROG_AR for dvisvgm.
+
+2023-02-25  Werner Fink  <werner@suse.de>
+
+	* kpse-potrace-flags.m4 (KPSE_POTRACE_SYSTEM_FLAGS): define
+	using _KPSE_LIB_FLAGS_SYSTEM since there is no .pc file,
+	to allow --with-system-potrace to work.
+	https://tug.org/pipermail/tex-live/2023-February/048869.html
+
+2022-08-22 Luigi Scarso <luigi.scarso@gmail.com>
+
+	* kpse-pkgs.m4 (KPSE_LIBS_PKGS): add potrace.
+	* Add kpse-potrace-flags.m4.
+
+2021-06-28  Karl Berry  <karl@freefriends.org>
+
+	* README: list the macros obsoleted by autoconf 2.70 which we use.
+
+2021-02-09  Karl Berry  <karl@freefriends.org>
+
+	* kpse-setup.m4 (_KPSE_RECURSE): add debug if configure not found.
+
+2021-02-07  Karl Berry  <karl@freefriends.org>
+
+	* kpse-pkgs.m4 (KPSE_UTILS_PKGS): new utils program xml2pmx.
+
+2020-05-14  Karl Berry  <karl@freefriends.org>
+
+	* kpse-pkgs.m4 (KPSE_LIBS_PKGS),
+	(KPSE_POPPLER_SYSTEM_FLAGS): remove poppler.
+	* kpse-poppler-flags.m4: remove file.
+	* kpse-xpdf-flags.m4 (KPSE_XPDF_OPTIONS): no more system option.
+	(KPSE_XPDF_SYSTEM_FLAGS): no-op.
+
+2020-04-21 Luigi Scarso <luigi.scarso@gmail.com>
+
+	* kpse-pkgs.m4 (KPSE_LIBS_PKGS): add pplib.
+	* Add kpse-pplib-flags.m4.
+
+2020-03-14  Karl Berry  <karl@freefriends.org>
+
+	* kpse-setup.m4 (KPSE_SETUP): make that powerpc*, not powerpc-*.
+	Johannes H tlbuild mail, 16 Feb 2020 23:09:54.
+
+2020-03-12  Karl Berry  <karl@freefriends.org>
+
+	* kpse-setup.m4 (KPSE_SETUP): disable jit programs on any
+	powerpc-*, not just powerpc-darwin, since jit is also unavailable
+	on powerpc-linux (specifically powerpc64le-unknown-linux-gnu),
+	per Johannes Hielscher. Although apparently there are patches to
+	"floating around" to make jit work on powerpc, they are not in TL,
+	and let's await anyone who actually needs them before refining.
+	https://tug.org/pipermail/tlbuild/2020q1/004627.html (item 1).
+
+2020-01-13  Karl Berry  <karl@tug.org>
+
+	* kpse-setup.m4 (KPSE_SETUP): use AS_TR_SH on the argument when
+	disabling the jit packages, for the sake of making mfluajit-nowin
+	into mfluajit_nowin for shell usage.
+	Also change one "WIN32" to "Windows" in an error message.
+
+2020-01-12  Mojca Miklavec  <mojca.miklavec.lists@gmail.com>
+
+	* kpse-setup.m4 (KPSE_SETUP): also disable mfluajit and mfluajit-nowin.
+
+2019-06-26  Karl Berry  <karl@freefriends.org>
+
+	* kpse-harfbuzz-flags.m4 (KPSE_HARFBUZZ_FLAGS): omit KPSE_ICU_FLAGS.
+	(KPSE_HARFBUZZ_SYSTEM_FLAGS): call pkg-config harfbuzz,
+	not harfbuzz-icu.
+
 2019-03-25  Karl Berry  <karl@freefriends.org>
 
 	* kpse-freetype2-flags.m4 (KPSE_FREETYPE2_SYSTEM_FLAGS): try

@@ -1,20 +1,31 @@
+## $Id: euptex.am 70222 2024-02-28 04:19:31Z kakuto $
 ## texk/web2c/euptexdir/am/euptex.am: Makefile fragment for e-upTeX.
 ##
-## Copyright (C) 2011-2015 Peter Breitenlohner <tex-live@tug.org>
+## Copyright 2015-2024 Karl Berry <tex-live@tug.org>
+## Copyright 2011-2015 Peter Breitenlohner <tex-live@tug.org>
 ## You may freely use, modify and/or distribute this file.
 
 ## e-upTeX
 ##
 if EUPTEX
 bin_PROGRAMS += euptex
+if !UPTEX
+bin_links += euptex$(EXEEXT):uptex
+endif !UPTEX
+if !EPTEX
+bin_links += euptex$(EXEEXT):eptex
+if !PTEX
+bin_links += euptex$(EXEEXT):ptex
+endif !PTEX
+endif !EPTEX
 endif EUPTEX
 EXTRA_PROGRAMS += euptex
 
-euptex_CPPFLAGS = $(PTEXENC_INCLUDES) $(AM_CPPFLAGS) -I$(srcdir)/libmd5
+euptex_CPPFLAGS = $(PTEXENC_INCLUDES) $(AM_CPPFLAGS) -I$(srcdir)/libmd5 $(ZLIB_INCLUDES)
 
 # With --enable-ipc, e-upTeX may need to link with -lsocket.
-euptex_LDADD = libukanji.a $(pproglib) $(PTEXENC_LIBS) $(LDADD) $(ipc_socketlibs) libmd5.a
-euptex_DEPENDENCIES = libukanji.a $(pproglib) $(PTEXENC_DEPEND) $(default_dependencies) libmd5.a
+euptex_LDADD = libukanji.a $(pproglib) $(PTEXENC_LIBS) $(LDADD) $(ipc_socketlibs) libmd5.a $(ZLIB_LIBS)
+euptex_DEPENDENCIES = libukanji.a $(pproglib) $(PTEXENC_DEPEND) $(default_dependencies) libmd5.a $(ZLIB_DEPEND)
 
 # e-upTeX C sources
 euptex_c_h = euptexini.c euptex0.c euptexcoerce.h euptexd.h
@@ -22,8 +33,8 @@ nodist_euptex_SOURCES = $(euptex_c_h) euptex-pool.c
 dist_euptex_SOURCES = euptexdir/euptexextra.c euptexdir/euptexextra.h
 
 # We must create euptexd.h and [eu]ptexdir/[eu]ptex_version.h before building the euptex_OBJECTS.
-euptex_prereq = euptexd.h etexdir/etex_version.h ptexdir/ptex_version.h \
-	eptexdir/eptex_version.h uptexdir/uptex_version.h
+euptex_prereq = euptexd.h etexdir/etex_version.h uptexdir/ptex_version.h \
+	euptexdir/eptex_version.h uptexdir/uptex_version.h
 $(euptex_OBJECTS): $(euptex_prereq)
 
 $(euptex_c_h): euptex-web2c
@@ -36,9 +47,9 @@ euptex-pool.c: euptex.pool euptexd.h $(makecpool_stamp)
 
 # Tangling e-upTeX
 euptex.p euptex.pool: euptex-tangle
-	@$(texmf_tangle) euptex euptex
+	$(texmf_tangle) euptex euptex
 euptex-tangle: tangle$(EXEEXT) euptex.web euptex.ch tangle-sh
-	@$(texmf_tangle) euptex euptex
+	$(texmf_tangle) euptex euptex
 
 # Generate euptex.web
 euptex.web: tie$(EXEEXT) $(euptex_web_srcs)
@@ -48,24 +59,32 @@ euptex_web_srcs = \
 	etexdir/etex.ch \
 	etexdir/tex.ch0 \
 	tex.ch \
+	tracingstacklevels.ch \
+	partoken.ch \
+	locnull-optimize.ch \
+	showstream.ch \
+	zlib-fmt.ch \
 	etexdir/tex.ech
 
 # Generate euptex.ch
 euptex.ch: tie$(EXEEXT) euptex.web $(euptex_ch_srcs)
 	$(tie_c) euptex.web $(euptex_ch_srcs)
 euptex_ch_srcs = \
-	eptexdir/etex.ch0 \
-	ptexdir/ptex-base.ch \
+	euptexdir/etex.ch0 \
+	uptexdir/ptex-base.ch \
 	uptexdir/uptex-m.ch \
 	euptexdir/euptex.ch0 \
-	eptexdir/eptex.ech \
-	eptexdir/etex.ch1 \
+	euptexdir/eptex.ech \
+	euptexdir/etex.ch1 \
 	euptexdir/euptex.ch1 \
 	$(euptex_ch_synctex) \
-	eptexdir/fam256.ch \
+	euptexdir/fam256.ch \
 	euptexdir/pdfstrcmp-eup-pre.ch \
-	eptexdir/pdfutils.ch \
+	euptexdir/pdfutils.ch \
 	euptexdir/pdfstrcmp-eup-post.ch \
+	euptexdir/suppresserrors.ch \
+	eptexdir/unbalanced-braces-eptex.ch \
+	euptexdir/char-warning-eptex.ch \
 	tex-binpool.ch
 
 EXTRA_DIST += $(euptex_web_srcs) $(euptex_ch_srcs) euptexdir/euptex.defines
@@ -82,9 +101,17 @@ EXTRA_DIST += \
 
 # e-upTeX Tests
 #
-euptex_tests = euptexdir/euptriptest.test euptexdir/pdfprimitive.test
-euptexdir/euptriptest.log: euptex$(EXEEXT) dvitype$(EXEEXT) pltotf$(EXEEXT) tftopl$(EXEEXT)
+euptex_tests = \
+	euptexdir/euptriptest.test euptexdir/eptriptest.test \
+	euptexdir/pdfprimitive.test \
+	euptexdir/eupver.test \
+	euptexdir/upkcat.test \
+	euptexdir/wcfname.test euptexdir/wcfname0.test
+euptexdir/euptriptest.log euptexdir/eptriptest.log: \
+	euptex$(EXEEXT) dvitype$(EXEEXT) pltotf$(EXEEXT) tftopl$(EXEEXT)
 euptexdir/pdfprimitive.log: euptex$(EXEEXT)
+euptexdir/eupver.log euptexdir/upkcat.log \
+	euptexdir/wcfname.log euptexdir/wcfname0.log: euptex$(EXEEXT)
 
 EXTRA_DIST += $(euptex_tests)
 
@@ -98,8 +125,8 @@ endif EUPTEX
 ##
 ## euptexdir/euptriptest.test
 EXTRA_DIST += \
-	eptexdir/eptrip/eptrip.log \
-	eptexdir/eptrip/eptrip.tex \
+	euptexdir/eptrip/eptrip.log \
+	euptexdir/eptrip/eptrip.tex \
 	euptexdir/euptrip/euptrip.diffs \
 	euptexdir/euptrip/texmf.cnf
 euptrip.diffs: euptex$(EXEEXT) dvitype$(EXEEXT) pltotf$(EXEEXT) tftopl$(EXEEXT)
@@ -111,7 +138,8 @@ DISTCLEANFILES += euptrip.diffs
 ## euptexdir/pdfprimitive.test
 EXTRA_DIST += \
 	euptexdir/pdfprimitive.test \
-	eptexdir/tests/pdfprimitive-test.tex \
+	euptexdir/tests/pdfprimitive-test.tex \
 	euptexdir/tests/pdfprimitive-euptex.log
 DISTCLEANFILES += pdfprimitive-euptex.*
 
+# (end of euptex.am)

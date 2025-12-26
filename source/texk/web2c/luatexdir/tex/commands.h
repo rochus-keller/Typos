@@ -115,6 +115,7 @@ typedef enum {
     ignore_spaces_cmd,                    /* gobble |spacer| tokens ( \.{\\ignorespaces} ) */
     after_assignment_cmd,                 /* save till assignment is done ( \.{\\afterassignment} ) */
     after_group_cmd,                      /* save till group is done ( \.{\\aftergroup} ) */
+    partoken_name_cmd,                    /* something pdftex, not sure if this is the right order */
     break_penalty_cmd,                    /* additional badness ( \.{\\penalty} ) */
     start_par_cmd,                        /* begin paragraph ( \.{\\indent}, \.{\\noindent} ) */
     ital_corr_cmd,                        /* italic correction ( \.{\\/} ) */
@@ -187,6 +188,7 @@ typedef enum {
     assign_box_dir_cmd,                   /* (\.{\\boxdir}) */
     assign_direction_cmd,                 /* (\.{\\pagedirection}, \.{\\textdirection}) */
     assign_dir_cmd,                       /* (\.{\\pagedir}, \.{\\textdir}) */
+    combine_toks_cmd,
 # define max_internal_cmd assign_dir_cmd  /* the largest code that can follow \.{\\the} */
     advance_cmd,                          /* advance a register or parameter ( \.{\\advance} ) */
     multiply_cmd,                         /* multiply a register or parameter ( \.{\\multiply} ) */
@@ -217,7 +219,6 @@ typedef enum {
     variable_cmd,
     feedback_cmd,
     the_cmd,                              /* expand an internal quantity ( \.{\\the} or \.{\\unexpanded}, \.{\\detokenize} ) */
-    combine_toks_cmd,
     top_bot_mark_cmd,                     /* inserted mark ( \.{\\topmark}, etc.~) */
     call_cmd,                             /* non-long, non-outer control sequence */
     long_call_cmd,                        /* long, non-outer control sequence */
@@ -307,6 +308,8 @@ typedef enum {
     current_if_branch_code,               /* code for \.{\\currentifbranch} */
     glue_stretch_order_code,              /* code for \.{\\gluestretchorder} */
     glue_shrink_order_code,               /* code for \.{\\glueshrinkorder} */
+    eTeX_glue_stretch_order_code,         /* code for \.{\\eTeXgluestretchorder} */
+    eTeX_glue_shrink_order_code,          /* code for \.{\\eTeXglueshrinkorder} */
     font_char_wd_code,                    /* code for \.{\\fontcharwd} */
 #  define eTeX_dim font_char_wd_code      /* first of \eTeX\ codes for dimensions */
     font_char_ht_code,                    /* code for \.{\\fontcharht} */
@@ -349,7 +352,8 @@ typedef enum {
     gp_code_base = 7
 } font_codes ;
 
-#  define immediate_code 4      /* command modifier for \.{\\immediate} */
+#  define immediate_code 4   /* reserved_immediate_code */  /* command modifier for \.{\\immediate} */
+#  define deferred_code  5   /* reserved_deferred_code  */  /* command modifier for \.{\\deferred} */
 
 extern void initialize_commands(void);
 extern void initialize_etex_commands(void);

@@ -1,5 +1,5 @@
-libpng 1.6.36 - December 1, 2018
-================================
+libpng 1.6.43 - February 23, 2024
+=================================
 
 This is a public release of libpng, intended for use in production code.
 
@@ -9,13 +9,13 @@ Files available for download
 
 Source files with LF line endings (for Unix/Linux):
 
- * libpng-1.6.36.tar.xz (LZMA-compressed, recommended)
- * libpng-1.6.36.tar.gz
+ * libpng-1.6.43.tar.xz (LZMA-compressed, recommended)
+ * libpng-1.6.43.tar.gz (deflate-compressed)
 
 Source files with CRLF line endings (for Windows):
 
- * lp1636.7z (LZMA-compressed, recommended)
- * lp1636.zip
+ * lpng1643.7z (LZMA-compressed, recommended)
+ * lpng1643.zip (deflate-compressed)
 
 Other information:
 
@@ -25,50 +25,36 @@ Other information:
  * TRADEMARK.md
 
 
-IMPORTANT licensing update: libpng license v2
+Changes from version 1.6.42 to version 1.6.43
 ---------------------------------------------
 
-The new libpng license comprises the terms and conditions from the zlib
-license, and the disclaimer from the Boost license.
-
-The legacy libpng license, used until libpng-1.6.35, is appended to the
-new license, following the precedent established in the Python Software
-Foundation License version 2.
-
-From now on, the list of contributing authors shall be maintained in a
-separate AUTHORS file.  The lists of previous contributing authors,
-mentioned in the legacy libpng license and considered to be an integral
-part of that license, are kept intact, with no further updates.
-
-
-Changes since the previous public release (version 1.6.35)
-----------------------------------------------------------
-
- * Optimized png_do_expand_palette for ARM processors.
-   Improved performance by around 10-22% on a recent ARM Chromebook.
-   (Contributed by Richard Townsend, ARM Holdings)
- * Fixed manipulation of machine-specific optimization options.
-   (Contributed by Vicki Pfau)
- * Used memcpy instead of manual pointer arithmetic on Intel SSE2.
-   (Contributed by Samuel Williams)
- * Fixed build errors with MSVC on ARM64.
-   (Contributed by Zhijie Liang)
- * Fixed detection of libm in CMakeLists.
+ * Fixed the row width check in png_check_IHDR().
+   This corrected a bug that was specific to the 16-bit platforms,
+   and removed a spurious compiler warning from the 64-bit builds.
+   (Reported by Jacek Caban; fixed by John Bowler)
+ * Added eXIf chunk support to the push-mode reader in pngpread.c.
+   (Contributed by Chris Blume)
+ * Added contrib/pngexif for the benefit of the users who would like
+   to inspect the content of eXIf chunks.
+ * Added contrib/conftest/basic.dfa, a basic build-time configuration.
+   (Contributed by John Bowler)
+ * Fixed a preprocessor condition in pngread.c that broke build-time
+   configurations like contrib/conftest/pngcp.dfa.
+   (Contributed by John Bowler)
+ * Added CMake build support for LoongArch LSX.
+   (Contributed by GuXiWei)
+ * Fixed a CMake build error that occurred under a peculiar state of the
+   dependency tree. This was a regression introduced in libpng-1.6.41.
+   (Contributed by Dan Rosser)
+ * Marked the installed libpng headers as system headers in CMake.
+   (Contributed by Benjamin Buch)
+ * Updated the build support for RISCOS.
    (Contributed by Cameron Cawley)
- * Fixed incorrect creation of pkg-config file in CMakeLists.
-   (Contributed by Kyle Bentley)
- * Fixed the CMake build on Windows MSYS by avoiding symlinks.
- * Fixed a build warning on OpenBSD.
-   (Contributed by Theo Buehler)
- * Fixed various typos in comments.
-   (Contributed by "luz.paz")
- * Raised the minimum required CMake version from 3.0.2 to 3.1.
- * Removed yet more of the vestigial support for pre-ANSI C compilers.
- * Removed ancient makefiles for ancient systems that have been broken
-   across all previous libpng-1.6.x versions.
- * Removed the Y2K compliance statement and the export control
-   information.
- * Applied various code style and documentation fixes.
+ * Updated the makefiles to allow cross-platform builds to initialize
+   conventional make variables like AR and ARFLAGS.
+ * Added various improvements to the CI scripts in areas like version
+   consistency verification and text linting.
+ * Added version consistency verification to pngtest.c also.
 
 
 Send comments/corrections/commendations to png-mng-implement at lists.sf.net.

@@ -1,4 +1,4 @@
-.TH MF 1 "17 January 2018" "Web2C @VERSION@"
+.TH MF 1 "24 August 2023" "Web2C @VERSION@"
 .\"=====================================================================
 .if n .ds MF Metafont
 .if t .ds MF Metafont
@@ -252,6 +252,13 @@ as the name of the base to be used, instead of the name by which
 .I %&
 line.
 .TP
+.BI -cnf-line \ string
+Parse
+.I string
+as a
+.I texmf.cnf
+configuration line.  See the Kpathsea manual.
+.TP
 .B -file-line-error
 Print error messages in the form
 .I file:line:error
@@ -321,7 +328,7 @@ Write output files in
 .I directory
 instead of the current directory.  Look up input files in
 .I directory
-first, the along the normal search path.
+first, then along the normal search path.
 .TP
 .B -parse-first-line
 If the first line of the main input file begins with

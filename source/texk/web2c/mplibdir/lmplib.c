@@ -294,6 +294,7 @@ typedef enum {
     P_MAKE_TEXT,
     P_SCRIPT_ERROR,
     P_EXTENSIONS,
+    P_UTF8_MODE,
     P__SENTINEL
 } mplib_parm_idx;
 
@@ -316,6 +317,7 @@ static mplib_parm_struct mplib_parms[] = {
     {"script_error", P_SCRIPT_ERROR },
     {"extensions",   P_EXTENSIONS   },
     {"math_mode",    P_MATH_MODE    },
+    {"utf8_mode",    P_UTF8_MODE    },
     {NULL,           P__SENTINEL    }
 };
 
@@ -403,7 +405,7 @@ static int mplib_script_error_function(lua_State * L)
     return 0;
 }
 
-static char *mplib_run_script(MP mp, const char *str)
+static char *mplib_run_script(MP mp, const char *str, size_t len)
 {
     lua_State *L = (lua_State *)mp_userdata(mp);
     lua_checkstack(L, 1);
@@ -411,7 +413,7 @@ static char *mplib_run_script(MP mp, const char *str)
     if (lua_isfunction(L, -1)) {
         char *s = NULL;
         const char *x = NULL;
-        lua_pushstring(L, str);
+        lua_pushlstring(L, str, len);
         if (lua_pcall(L, 1, 1, 0) != 0) {
             fprintf(stdout,"mplib warning: error in script: %s\n",lua_tostring(L, -1));
             return NULL;
@@ -439,7 +441,7 @@ static int mplib_run_script_function(lua_State * L)
     return 0;
 }
 
-static char *mplib_make_text(MP mp, const char *str, int mode)
+static char *mplib_make_text(MP mp, const char *str, size_t len, int mode)
 {
     lua_State *L = (lua_State *)mp_userdata(mp);
     lua_checkstack(L, 1);
@@ -447,7 +449,7 @@ static char *mplib_make_text(MP mp, const char *str, int mode)
     if (lua_isfunction(L, -1)) {
         char *s = NULL;
         const char *x = NULL;
-        lua_pushstring(L, str);
+        lua_pushlstring(L, str, len);
         lua_pushinteger(L, mode);
         if (lua_pcall(L, 2, 1, 0) != 0) {
             mplib_script_error(mp, lua_tostring(L, -1));
@@ -544,6 +546,7 @@ static int mplib_new(lua_State * L)
     /*  options->script_error = mplib_script_error; */
         options->print_found_names = 1;
         options->ini_version = 1;
+        options->utf8_mode = 0;
         if (lua_type(L, 1) == LUA_TTABLE) {
             for (i = 0; mplib_parms[i].name != NULL; i++) {
                 lua_getfield(L, 1, mplib_parms[i].name);
@@ -599,6 +602,9 @@ static int mplib_new(lua_State * L)
                         break;
                     case P_EXTENSIONS:
                         options->extensions = (int)lua_tointeger(L, -1);
+                        break;
+                    case P_UTF8_MODE:
+                        options->utf8_mode = (int)lua_toboolean(L, -1);
                         break;
                     default:
                         break;
@@ -1863,7 +1869,7 @@ static void mplib_stroked(lua_State * L, struct mp_stroked_object *h)
 static void mplib_text(lua_State * L, struct mp_text_object *h)
 {
     if (FIELD(text)) {
-        lua_pushstring(L, h->text_p);
+        lua_pushlstring(L, h->text_p, h->text_l);
     } else if (FIELD(dsize)) {
         mplib_push_number(L, (h->font_dsize / 16));
     } else if (FIELD(font)) {

@@ -1,7 +1,7 @@
-dnl $Id: configure.ac 50260 2019-03-06 13:23:58Z lscarso $
+dnl $Id: configure.ac 69664 2024-02-01 22:56:12Z karl $
 dnl Process this file with Autoconf to produce a configure script for Web2c.
 dnl
-dnl   Copyright 2018 Karl Berry <tex-live@tug.org>
+dnl   Copyright 2015-2024 Karl Berry <tex-live@tug.org>
 dnl   Copyright 2009-2015 Peter Breitenlohner <tex-live@tug.org>
 dnl
 dnl   This file is free software; the copyright holder
@@ -46,10 +46,9 @@ KPSE_LT_HACK
 KPSE_WEB2C_PREPARE
 m4_include([ac/web2c.ac])
 
-# XeTeX now requires C++11 because poppler does :(.
-# XeTeX also requires C+11 because of ICU.
+# XeTeX now requires C++11 because ICU does :(.
 if test "x$enable_xetex" = xyes; then
-  AC_MSG_NOTICE([checking for C++11, since XeTeX enabled])
+  AC_MSG_NOTICE([checking for C++11, since XeTeX is enabled])
   AX_CXX_COMPILE_STDCXX([11])
 fi
 
@@ -98,7 +97,7 @@ if test "x$enable_ipc" = xyes; then
    AC_DEFINE([IPC], 1, [tex: Define to enable --ipc.])
 fi
 
-# We may need additional libraries for luaTeX.
+# We may need additional libraries for LuaTeX.
 # On Solaris -lnsl for gethostbyname(), -lrt for nanosleep(),
 # and maybe -lresolv for inet_aton().
 lua_socketlibs=$socketlibs
@@ -207,12 +206,12 @@ m4_foreach([Kpse_Win], [kpse_mf_win],
 
 AM_CONDITIONAL([WEB], [test "x$enable_web_progs" != xno])
 
-AS_IF([test "x$enable_ptex:$enable_eptex" = xno:no],
+AS_IF([test "x$enable_eptex" = xno:no],
       [enable_pweb_progs=no],
       [enable_pweb_progs=$enable_web_progs])
 AM_CONDITIONAL([PWEB], [test "x$enable_pweb_progs" != xno])
 
-AS_IF([test "x$enable_uptex:$enable_euptex" = xno:no],
+AS_IF([test "x$enable_euptex" = xno:no],
       [enable_upweb_progs=no],
       [enable_upweb_progs=$enable_web_progs])
 AM_CONDITIONAL([UPWEB], [test "x$enable_upweb_progs" != xno])
@@ -249,6 +248,7 @@ AC_TYPE_SIGNAL
 
 KPSE_KPATHSEA_FLAGS
 KPSE_PTEXENC_FLAGS
+KPSE_PPLIB_FLAGS
 KPSE_ZLIB_FLAGS
 KPSE_LUA53_FLAGS
 KPSE_LUA52_FLAGS
@@ -257,15 +257,25 @@ KPSE_LIBPNG_FLAGS
 KPSE_FREETYPE2_FLAGS
 KPSE_PIXMAN_FLAGS
 KPSE_CAIRO_FLAGS
+KPSE_POTRACE_FLAGS
 KPSE_GMP_FLAGS
 KPSE_MPFR_FLAGS
-KPSE_POPPLER_FLAGS
+KPSE_MPFI_FLAGS
 KPSE_XPDF_FLAGS
 KPSE_ZZIPLIB_FLAGS
 KPSE_TECKIT_FLAGS
-KPSE_ICU_FLAGS
-KPSE_HARFBUZZ_FLAGS
-KPSE_GRAPHITE2_FLAGS
+
+# LuaTeX and XeTeX need harfbuzz.
+if test "x$enable_xetex" = xyes \
+   || test "x$enable_luatex" = xyes || test "x$enable_luatex53" = xyes; then
+  KPSE_HARFBUZZ_FLAGS
+fi # end xetex/luatex for harfbuzz
+
+# XeTeX, but not LuaTeX, needs icu and graphite.
+if test "x$enable_xetex" = xyes; then
+  KPSE_ICU_FLAGS
+  KPSE_GRAPHITE2_FLAGS
+fi # end xetex for icu/graphite
 
 # Check size of off_t (using <kpathsea/config.h>)
 KPSE_ADD_FLAGS([kpathsea])
@@ -295,7 +305,6 @@ fi
 AC_SUBST([KPATHSEA_PATHS_H])
 
 dnl Check for Object::initCmd(const char *) etc
-KPSE_ADD_FLAGS([poppler])
 AC_LANG_PUSH([C++])
 AC_MSG_CHECKING([for Object::[initCmd(const char*)] etc])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <Object.h>]],
@@ -319,7 +328,7 @@ AC_CONFIG_HEADERS([w2c/c-auto.h:c-auto.in],
 
 AH_TOP([/* w2c/c-auto.h: defines for web2c, as determined by configure.
 
-   Copyright 1994-97, 2008-2012 Karl Berry.
+   Copyright 1994-97, 2008-2021 Karl Berry.
    Copyright 1997-99, 2002, 2005 Olaf Weber.
 
    This program is free software: you can redistribute it and/or modify
@@ -343,7 +352,7 @@ AH_TOP([/* w2c/c-auto.h: defines for web2c, as determined by configure.
 #define WEB2CVERSION "REPLACE-WITH-WEB2CVERSION"])
 AH_BOTTOM([#endif /* !WEB2C_C_AUTO_H */])
 
-dnl Additional config header for luaTeX
+dnl Additional config header for LuaTeX
 AC_CONFIG_HEADERS([ff-config.h:luatexdir/luafontloader/ff-config.in])
 
 # For cross-compilation.  Put at the end so there is a fair chance

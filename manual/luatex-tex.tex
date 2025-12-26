@@ -1,4 +1,4 @@
-% language=uk
+% engine=luatex language=uk
 
 % lua.newtable
 
@@ -96,7 +96,7 @@ If you want to unset a \LUA\ name, you can assign \type {nil} to it. The functio
 accessors are:
 
 \startfunctioncall
-lua.setluaname(<string> s,<number> n])
+lua.setluaname(<number> n, <string> s)
 <string> s = lua.getluaname(<number> n)
 \stopfunctioncall
 
@@ -204,6 +204,8 @@ index into \type {status}. The current list is:
 \NC \type{save_size}          \NC save stack size \NC \NR
 \NC \type{shell_escape}       \NC \type {0} means disabled, \type {1} means anything is permitted, and \type {2} is restricted \NC \NR
 \NC \type{safer_option}       \NC \type {1} means safer is enforced \NC \NR
+\NC \type{luadebug_option}    \NC true if the \type{debug} library is enabled at command line \NC\NR
+\NC \type{output_directory}   \NC the value of the output directory \NC \NR
 \NC \type{kpse_used}          \NC \type {1} means that kpse is used \NC \NR
 \NC \type{stack_size}         \NC input stack size \NC \NR
 \NC \type{str_ptr}            \NC number of strings \NC \NR
@@ -249,7 +251,8 @@ readable (like \prm {tracingcommands} and \prm {parindent}).
 
 \topicindex{parameters+internal}
 
-\libindex{set}           \libindex{get}
+\libindex{set}
+\libindex{get}
 
 For all the parameters in this section, it is possible to access them directly
 using their names as index in the \type {tex} table, or by using one of the
@@ -357,6 +360,10 @@ These are read|-|only:
 tex.deadcycles
 tex.insertpenalties
 tex.parshape
+tex.interlinepenalties
+tex.clubpenalties
+tex.widowpenalties
+tex.displaywidowpenalties
 tex.prevgraf
 tex.spacefactor
 \stoptyping
@@ -605,6 +612,8 @@ tex.currentifbranch
 
 \libindex{scantoks}
 
+\libindex{getmark}
+
 \TEX's attributes (\lpr {attribute}), counters (\prm {count}), dimensions (\prm
 {dimen}), skips (\prm {skip}, \prm {muskip}) and token (\prm {toks}) registers
 can be accessed and written to using two times five virtual sub|-|tables of the
@@ -689,13 +698,14 @@ We have similar setters for \type {count}, \type {dimen}, \type {muskip}, and
 \type {toks}. Counters and dimen are represented by numbers, skips and muskips by
 nodes, and toks by strings.
 
-Again the glue variants are not using the \nod {glue-spec} userdata nodes. The
+Again the glue variants are not using the \nod {glue_spec} userdata nodes. The
 \type {setglue} function accepts upto 5 arguments: width, stretch, shrink,
-stretch order and shrink order and the \type {getglue} function reports them,
-unless the second argument is \type {false} in which care only the width is
-returned.
+stretch order and shrink order. If you pass no values or if a value is not a
+number the corresponding property will become a zero. The \type {getglue}
+function reports all properties, unless the second argument is \type {false} in
+which care only the width is returned.
 
-Here is an example usign a threesome:
+Here is an example using a threesome:
 
 \startfunctioncall
 local d = tex.getdimen("foo")
@@ -725,7 +735,7 @@ are special because they have to deal with more properties.
 
 As with the general \type {get} and \type {set} function discussed before, for
 the skip registers \type {getskip} returns a node and \type {getglue} returns
-numbers, while \type {setskip} accepts a node and \type {setglue} expects upto 5
+numbers, while \type {setskip} accepts a node and \type {setglue} expects upto five
 numbers. Again, when you pass \type {false} as second argument to \type {getglue}
 you only get the width returned. The same is true for the \type {mu} variants
 \type {getmuskip}, \type {setmuskip}, \type {getmuskip} and\type {setmuskip}.
@@ -737,8 +747,14 @@ tex.scantoks(0,3,"$e=mc^2$")
 tex.scantoks("global",0,"$\int\limits^1_2$")
 \stopfunctioncall
 
-In the function-based interface, it is possible to define values globally by
+In the function|-|based interface, it is possible to define values globally by
 using the string \type {global} as the first function argument.
+
+There is a dedicated getter for marks: \type {getmark} that takes two arguments.
+The first argument is one of \type {top}, \type {bottom}, \type {first}, \type
+{splitbottom} or \type {splitfirst}, and the second argument is a marks class
+number. When no arguments are given the current maximum number of classes is
+returned.
 
 \stopsubsection
 
@@ -1104,11 +1120,12 @@ The known fields are:
 \starttabulate[|l|l|l|p|]
 \DB key                \BC type    \BC modes \BC explanation \NC \NR
 \TB
-\NC \type{mode}        \NC number  \NC all   \NC a string:
-                                                 \type {none} (this happens during \prm {write}),
-                                                 \type {vmode}, \type {hmode}, \type {displaymath},
-                                                 \type {innervmode}, \type {innerhmode}, \type {inlinemath};
-                                                 these fields cannot be set \NC \NR
+\NC \type{mode}        \NC number  \NC all   \NC the meaning of these numbers depends on the engine
+                                                 and sometimes even the version; you can use \typ
+                                                 {tex.getmodevalues()} to get the mapping: positive
+                                                 values signal vertical, horizontal and math mode,
+                                                 while negative values indicate inner and inline
+                                                 variants \NC \NR
 \NC \type{modeline}    \NC number  \NC all   \NC source input line where this mode was entered in,
                                                  negative inside the output routine \NC \NR
 \NC \type{head}        \NC node    \NC all   \NC the head of the current list \NC \NR
@@ -1364,8 +1381,8 @@ tex.print(tex.romannumeral(123))
 The first one returns the name only, the second one reports the size too.
 
 \startfunctioncall
-tex.print(tex.fontname(tex.fontname))
-tex.print(tex.fontname(tex.fontidentidier))
+tex.print(tex.fontidentifier(1))
+tex.print(tex.fontname(1))
 \stopfunctioncall
 
 \subsubsection{\type {sp}}
@@ -1397,28 +1414,28 @@ following:
 \stopitem
 \stopitemize
 
-\subsubsection{\type {tex.getlinenumber} and \type {tex.setlinenumber}}
-
-\libindex{getlinenumber}
-\libindex{setlinenumber}
-
-You can mess with the current line number:
-
-\startfunctioncall
-local n = tex.getlinenumber()
-tex.setlinenumber(n+10)
-\stopfunctioncall
-
-which can be shortcut to:
-
-\startfunctioncall
-tex.setlinenumber(10,true)
-\stopfunctioncall
-
-This might be handy when you have a callback that read numbers from a file and
-combines them in one line (in which case an error message probably has to refer
-to the original line). Interference with \TEX's internal handling of numbers is
-of course possible.
+%\subsubsection{\type {tex.getlinenumber} and \type {tex.setlinenumber}}
+%
+%\libindex{getlinenumber}
+%\libindex{setlinenumber}
+%
+%You can mess with the current line number:
+%
+%\startfunctioncall
+%local n = tex.getlinenumber()
+%tex.setlinenumber(n+10)
+%\stopfunctioncall
+%
+%which can be shortcut to:
+%
+%\startfunctioncall
+%tex.setlinenumber(10,true)
+%\stopfunctioncall
+%
+%This might be handy when you have a callback that read numbers from a file and
+%combines them in one line (in which case an error message probably has to refer
+%to the original line). Interference with \TEX's internal handling of numbers is
+%of course possible.
 
 \subsubsection{\type {error} and \type {show_context}}
 
@@ -1474,6 +1491,23 @@ tex.runtoks(<lua function>)
 
 When the \prm {tracingnesting} parameter is set to a value larger than~2 some
 information is reported about the state of the local loop.
+
+This function has two optional arguments in case a token register is passed:
+
+\startfunctioncall
+tex.runtoks(<token register>,force,grouped)
+\stopfunctioncall
+
+Inside for instance an \type {\edef} the \type {runtoks} function behaves (at
+least tries to) like it were an \type {\the}. This prevents unwanted side
+effects: normally in such an definition tokens remain tokens and (for instance)
+characters don't become nodes. With the second argument you can force the local
+main loop, no matter what. The third argument adds a level of grouping.
+
+You can quit the local loop with \type {\endlocalcontrol} or from the \LUA\ end
+with \type {tex.quittoks}. In that case you end one level up! Of course in the
+end that can mean that you arrive at the main level in which case an extra end
+will trigger a redundancy warning (not an abort!).
 
 \subsubsection{\type {forcehmode}}
 
@@ -1596,7 +1630,10 @@ primitives \quote{\tex{ }}, \quote{\tex {/}} and \quote{\type {-}} are defined.
 
 \startluacode
 function document.showprimitives(tag)
-    for k, v in table.sortedpairs(tex.extraprimitives(tag)) do
+    local t = tex.extraprimitives(tag)
+    table.sort(t)
+    for i=1,#t do
+        local v = t[i]
         if v ~= ' ' and v ~= "/" and v ~= "-" then
             context.type(v)
             context.space()
@@ -1894,28 +1931,44 @@ the executable after loading and executing the startup file.
 \NC \type{max_print_line}   \NC number   \NC     79  \NC cf.\ web2c docs \NC \NR
 \NC \type{hash_extra}       \NC number   \NC      0  \NC cf.\ web2c docs \NC \NR
 \NC \type{pk_dpi}           \NC number   \NC     72  \NC cf.\ web2c docs \NC \NR
-\NC \type{trace_file_names} \NC boolean  \NC true
+\NC \type{trace_file_names} \NC boolean  \NC true 
 \NC
     \type {false} disables \TEX's normal file open|-|close feedback (the
     assumption is that callbacks will take care of that)
 \NC \NR
-\NC \type{file_line_error}  \NC boolean  \NC false
+\NC \type{trace_extra_newline} \NC boolean  \NC false \NC adds an extra newline in \type{\tracingmacros} \NC\NR
+\NC \type{file_line_error} \NC boolean \NC false
 \NC
     do \type {file:line} style error messages
 \NC \NR
-\NC \type{halt_on_error}    \NC boolean  \NC false
+\NC \type{halt_on_error} \NC boolean \NC false
 \NC
     abort run on the first encountered error
 \NC \NR
-\NC \type{formatname}       \NC string   \NC
+\NC \type{formatname} \NC string \NC
 \NC
     if no format name was given on the command line, this key will be tested first
     instead of simply quitting
 \NC \NR
-\NC \type{jobname}        \NC string   \NC
+\NC \type{jobname} \NC string \NC
 \NC
     if no input file name was given on the command line, this key will be tested
     first instead of simply giving up
+\NC \NR
+\NC \type{level_chr} \NC number \NC
+\NC
+    character to put in front of traced macros (see next value)
+\NC \NR
+\NC \type{level_max} \NC number \NC
+\NC
+    when larger than zero the input nesting level will be shown when \type
+    {\tracingmacros} is set; levels above this value will be clipped with
+    the level shown up front
+\NC \NR
+\NC \type{check_dvi_total_pages} \NC boolean \NC
+\NC 
+     in \DVI\ output mode, if true abort run when the number of pages exceeds 65535. 
+     This is the default behaviour. If false, the run goes on as is in \TEX.
 \NC \NR
 \LL
 \stoptabulate
@@ -1923,6 +1976,37 @@ the executable after loading and executing the startup file.
 Note: the numeric values that match web2c parameters are only used if \type
 {kpse_init} is explicitly set to \type {false}. In all other cases, the normal
 values from \type {texmf.cnf} are used.
+
+You can kick in your own nesting level visualizer, for instance:
+
+\starttyping
+callback.register("input_level_string",function(n)
+ if tex.tracingmacros > 0 and tex.count.tracingstacklevels > 0 then
+    if tex.tracingmacros > 1 then
+        return "! " .. string.rep(">",n) .. " "
+    end
+  end
+  return ""
+end)
+\stoptyping
+
+Or, in sync with other engines (not checked):
+
+\newcount\tracingstacklevels
+
+\starttyping
+\directlua {
+  callback.register("input_level_string", function(n)
+    if tex.tracingmacros > 0 then
+      local l = tex.count.tracingstacklevels
+      if l > 0 then
+        return string.rep("~",l) .. string.rep(".",n-l)
+      end
+    end
+    return ""
+  end)
+}
+\stoptyping
 
 \stopsection
 
@@ -2040,8 +2124,7 @@ most intriguing.
 \NC \type{scan_toks}      \NC definer, expand    \NC returns a table of tokens tokens \NC \NR
 \NC \type{scan_code}      \NC bitset             \NC returns a character if its category is in the given bitset (representing catcodes) \NC \NR
 \NC \type{scan_string}    \NC                    \NC returns a string given between \type {{}}, as \type {\macro} or as sequence of characters with catcode 11 or 12 \NC \NR
-\NC \type{scan_argument}  \NC                    \NC this one is simular to \type {scanstring} but also accepts a \type {\cs}
-                                                     (which then get expanded) \NC \NR
+\NC \type{scan_argument}  \NC boolean            \NC this one is simular to \type {scanstring} but also accepts a \type {\cs} \NC \NR
 \NC \type{scan_word}      \NC                    \NC returns a sequence of characters with catcode 11 or 12 as string \NC \NR
 \NC \type{scan_csname}    \NC                    \NC returns \type {foo} after scanning \type {\foo} \NC \NR
 \NC \type{scan_list}      \NC                    \NC picks up a box specification and returns a \type {[h|v]list} node \NC \NR
@@ -2056,6 +2139,11 @@ we expect math units. When scanning tokens we can indicate that we are defining 
 macro, in which case the result will also provide information about what
 arguments are expected and in the result this is separated from the meaning by a
 separator token. The \type {expand} flag determines if the list will be expanded.
+
+The \type {scan_argument} function expands the given argument. When a braced
+argument is scanned, expansion can be prohibited by passing \type {false}
+(default is \type {true}). In case of a control sequence passing \type {false}
+will result in a one|-|level expansion (the meaning of the macro).
 
 The string scanner scans for something between curly braces and expands on the
 way, or when it sees a control sequence it will return its meaning. Otherwise it
@@ -2268,6 +2356,9 @@ accepts a string and returns a boolean:
 \starttyping
 local okay = token.is_defined("foo")
 \stoptyping
+
+When a second argument to \type {is_defined} is \type {true} the check is for an
+undefined control sequence (only), otherwise any undefined command gives true.
 
 The largest character possible is returned by \type {biggest_char}, just in case you
 need to know that boundary condition.
@@ -2627,6 +2718,9 @@ will search the disk as well as the \type {ls-R} databases.
 This is used for the size argument of the formats \type {pk}, \type {gf}, and
 \type {bitmap font}. \stopitemize
 
+If \type {--output-directory} is specified and the value is a relative pathname,
+the file is searched first here and if it fails it will be searched in the standard tree.
+
 \stopsubsection
 
 \startsubsection[title={\type {lookup}}]
@@ -2660,6 +2754,10 @@ The options match commandline arguments from \type {kpsewhich}:
                                       ends with the given string(s) \NC \NR
 \LL
 \stoptabulate
+
+If \type {--output-directory} is specified and the value is a relative pathname,
+the file is searched first here and then in the standard tree.
+
 
 \stopsubsection
 
@@ -2731,6 +2829,64 @@ Like kpsewhich's \type {-expand-braces}:
 
 \stopsubsection
 
+\startsubsection[title={\type {in_name_ok}}]
+
+\libindex{in_name_ok}
+
+Returns true if \type{fname} is acceptable to open for reading, otherwise false and 
+write a message to standard error. 
+
+\startfunctioncall
+<boolean> r = kpse.in_name_ok(<string> fname)
+\stopfunctioncall
+
+\startsubsection[title={\type {in_name_ok_silent_extended}}]
+
+\libindex{in_name_ok_silent_extended}
+
+\startfunctioncall
+<boolean> r = kpse.in_name_ok_silent_extended(<string> fname)
+\stopfunctioncall
+
+Returns true if \type{fname} is acceptable to open for reading;
+the values of \type{TEXMFVAR} and \type{TEXMFSYSVAR} are also
+checked for absolute filenames. Returns false otherwise but it doesn't write
+a message to standard error.
+
+\stopsubsection
+
+
+\startsubsection[title={\type {out_name_ok}}]
+
+\libindex{out_name_ok}
+
+Returns true if \type{fname} is acceptable to open for writing. 
+
+\startfunctioncall
+<boolean> r = kpse.out_name_ok(<string> fname)
+\stopfunctioncall
+
+\stopsubsection
+
+
+\startsubsection[title={\type {out_name_ok_silent_extended}}]
+
+\libindex{out_name_ok_silent_extended}
+
+\startfunctioncall
+<boolean> r = kpse.out_name_ok_silent_extended(<string> fname)
+\stopfunctioncall
+
+Returns true if \type{fname} is acceptable to open for writing;
+the values of \type{TEXMFVAR} and \type{TEXMFSYSVAR} are also
+checked for absolute filenames. Returns false otherwise but it doesn't write
+a message to standard error.
+
+\stopsubsection
+
+
+
+
 \startsubsection[title={\type {show_path}}]
 
 \libindex{show_path}
@@ -2766,6 +2922,21 @@ Returns the kpathsea version string.
 \stopfunctioncall
 
 \stopsubsection
+
+\startsubsection[title={\type {check_permission}}]
+
+\libindex{check\_permission}
+
+Checks if the \type{filename} can be executed or not.
+Returns \type{1}, \type{filename} or a safe cmd alternative  if it can be executed,
+otherwise  returns \type{0} and an error message. 
+
+\startfunctioncall
+<string> res, cmd = kpse.check_permission(filename)
+\stopfunctioncall
+
+\stopsubsection
+
 
 \stopsection
 

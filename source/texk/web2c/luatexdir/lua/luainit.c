@@ -2,7 +2,7 @@
 
 luainit.w
 
-Copyright 2006-2019 Taco Hoekwater <taco@@luatex.org>
+Copyright 2006-2021 Taco Hoekwater <taco@@luatex.org>
 
 This file is part of LuaTeX.
 
@@ -24,10 +24,13 @@ with LuaTeX; if not, see <http://www.gnu.org/licenses/>.
 #include "ptexlib.h"
 
 #include <kpathsea/c-stat.h>
+#include <kpathsea/cnf.h>
 
 #include "lua/luatex-api.h"
 
 #include <locale.h>
+
+#include "luatex_svnversion.h"
 
 extern int load_luatex_core_lua (lua_State * L);
 
@@ -66,9 +69,11 @@ const_string LUATEX_IHELP[] = {
     "",
     "  The following regular options are understood: ",
     "",
+    "   --cnf-line =STRING            parse STRING as a configuration file line",
     "   --credits                     display credits and exit",
     "   --debug-format                enable format debugging",
     "   --draftmode                   switch on draft mode (generates no output PDF)",
+    "   --[no-]check-dvi-total-pages  exit when DVI exceeds 65535 pages (default: check)",
     "   --[no-]file-line-error        disable/enable file:line:error style messages",
     "   --[no-]file-line-error-style  aliases of --[no-]file-line-error",
     "   --fmt=FORMAT                  load the format file FORMAT",
@@ -79,8 +84,11 @@ const_string LUATEX_IHELP[] = {
     "   --jobname=STRING              set the job name to STRING",
     "   --kpathsea-debug=NUMBER       set path searching debugging flags according to the bits of NUMBER",
     "   --lua=FILE                    load and execute a lua initialization script",
+    "   --luadebug                    enable lua debug library",
     "   --[no-]mktex=FMT              disable/enable mktexFMT generation (FMT=tex/tfm)",
     "   --nosocket                    disable the lua socket library",
+    "   --no-socket                   disable the lua socket library",
+    "   --socket                      enable the lua socket library",
     "   --output-comment=STRING       use STRING for DVI file comment instead of date (no effect for PDF)",
     "   --output-directory=DIR        use existing DIR as the directory to write files in",
     "   --output-format=FORMAT        use FORMAT for job output; FORMAT is 'dvi' or 'pdf'",
@@ -104,6 +112,7 @@ const_string LUATEX_IHELP[] = {
 #endif
     "",
     "See the reference manual for more information about the startup process.",
+    "LuaTeX package page: https://ctan.org/pkg/luatex",
     NULL
 };
 
@@ -183,6 +192,16 @@ static void prepare_cmdline(lua_State * L, char **av, int ac, int zero_offset)
 
 int kpse_init = -1;
 
+/*tex
+
+Array and count of values given with --cnf-line.
+
+*/
+static string *user_cnf_lines = NULL;
+static unsigned user_cnf_nlines = 0;
+
+
+
 string input_name = NULL;
 
 static string user_progname = NULL;
@@ -198,8 +217,30 @@ char *jithash_hashname = NULL;
 #endif
 
 int safer_option = 0;
-int nosocket_option = 0;
+int nosocket_option = 1; 
+int nosocket_cli_option = 0; 
+int yessocket_cli_option = 0; 
+int socket_bitmask = 0; 
 int utc_option = 0;
+int luadebug_option = 0;
+
+/*tex We use a bitmask for the socket library: |0000| and |1xxx| implies |--nosocket|,
+  otherwise the socket library is enabled. Default value is |0000|, i.e. |--nosocket|.
+*/
+#define UPDATE_SOCKET_STATUS() do {                                                              \
+ socket_bitmask = 0;                                                                             \
+ socket_bitmask = safer_option==1?                             (8+socket_bitmask):socket_bitmask;\
+ socket_bitmask = nosocket_cli_option==1?                      (4+socket_bitmask):socket_bitmask;\
+ socket_bitmask = (shellenabledp == 1 && restrictedshell == 0)?(2+socket_bitmask):socket_bitmask;\
+ socket_bitmask = yessocket_cli_option==1?                     (1+socket_bitmask):socket_bitmask;\
+ if( socket_bitmask==0) {                                                                        \
+   nosocket_option = 1;                                                                          \
+ } else if ( socket_bitmask<4) {                                                                 \
+   nosocket_option = 0;                                                                          \
+ } else {                                                                                        \
+   nosocket_option = 1;                                                                          \
+ }                                                                                               \
+} while (0)
 
 /*tex
 
@@ -227,13 +268,17 @@ static struct option long_options[] = {
     {"jithash", 1, 0, 0},
 #endif
     {"safer", 0, &safer_option, 1},
+    {"luadebug", 0, &luadebug_option, 1},
     {"utc", 0, &utc_option, 1},
-    {"nosocket", 0, &nosocket_option, 1},
+    {"nosocket", 0, &nosocket_cli_option, 1},
+    {"no-socket", 0, &nosocket_cli_option, 1},
+    {"socket", 0, &yessocket_cli_option, 1},
     {"help", 0, 0, 0},
     {"ini", 0, &ini_version, 1},
     {"interaction", 1, 0, 0},
     {"halt-on-error", 0, &haltonerrorp, 1},
     {"kpathsea-debug", 1, 0, 0},
+    {"cnf-line", 1,0 ,0},
     {"progname", 1, 0, 0},
     {"version", 0, 0, 0},
     {"credits", 0, 0, 0},
@@ -249,14 +294,16 @@ static struct option long_options[] = {
     {"disable-write18", 0, &shellenabledp, -1},
     {"shell-restricted", 0, 0, 0},
     {"debug-format", 0, &debug_format_file, 1},
+    {"check-dvi-total-pages", 0, &check_dvi_total_pages, 1},
+    {"no-check-dvi-total-pages", 0, &check_dvi_total_pages, 0},
     {"file-line-error-style", 0, &filelineerrorstylep, 1},
     {"no-file-line-error-style", 0, &filelineerrorstylep, -1},
     /*tex Shorter option names for the above. */
     {"file-line-error", 0, &filelineerrorstylep, 1},
     {"no-file-line-error", 0, &filelineerrorstylep, -1},
     {"jobname", 1, 0, 0},
-    {"parse-first-line", 0, &parsefirstlinep, 1},
-    {"no-parse-first-line", 0, &parsefirstlinep, -1},
+    /*{"parse-first-line", 0, &parsefirstlinep, 1},*/ /* ignored, left as reference*/
+    /*{"no-parse-first-line", 0, &parsefirstlinep, -1},*/
     {"translate-file", 1, 0, 0},
     {"default-translate-file", 1, 0, 0},
     {"8bit", 0, 0, 0},
@@ -310,10 +357,12 @@ static void parse_options(int ac, char **av)
     opterr = 0;
 #ifdef LuajitTeX
     if ((strstr(argv[0], "luajittexlua") != NULL) ||
-        (strstr(argv[0], "texluajit") != NULL)) {
+        (strstr(argv[0], "texluajit") != NULL) ||
+        (strstr(argv[0], "texluahbjit") != NULL) ) {
 #else
     if ((strstr(argv[0], "luatexlua") != NULL) ||
-        (strstr(argv[0], "texlua") != NULL)) {
+        (strstr(argv[0], "texlua") != NULL) ||
+        (strstr(argv[0], "texluahb") != NULL)) {
 #endif
         lua_only = 1;
         luainit = 1;
@@ -359,6 +408,16 @@ static void parse_options(int ac, char **av)
             show_luahashchars = 1;
         } else if (ARGUMENT_IS("kpathsea-debug")) {
             kpathsea_debug |= atoi(optarg);
+        } else if (ARGUMENT_IS ("cnf-line")) {
+	  if (user_cnf_lines == NULL) {
+	    user_cnf_nlines = 1;
+	    user_cnf_lines = xmalloc (sizeof (const_string));
+	  } else {
+	    user_cnf_nlines++;
+	    user_cnf_lines = xrealloc (user_cnf_lines,
+				       user_cnf_nlines * sizeof (const_string));
+	  }
+	  user_cnf_lines[user_cnf_nlines-1] = xstrdup (optarg);
         } else if (ARGUMENT_IS("progname")) {
             user_progname = optarg;
         } else if (ARGUMENT_IS("jobname")) {
@@ -390,6 +449,10 @@ static void parse_options(int ac, char **av)
                 WARNING1("Ignoring unknown value `%s' for --output-format",optarg);
                 output_mode_option = 0;
             }
+	} else if (ARGUMENT_IS("check-dvi-total-pages")) {
+            check_dvi_total_pages = 1;
+	} else if (ARGUMENT_IS("no-check-dvi-total-pages")) {
+            check_dvi_total_pages = 0;
         } else if (ARGUMENT_IS("draftmode")) {
             draft_mode_option = 1;
             draft_mode_value = 1;
@@ -418,14 +481,17 @@ static void parse_options(int ac, char **av)
         } else if (ARGUMENT_IS("help")) {
             usagehelp(LUATEX_IHELP, BUG_ADDRESS);
         } else if (ARGUMENT_IS("version")) {
+            #define STR(tok) STR2(tok)
+            #define STR2(tok) #tok
             print_version_banner();
+            puts("\nDevelopment id: " STR(luatex_svn_revision));
             /* *INDENT-OFF* */
-            puts("\n\nExecute  '" my_name " --credits'  for credits and version details.\n\n"
+            puts("\nExecute  '" my_name " --credits'  for credits and version details.\n\n"
                  "There is NO warranty. Redistribution of this software is covered by\n"
                  "the terms of the GNU General Public License, version 2 or (at your option)\n"
                  "any later version. For more information about these matters, see the file\n"
                  "named COPYING and the LuaTeX source.\n\n"
-                 "LuaTeX is Copyright 2019 Taco Hoekwater and the LuaTeX Team.\n");
+                 "LuaTeX is Copyright 2022 Taco Hoekwater and the LuaTeX Team.\n");
             /* *INDENT-ON* */
             uexit(0);
         } else if (ARGUMENT_IS("credits")) {
@@ -494,14 +560,11 @@ static void parse_options(int ac, char **av)
                 input_name = xstrdup(sargv[sargc-1]);
             sargv[sargc-1] = normalize_quotes(input_name, "argument");
         }
-        if (safer_option)      /* --safer implies --nosocket */
-            nosocket_option = 1;
+	UPDATE_SOCKET_STATUS();
         return;
 #endif
     }
-    /*tex |--safer| implies |--nosocket| */
-    if (safer_option)
-        nosocket_option = 1;
+    UPDATE_SOCKET_STATUS();
     /*tex Finalize the input filename. */
     if (input_name != NULL) {
         argv[optind] = normalize_quotes(input_name, "argument");
@@ -654,6 +717,7 @@ static int luatex_kpse_lua_find(lua_State * L)
         /*tex library not found in this path */
         return 1;
     }
+    recorder_record_input(filename);
     if (luaL_loadfile(L, filename) != 0) {
         luaL_error(L, "error loading module %s from file %s:\n\t%s",
             lua_tostring(L, 1), filename, lua_tostring(L, -1));
@@ -691,6 +755,7 @@ static int luatex_kpse_clua_find(lua_State * L)
             /*tex library not found in this path */
             return 1;
         }
+        recorder_record_input(filename);
         extensionless = strdup(filename);
         if (!extensionless) {
             /*tex allocation failure */
@@ -927,10 +992,13 @@ void lua_initialize(int ac, char **av)
     mk_suffixlist();
 #endif
     /*tex Must be initialized before options are parsed and might get adapted by config table.  */
+    check_dvi_total_pages = true;
     interactionoption = 4;
     filelineerrorstylep = false;
     haltonerrorp = false;
+    haltingonerrorp = false;
     tracefilenames = 1;
+    traceextranewline = 0;
     dump_name = NULL;
     /*tex
         In the next option 0 means ``disable Synchronize TeXnology''. The
@@ -948,6 +1016,8 @@ void lua_initialize(int ac, char **av)
         shellenabledp = true;
         restrictedshell = false;
         safer_option = 0;
+	nosocket_option = 0;
+	luadebug_option = true;
     }
     /*tex
         Get the current locale (it should be |C|) and save |LC_CTYPE|, |LC_COLLATE|
@@ -964,7 +1034,7 @@ void lua_initialize(int ac, char **av)
         */
         env_locale = setlocale (LC_ALL, "");
         if (!env_locale && !lua_only) {
-            fprintf(stderr,"Unable to read environment locale: exit now.\n");
+            fprintf(stderr,"Unable to read locale data: please check the 'locale' settings of your environment for consistency. Exiting now.\n");
             exit(1);
         }
         tmp = setlocale (LC_CTYPE, NULL);
@@ -985,7 +1055,7 @@ void lua_initialize(int ac, char **av)
         */
         env_locale = setlocale (LC_ALL, old_locale);
         if (!env_locale) {
-          fprintf(stderr,"Unable to restore original locale %s: exit now.\n",old_locale);
+          fprintf(stderr,"Unable to restore original locale %s: exiting now.\n",old_locale);
           exit(1);
         }
         xfree(old_locale);
@@ -998,6 +1068,15 @@ void lua_initialize(int ac, char **av)
     putenv(LC_NUMERIC_C);
     /*tex this is sometimes needed */
     putenv(engine_luatex);
+    /*tex add user's cnf values*/
+    if (user_cnf_lines) {
+     unsigned i;
+     for (i = 0; i < user_cnf_nlines; i++) {
+      /* debug printf ("ucnf%d: %s\n", i, user_cnf_lines[i]); */
+      kpathsea_cnf_line_env_progname (kpse_def, user_cnf_lines[i]);
+      free (user_cnf_lines[i]);
+     }
+    }
     luainterpreter();
     /*tex init internalized strings */
     set_init_keys;
@@ -1084,8 +1163,12 @@ void lua_initialize(int ac, char **av)
             init_kpse();
             kpse_init = 1;
         }
+        /*tex |check_dvi_total_pages| (boolean) */
+        get_lua_boolean("texconfig", "check_dvi_total_pages", &check_dvi_total_pages);
         /*tex |prohibit_file_trace| (boolean) */
         get_lua_boolean("texconfig", "trace_file_names", &tracefilenames);
+        /*tex |trace_extra_newline| (boolean) */
+        get_lua_boolean("texconfig", "trace_extra_newline", &traceextranewline);
         /*tex |file_line_error| */
         get_lua_boolean("texconfig", "file_line_error", &filelineerrorstylep);
         /*tex |halt_on_error| */
@@ -1107,6 +1190,7 @@ void lua_initialize(int ac, char **av)
             }
             free(v1);
         }
+	UPDATE_SOCKET_STATUS();
         /*tex If shell escapes are restricted, get allowed cmds from cnf.  */
         if (shellenabledp && restrictedshell == 1) {
             v1 = NULL;
@@ -1147,6 +1231,15 @@ void lua_initialize(int ac, char **av)
         init_kpse();
         kpse_init = 1;
         fix_dumpname();
+    }
+    if (output_directory) {
+      xputenv ("TEXMF_OUTPUT_DIRECTORY", output_directory);
+    } else if (getenv ("TEXMF_OUTPUT_DIRECTORY")) {
+      output_directory = getenv ("TEXMF_OUTPUT_DIRECTORY");
+    }
+    /* the lua debug library is enabled if shell escape permits everything */
+    if (shellenabledp && restrictedshell != 1) {
+      luadebug_option = 1 ;      
     }
     /*tex Here we load luatex-core.lua which takes care of some protection on demand. */
     if (load_luatex_core_lua(Luas)) {

@@ -319,8 +319,8 @@ static int set_luaname(lua_State * L)
 {
     int k;
     const char *s;
-    if (lua_gettop(L) == 3) {
-        k = (int) luaL_checkinteger(L, 2);
+    if (lua_gettop(L) == 2) {
+        k = (int) luaL_checkinteger(L, 1);
         if (k > 65535 || k < 0) {
             /* error */
         } else {
@@ -328,8 +328,8 @@ static int set_luaname(lua_State * L)
                 free(luanames[k]);
                 luanames[k] = NULL;
             }
-            if (lua_type(L,3) == LUA_TSTRING) {
-                s = lua_tostring(L, 3);
+            if (lua_type(L, 2) == LUA_TSTRING) {
+                s = lua_tostring(L, 2);
                 if (s != NULL)
                     luanames[k] = xstrdup(s);
             }
@@ -340,7 +340,7 @@ static int set_luaname(lua_State * L)
 
 static int get_luaname(lua_State * L)
 {
-    int k = (int) luaL_checkinteger(L, 2);
+    int k = (int) luaL_checkinteger(L, 1);
     if (k > 65535 || k < 0) {
         /* error */
         lua_pushnil(L);
@@ -379,16 +379,29 @@ static int get_call_level(lua_State * L) /* hh */
     return 1;
 }
 
+static int get_code_page(lua_State *L)
+{
+# ifdef _WIN32
+    lua_pushinteger(L,(int) GetOEMCP());
+    lua_pushinteger(L,(int) GetACP());
+# else
+    lua_pushboolean(L,0);
+    lua_pushboolean(L,0);
+# endif
+    return 2;
+}
+
 static const struct luaL_Reg lualib[] = {
     /* *INDENT-OFF* */
-    {"getluaname",  get_luaname},
-    {"setluaname",  set_luaname},
+    {"getluaname", get_luaname},
+    {"setluaname", set_luaname},
     {"getbytecode", get_bytecode},
     {"setbytecode", set_bytecode},
-    {"newtable",    new_table},
+    {"newtable", new_table},
     {"get_functions_table",lua_functions_get_table},
-    {"getstacktop",get_stack_top},
+    {"getstacktop", get_stack_top},
     {"getcalllevel", get_call_level},
+    {"getcodepage", get_code_page },
     /* *INDENT-ON* */
     {NULL, NULL}                /* sentinel */
 };

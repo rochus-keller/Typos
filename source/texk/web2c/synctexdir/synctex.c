@@ -293,7 +293,7 @@ mem[NODE+TYPE##_node_size-synchronization_field_size+1].cint
 #   endif
 
 #if defined(_WIN32)
-#if defined(pdfTeX) || defined(upTeX) || defined(eupTeX) || defined(XeTeX)
+#if defined(pdfTeX) || defined(upTeX) || defined(eupTeX) || defined(XeTeX) || defined(LuaTeX) || defined(LuajitTeX)
 #define W32UPTEXSYNCTEX 1
 #include <wchar.h>
 static char *chgto_oem(char *src);
@@ -301,13 +301,34 @@ static int fsyscp_remove(char *name);
 #endif /* pdfTeX ... */
 #endif /* _WIN32 */
 
+#if defined(pTeX) || defined(upTeX) || defined(epTeX) || defined(eupTeX)
+#define IS_pTeX 1
+#else
+#define IS_pTeX 0
+#endif
+
 /*  This macro layer was added to take luatex into account as suggested by T. Hoekwater. */
+# if IS_pTeX && !defined(_WIN32)
+char *SYNCTEX_GET_JOB_NAME()
+{
+   char *tmp = gettexstring(jobname);
+   char *tmpa = ptenc_from_internal_enc_string_to_utf8(tmp);
+   if (tmpa) { SYNCTEX_FREE(tmp); return tmpa; } else return tmp;
+}
+char *SYNCTEX_GET_LOG_NAME()
+{
+   char *tmp = gettexstring(texmflogname);
+   char *tmpa = ptenc_from_internal_enc_string_to_utf8(tmp);
+   if (tmpa) { SYNCTEX_FREE(tmp); return tmpa; } else return tmp;
+}
+# else
 #   if !defined(SYNCTEX_GET_JOB_NAME)
 #       define SYNCTEX_GET_JOB_NAME() (gettexstring(jobname))
 #   endif
 #   if !defined(SYNCTEX_GET_LOG_NAME)
 #       define SYNCTEX_GET_LOG_NAME() (gettexstring(texmflogname))
 #   endif
+# endif
 #   if !defined(SYNCTEX_CURRENT_TAG)
 #       define SYNCTEX_CURRENT_TAG (curinput.synctextagfield)
 #   endif
@@ -591,7 +612,8 @@ static int fsyscp_rename(char *s1, char *s2)
 }
 
 #undef fopen
-#define fopen fsyscp_fopen
+extern FILE *f_fsyscp_fopen(const char *filename, const char *mode);
+#define fopen f_fsyscp_fopen
 #define gzopen fsyscp_gzopen
 #define rename fsyscp_rename
 #define remove fsyscp_remove
@@ -947,7 +969,7 @@ void synctexterminate(boolean log_opened)
 #ifdef W32UPTEXSYNCTEX
                         {
                         char *stmp = chgto_oem(tmp);
-                        printf((synctex_ctxt.flags.quoted ? "SyncTeX written on \"%s\"\n" : "\nSyncTeX written on %s.\n"),
+                        printf((synctex_ctxt.flags.quoted ? "\nSyncTeX written on \"%s\"\n" : "\nSyncTeX written on %s.\n"),
                                stmp);
                         free(stmp);
                         }

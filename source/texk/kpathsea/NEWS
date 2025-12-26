@@ -1,5 +1,34 @@
-$Id: NEWS 50836 2019-04-07 01:42:55Z karl $
+$Id: NEWS 70573 2024-03-10 21:37:05Z karl $
 This file records noteworthy changes.  (Public domain.)
+
+6.4.0 (for TeX Live 2024, 10 March 2024)
+* Support an extended check for safe filenames which also allows
+  TEXMF[SYS]VAR, for Lua(La)TeX; new functions and corresponding
+  kpsewhich options.
+* Support a new variable TEXMF_OUTPUT_DIRECTORY (alongside the
+  traditional TEXMFOUTPUT), so that subprograms can have access to an
+  --output-directory setting in an engine invocation.
+
+6.3.5 (for TeX Live 2023, 9 March 2023)
+* Support guessing input file encodings for Unix-ish platforms, as on
+  Windows; enabled for (e)p(la)tex, pbibtex, mendex.
+
+6.3.4 (for TeX Live 2022, 21 March 2022)
+* First return path from kpsewhich -all is now the same as non-all.
+  (Internally, str_list_uniqify retains ordering.)
+
+6.3.3 (for TeX Live 2021, 23 March 2021)
+* The library does not emit warnings for unrecognized filenames,
+  leaving it up to the caller.
+* Double save_size limit to 200,000 for tex4ht, l3regex, etc.
+
+6.3.2 (for TeX Live 2020, 27 March 2020)
+* New option --cnf-line for kpsewhich (and tex and mf) to support
+  arbitrary configuration settings on the command line.
+* Warn about unusual program name qualifiers.
+* The mktex* programs are no longer maintained or present here, but in
+  TeX Live's Master/texmf-dist/scripts/texlive (with copies in
+  Build/source/texk/texlive/linked_scripts as usual).
 
 6.3.1 (for TeX Live 2019, 7 April 2019)
 * kpsewhich --var-value does brace expansion as well as variable and

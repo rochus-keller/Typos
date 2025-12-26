@@ -1,20 +1,25 @@
+## $Id: eptex.am 70222 2024-02-28 04:19:31Z kakuto $
 ## texk/web2c/eptexdir/am/eptex.am: Makefile fragment for e-pTeX.
 ##
-## Copyright (C) 2011-2015 Peter Breitenlohner <tex-live@tug.org>
+## Copyright 2015-2024 Karl Berry <tex-live@tug.org>
+## Copyright 2011-2015 Peter Breitenlohner <tex-live@tug.org>
 ## You may freely use, modify and/or distribute this file.
 
 ## e-pTeX
 ##
 if EPTEX
 bin_PROGRAMS += eptex
+if !PTEX
+bin_links += eptex$(EXEEXT):ptex
+endif !PTEX
 endif EPTEX
 EXTRA_PROGRAMS += eptex
 
-eptex_CPPFLAGS = $(PTEXENC_INCLUDES) $(AM_CPPFLAGS) -I$(srcdir)/libmd5
+eptex_CPPFLAGS = $(PTEXENC_INCLUDES) $(AM_CPPFLAGS) -I$(srcdir)/libmd5 $(ZLIB_INCLUDES)
 
 # With --enable-ipc, e-pTeX may need to link with -lsocket.
-eptex_LDADD = libkanji.a $(pproglib) $(PTEXENC_LIBS) $(LDADD) $(ipc_socketlibs) libmd5.a
-eptex_DEPENDENCIES = libkanji.a $(pproglib) $(PTEXENC_DEPEND) $(default_dependencies) libmd5.a
+eptex_LDADD = libkanji.a $(pproglib) $(PTEXENC_LIBS) $(LDADD) $(ipc_socketlibs) libmd5.a $(ZLIB_LIBS)
+eptex_DEPENDENCIES = libkanji.a $(pproglib) $(PTEXENC_DEPEND) $(default_dependencies) libmd5.a $(ZLIB_DEPEND)
 
 # e-pTeX C sources
 eptex_c_h = eptexini.c eptex0.c eptexcoerce.h eptexd.h
@@ -35,9 +40,9 @@ eptex-pool.c: eptex.pool eptexd.h $(makecpool_stamp)
 
 # Tangling e-pTeX
 eptex.p eptex.pool: eptex-tangle
-	@$(texmf_tangle) eptex eptex
+	$(texmf_tangle) eptex eptex
 eptex-tangle: tangle$(EXEEXT) eptex.web eptex.ch tangle-sh
-	@$(texmf_tangle) eptex eptex
+	$(texmf_tangle) eptex eptex
 
 # Extract eptex version
 $(srcdir)/eptexdir/eptex_version.h: @MAINTAINER_MODE_TRUE@ eptexdir/eptex.ech
@@ -52,6 +57,11 @@ eptex_web_srcs = \
 	etexdir/etex.ch \
 	etexdir/tex.ch0 \
 	tex.ch \
+	tracingstacklevels.ch \
+	partoken.ch \
+	locnull-optimize.ch \
+	showstream.ch \
+	zlib-fmt.ch \
 	etexdir/tex.ech
 
 # Generate eptex.ch
@@ -66,6 +76,9 @@ eptex_ch_srcs = \
 	$(eptex_ch_synctex) \
 	eptexdir/fam256.ch \
 	eptexdir/pdfutils.ch \
+	eptexdir/suppresserrors.ch \
+	eptexdir/unbalanced-braces-eptex.ch \
+	eptexdir/char-warning-eptex.ch \
 	tex-binpool.ch
 
 EXTRA_DIST += $(eptex_web_srcs) $(eptex_ch_srcs) eptexdir/eptex.defines
@@ -81,9 +94,14 @@ EXTRA_DIST += \
 
 # e-pTeX Tests
 #
-eptex_tests = eptexdir/eptriptest.test eptexdir/pdfprimitive.test
+eptex_tests = \
+	eptexdir/eptriptest.test \
+	eptexdir/pdfprimitive.test \
+	eptexdir/epver.test \
+	eptexdir/wcfname.test
 eptexdir/eptriptest.log: eptex$(EXEEXT) dvitype$(EXEEXT) pltotf$(EXEEXT) tftopl$(EXEEXT)
 eptexdir/pdfprimitive.log: eptex$(EXEEXT)
+eptexdir/epver.log eptexdir/wcfname.log: eptex$(EXEEXT)
 
 EXTRA_DIST += $(eptex_tests)
 
@@ -114,3 +132,4 @@ EXTRA_DIST += \
 	eptexdir/tests/pdfprimitive-eptex.log
 DISTCLEANFILES += pdfprimitive-eptex.*
 
+# (end of eptex.am)

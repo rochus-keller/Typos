@@ -1,19 +1,23 @@
+## $Id: Makefile.am 69786 2024-02-10 23:22:21Z karl $
 ## Makefile.am for the TeX Live subdirectory texk/texlive/linked_scripts/
 ##
-## Copyright 2016-2017 Karl Berry <tex-live@tug.org>
+## Copyright 2016-2023 Karl Berry <tex-live@tug.org>
 ## Copyright 2009-2015 Peter Breitenlohner <tex-live@tug.org>
 ## You may freely use, modify and/or distribute this file.
 ##
 ## TeX Live's extra scripts.
 
-## Build lists of scripts.
-##
+# Build lists of scripts.
 scripts-list: Makefile
 	@echo "Create $@"
 	@echo "texmf_scripts='" >$@
 	@for f in $(nobase_dist_texmf_scripts_SCRIPTS); do echo "$$f"; done >>$@
 	@echo "'" >>$@
 	cmp -s $(srcdir)/scripts.lst $@ || cp -f $@ $(srcdir)/scripts.lst
+
+# Hard to remember the target name different from final file name.
+scripts-lst:
+	$(MAKE) scripts-list
 
 if MAINTAINER_MODE
 all-local: scripts-list
@@ -34,23 +38,20 @@ installdirs-local:
 # dangling symlinks produced by `make install'.
 # The instances in texmf* are the masters (except when it is CTAN).
 #
-## We distinguish several classes of scripts according to their
-## type: `shell', `context', or `other'.
+## We distinguish classes of scripts: `shell' and `other'.
 ## 
 ## On Unix systems a symlink from $(bindir) to the script is installed
 ## for all of them; on Windows nothing is installed in $(bindir) for
 ## `shell' scripts whereas for `other' (usually perl, lua, ...) scripts
-## the standard wrapper ../$(WIN_WRAPPER)/runscript.exe is installed or
-## the ConTeXt wrapper ../$(WIN_WRAPPER)/context/mtxrun.exe for
-## `context' scripts.
+## the standard wrapper ../$(WIN_WRAPPER)/runscript.exe is installed.
 ##
-## WIN_WRAPPER is w32_wrapper for 32-bit or w64_wrapper for 64-bit.
+## WIN_WRAPPER is windows_wrapper (64-bit).
 ## 
-## The "shell" list aren't just shell scripts, in either direction.
-## Some /bin/sh scripts are listed as `other' or `context'
-## scripts because they are correctly handled by the wrapper binaries.
-## Conversely, some non-sh scripts are listed as `shell' because they
-## depend on shell scripts or otherwise aren't useful on Windows.
+## The "shell" list aren't just shell scripts, in either direction. Some
+## /bin/sh scripts are listed as `other' scripts because they are
+## correctly handled by the wrapper binaries. Conversely, some non-sh
+## scripts are listed as `shell' because they depend on shell scripts or
+## otherwise aren't useful on Windows.
 ## 
 texmf_scriptsdir = $(datarootdir)/texmf-dist/scripts
 texmf_shell_scripts = \
@@ -59,48 +60,67 @@ texmf_shell_scripts = \
 	checklistings/checklistings.sh \
 	ctanbib/ctanbib \
 	dtxgen/dtxgen \
+	git-latexdiff/git-latexdiff \
 	installfont/installfont-tl \
 	latexfileversion/latexfileversion \
 	listbib/listbib \
 	listings-ext/listings-ext.sh \
 	ltxfileinfo/ltxfileinfo \
-	lua2dox/lua2dox_filter \
+	pagelayout/pagelayoutapi \
+	pagelayout/textestvis \
 	pdfbook2/pdfbook2 \
-	pdfjam/pdf180 \
-	pdfjam/pdf270 \
-	pdfjam/pdf90 \
-	pdfjam/pdfbook \
-	pdfjam/pdfflip \
 	pdfjam/pdfjam \
-	pdfjam/pdfjam-pocketmod \
-	pdfjam/pdfjam-slides3up \
-	pdfjam/pdfjam-slides6up \
-	pdfjam/pdfjoin \
-	pdfjam/pdfnup \
-	pdfjam/pdfpun \
 	pdftex-quiet/pdftex-quiet \
 	pdfxup/pdfxup \
 	pst-pdf/ps4pdf \
 	simpdftex/simpdftex \
+	texaccents/texaccents.sno \
+	texlive-extra/allcm.sh \
+	texlive-extra/allneeded.sh \
+	texlive-extra/dvi2fax.sh \
+	texlive-extra/dvired.sh \
+	texlive-extra/fontinst.sh \
+	texlive-extra/kpsetool.sh \
+	texlive-extra/kpsewhere.sh \
+	texlive-extra/ps2frag.sh \
+	texlive-extra/pslatex.sh \
+	texlive-extra/rubibtex.sh \
+	texlive-extra/rumakeindex.sh \
+	texlive-extra/texconfig-dialog.sh \
+	texlive-extra/texconfig-sys.sh \
+	texlive-extra/texconfig.sh \
+	texlive-extra/texlinks.sh \
+	texlive-extra/xetex-unsafe.sh \
+	texlive-extra/xelatex-unsafe.sh \
 	texosquery/texosquery.sh \
 	texosquery/texosquery-jre5.sh \
 	texosquery/texosquery-jre8.sh \
+	tikztosvg/tikztosvg \
 	typeoutfileinfo/typeoutfileinfo.sh \
 	wordcount/wordcount.sh
+
+# 
 texmf_other_scripts = \
 	a2ping/a2ping.pl \
 	accfonts/mkt1font \
 	accfonts/vpl2ovp \
 	accfonts/vpl2vpl \
+	albatross/albatross.sh \
 	arara/arara.sh \
+	attachfile2/pdfatfi.pl \
 	authorindex/authorindex \
 	bib2gls/bib2gls.sh \
 	bib2gls/convertgls2bib.sh \
+	bibcop/bibcop.pl \
+	bibtexperllibs/ltx2unitxt \
 	bundledoc/arlatex \
 	bundledoc/bundledoc \
 	cachepic/cachepic.tlu \
 	checkcites/checkcites.lua \
+	citation-style-language/citeproc-lua.lua \
+	chklref/chklref.pl \
 	cjk-gs-integrate/cjk-gs-integrate.pl \
+	clojure-pamphlet/pamphletangler \
 	cluttex/cluttex.lua \
 	context/perl/mptopdf.pl \
 	convbkmk/convbkmk.rb \
@@ -115,10 +135,13 @@ texmf_other_scripts = \
 	ctanupload/ctanupload.pl \
 	de-macro/de-macro \
 	diadia/diadia.lua \
+	digestif/digestif.texlua \
 	dosepsbin/dosepsbin.pl \
 	dviasm/dviasm.py \
 	dviinfox/dviinfox.pl \
+	easydtx/edtx2dtx.pl \
 	ebong/ebong.py \
+	eolang/eolang.pl \
 	epspdf/epspdf.tlu \
 	epspdf/epspdftk.tcl \
 	epstopdf/epstopdf.pl \
@@ -132,7 +155,9 @@ texmf_other_scripts = \
 	getmap/getmapdl.lua \
 	glossaries/makeglossaries \
 	glossaries/makeglossaries-lite.lua \
+	hyperxmp/hyperxmp-add-bytecount.pl \
 	jfmutil/jfmutil.pl \
+	ketcindy/ketcindy.pl \
 	kotex-utils/jamo-normalize.pl \
 	kotex-utils/komkindex.pl \
 	kotex-utils/ttf2kotexfont.pl \
@@ -147,10 +172,12 @@ texmf_other_scripts = \
 	latexindent/latexindent.pl \
 	latexmk/latexmk.pl \
 	latexpand/latexpand \
+	light-latex-make/llmk.lua \
 	lilyglyphs/lily-glyph-commands.py \
 	lilyglyphs/lily-image-commands.py \
 	lilyglyphs/lily-rebuild-pdfs.py \
 	ltximg/ltximg.pl \
+	luafindfont/luafindfont.lua \
 	luaotfload/luaotfload-tool.lua \
 	lwarp/lwarpmk.lua \
 	m-tx/m-tx.lua \
@@ -158,6 +185,10 @@ texmf_other_scripts = \
 	make4ht/make4ht \
 	match_parens/match_parens \
 	mathspic/mathspic.pl \
+	memoize/memoize-clean.pl \
+	memoize/memoize-clean.py \
+	memoize/memoize-extract.pl \
+	memoize/memoize-extract.py \
 	mf2pt1/mf2pt1.pl \
 	mkgrkindex/mkgrkindex \
 	mkjobtexmf/mkjobtexmf.pl \
@@ -165,7 +196,7 @@ texmf_other_scripts = \
 	multibibliography/multibibliography.pl \
 	musixtex/musixflx.lua \
 	musixtex/musixtex.lua \
-	oberdiek/pdfatfi.pl \
+	optexcount/optexcount \
 	pax/pdfannotextractor.pl \
 	pdfcrop/pdfcrop.pl \
 	pdflatexpicscale/pdflatexpicscale.pl \
@@ -188,27 +219,39 @@ texmf_other_scripts = \
 	pythontex/depythontex.py \
 	pythontex/pythontex.py \
 	rubik/rubikrotation.pl \
+	runtexshebang/runtexshebang.lua \
+	spix/spix.py \
 	splitindex/splitindex.pl \
 	srcredact/srcredact.pl \
 	sty2dtx/sty2dtx.pl \
 	svn-multi/svn-multi.pl \
 	tex4ebook/tex4ebook \
+	texblend/texblend \
 	texcount/texcount.pl \
 	texdef/texdef.pl \
 	texdiff/texdiff \
 	texdirflatten/texdirflatten \
+	texfindpkg/texfindpkg.lua \
 	texdoc/texdoc.tlu \
 	texfot/texfot.pl \
 	texlive/fmtutil-sys.sh \
 	texlive/fmtutil-user.sh \
 	texlive/fmtutil.pl \
-	texlive/rungs.tlu \
+	texlive/mktexlsr \
+	texlive/mktexmf \
+	texlive/mktexpk \
+	texlive/mktextfm \
+	texlive/rungs.lua \
 	texlive/tlmgr.pl \
 	texlive/updmap-sys.sh \
 	texlive/updmap-user.sh \
 	texlive/updmap.pl \
+	texlive-extra/e2pall.pl \
 	texliveonfly/texliveonfly.py \
 	texloganalyser/texloganalyser \
+	texlogfilter/texlogfilter \
+	texlogsieve/texlogsieve \
+	texplate/texplate.sh \
 	thumbpdf/thumbpdf.pl \
 	tlcockpit/tlcockpit.sh \
 	tlshell/tlshell.tcl \
@@ -218,32 +261,25 @@ texmf_other_scripts = \
 	webquiz/webquiz.py \
 	xindex/xindex.lua \
 	yplan/yplan
-texmf_context_scripts = \
-	context/stubs/unix/context \
-	context/stubs/unix/contextjit \
-	context/stubs/unix/luatools \
-	context/stubs/unix/mtxrun \
-	context/stubs/unix/mtxrunjit \
-	context/stubs/unix/texexec \
-	context/stubs/unix/texmfstart
-
-EXTRA_DIST += \
-	context/stubs/unix/ctxtools \
-	context/stubs/unix/pstopdf
 
 nobase_dist_texmf_scripts_SCRIPTS = \
 	$(texmf_shell_scripts) \
-	$(texmf_other_scripts) \
-	$(texmf_context_scripts)
+	$(texmf_other_scripts)
 
 ## Symlinks within $(bindir): FILE:LINK here means "ln -s FILE LINK" is done.
 bin_links = \
+	allcm:allec \
 	cluttex:clxelatex \
 	cluttex:cllualatex \
 	epstopdf:repstopdf \
+	fmtutil:mktexfmt \
+	kpsetool:kpsexpand \
+	kpsetool:kpsepath \
+	mktexlsr:texhash \
 	pdfcrop:rpdfcrop \
 	texdef:latexdef
 
+# 
 # The idea is to install the scripts themselves in texmf*/scripts, and
 # have bin/arch/foo be a symlink to, say,
 # ../../texmf-dist/scripts/foo/foo.pl.  That way we save a bit of disk
@@ -267,7 +303,6 @@ bin_links = \
 EXTRA_DIST += ../../../build-aux/relpath
 relpath = $(SHELL) $(top_srcdir)/../../build-aux/relpath
 runscript = $(top_srcdir)/$(WIN_WRAPPER)/runscript.exe
-ctxscript = $(top_srcdir)/$(WIN_WRAPPER)/context/mtxrun.exe
 install-data-hook: installdirs-local
 if WIN32
 	@for s in $(texmf_other_scripts); do \
@@ -277,19 +312,7 @@ if WIN32
 	done
 	$(INSTALL_SCRIPT) $(top_srcdir)/$(WIN_WRAPPER)/runscript.dll $(DESTDIR)$(bindir)
 	$(INSTALL_SCRIPT) $(top_srcdir)/$(WIN_WRAPPER)/runscript.exe $(DESTDIR)$(bindir)
-	$(INSTALL_SCRIPT) $(top_srcdir)/w32_wrapper/runscript.tlu $(DESTDIR)$(bindir)
-	@for s in $(texmf_context_scripts); do \
-	  t=`basename $$s | sed 's,\.[^/]*$$,,' | tr '[A-Z]' '[a-z]'`; \
-	  echo "$(INSTALL_SCRIPT) '$(ctxscript)' '$(DESTDIR)$(bindir)/$$t.exe'"; \
-	  $(INSTALL_SCRIPT) $(ctxscript) $(DESTDIR)$(bindir)/$$t.exe; \
-	done
-	$(INSTALL_SCRIPT) $(top_srcdir)/$(WIN_WRAPPER)/context/mtxrun.dll $(DESTDIR)$(bindir)
-	$(INSTALL_SCRIPT) $(srcdir)/context/stubs/unix/mtxrun $(DESTDIR)$(bindir)/mtxrun.lua
-	@for s in $(bin_links); do \
-	  link=`echo $$s | sed 's,.*:,,'`; \
-	  echo "$(INSTALL_SCRIPT) '$(runscript)' '$(DESTDIR)$(bindir)/$$link.exe'"; \
-	  $(INSTALL_SCRIPT) $(runscript) $(DESTDIR)$(bindir)/$$link.exe || exit 1; \
-	done
+	$(INSTALL_SCRIPT) $(top_srcdir)/$(WIN_WRAPPER)/runscript.tlu $(DESTDIR)$(bindir)
 else !WIN32
 ## Name the link as the basename, removing any extension,
 ## except for listings-ext.sh, which is documented as that name.
@@ -355,6 +378,6 @@ endif !WIN32
 ## 
 ## This target is invoked by check-wrapper-consistency (run from cron).
 .PHONY: echo-shell-scripts
-shell_scripts = $(texmf_shell_scripts) $(texmf_context_scripts)
+shell_scripts = $(texmf_shell_scripts)
 echo-shell-scripts:
 	@echo $(shell_scripts)

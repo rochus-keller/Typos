@@ -45,7 +45,7 @@
 # undef output
 # endif
 
-# include "luapplib/pplib.h"
+# include "pplib.h"
 
 # include "image/epdf.h"
 
@@ -422,12 +422,15 @@ static int pushvalue(lua_State * L, ppobj *object)
             return 1;
             break;
         case PPNAME:
-            lua_pushstring(L, (const char *) ppname_decoded(object->name));
-            return 1;
+            {
+                ppname * n = ppname_decoded(object->name) ;
+                lua_pushlstring(L, ppname_data(n), ppname_size(n));
+                return 1;
+            }
             break;
         case PPSTRING:
-            lua_pushlstring(L,(const char *) object->string, ppstring_size((void *)object->string));
-            lua_pushboolean(L, ppstring_hex((void *)object->string));
+            lua_pushlstring(L, ppstring_data(object->string), ppstring_size(object->string));
+            lua_pushboolean(L, ppstring_hex(object->string));
             return 2;
             break;
         case PPARRAY:
@@ -527,8 +530,8 @@ static int pdfelib_getfromdictionary(lua_State * L)
             if (index < d->dictionary->size) {
                 ppobj *object = ppdict_at(d->dictionary,index);
                 if (object != NULL) {
-                    ppname key = ppdict_key(d->dictionary,index);
-                    lua_pushstring(L,(const char *) key);
+                    ppname * key = ppname_decoded(ppdict_key(d->dictionary,index));
+                    lua_pushlstring(L, ppname_data(key), ppname_size(key));
                     lua_pushinteger(L,(int) object->type);
                     return 2 + pushvalue(L,object);
                 }
@@ -555,8 +558,8 @@ static int pdfelib_getfromstream(lua_State * L)
             if (index < d->size) {
                 ppobj *object = ppdict_at(d,index);
                 if (object != NULL) {
-                    ppname key = ppdict_key(d,index);
-                    lua_pushstring(L,(const char *) key);
+                    ppname * key = ppname_decoded(ppdict_key(d,index));
+                    lua_pushlstring(L, ppname_data(key), ppname_size(key));
                     lua_pushinteger(L,(int) object->type);
                     return 2 + pushvalue(L,object);
                 }
@@ -656,8 +659,8 @@ static int pdfelib_dictionarytotable(lua_State * L)
         for (i=0;i<d->dictionary->size;i++) {
             ppobj *object = ppdict_at(d->dictionary,i);
             if (object != NULL) {
-                ppname key = ppdict_key(d->dictionary,i);
-                lua_pushstring(L,(const char *) key);
+                ppname * key = ppname_decoded(ppdict_key(d->dictionary,i));
+                lua_pushlstring(L, ppname_data(key), ppname_size(key));
                 /* table key */
                 pdfelib_totable(L,object,flat);
                 /* table key { type, [value], [extra], [more] } */
@@ -874,7 +877,7 @@ static int pdfelib_new(lua_State * L)
     if (! memstream) {
         luaL_error(L, "no room for <pdfe> stream");
     }
-    memcpy(memstream, docstream, (streamsize + 1));
+    memcpy(memstream, docstream, streamsize);
     memstream[streamsize]='\0';
     if (lua_gettop(L) == 2) {
         /* we stay at the lua end */
@@ -1010,7 +1013,6 @@ static int pdfelib_getsize(lua_State * L)
     lua_pushinteger(L,(int) ppdoc_file_size(p->document));
     return 1;
 }
-
 
 static int pdfelib_getversion(lua_State * L)
 {
@@ -1235,9 +1237,10 @@ static int pdfelib_getfromreference(lua_State * L)
     ppref *r = (((pdfe_reference *) p)->xref != NULL) ? ppxref_find(((pdfe_reference *) p)->xref, (ppuint) (((pdfe_reference *) p)->onum)) : NULL; \
     ppobj *o = (r != NULL) ? ppref_obj(r) : NULL; \
 
-# define pdfelib_get_value_direct(get_d,get_a) do {                      \
+# define pdfelib_get_value_direct(get_d,get_a) do {                     \
     int t = lua_type(L,2);                                              \
     void *p = lua_touserdata(L, 1);                                     \
+    lua_settop(L,2);                                                    \
     pdfelib_get_value_check_1;                                          \
     if (t == LUA_TSTRING) {                                             \
         const char *key = lua_tostring(L,-2);                           \
@@ -1284,6 +1287,7 @@ static int pdfelib_getfromreference(lua_State * L)
 # define pdfelib_get_value_indirect(get_d,get_a) do {                       \
     int t = lua_type(L,2);                                                  \
     void *p = lua_touserdata(L, 1);                                         \
+    lua_settop(L,2);                                                        \
     pdfelib_get_value_check_1;                                              \
     if (t == LUA_TSTRING) {                                                 \
         const char *key = lua_tostring(L,-2);                               \
@@ -1318,14 +1322,47 @@ static int pdfelib_getfromreference(lua_State * L)
     }                                                                       \
 } while (0)
 
+/* pre 1.13 version:
+
 static int pdfelib_getstring(lua_State * L)
 {
     if (lua_gettop(L) > 1) {
-        ppstring value = NULL;
+        ppstring * value = NULL;
         pdfelib_get_value_direct(ppdict_rget_string,pparray_rget_string);
         if (value != NULL) {
-            lua_pushstring(L,(const char *) value);
-            return 1;
+            lua_pushlstring(L, ppstring_data(value), ppstring_size(value));
+            return 2;
+        }
+    }
+    return 0;
+}
+
+*/
+
+static int pdfelib_getstring(lua_State *L)
+{
+    if (lua_gettop(L) > 1) {
+        ppstring *value = NULL;
+        int how = 0;
+        if (lua_type(L, 3) == LUA_TBOOLEAN) {
+            if (lua_toboolean(L, 3)) {
+                how = 1;
+            } else {
+                how = 2;
+            }
+        }
+        pdfelib_get_value_direct(ppdict_rget_string,pparray_rget_string);
+        if (value != NULL) {
+            if (how == 1) {
+                value = ppstring_decoded(value);
+            }
+            lua_pushlstring(L,ppstring_data(value),ppstring_size(value));
+            if (how == 2) {
+                lua_pushboolean(L,ppstring_hex(value));
+                return 2;
+            } else {
+                return 1;
+            }
         }
     }
     return 0;
@@ -1376,10 +1413,11 @@ static int pdfelib_getboolean(lua_State * L)
 static int pdfelib_getname(lua_State * L)
 {
     if (lua_gettop(L) > 1) {
-        ppname value = NULL;
+        ppname * value = NULL;
         pdfelib_get_value_direct(ppdict_rget_name,pparray_rget_name);
         if (value != NULL) {
-            lua_pushstring(L,(const char *) ppname_decoded(value));
+            value = ppname_decoded(value) ;
+            lua_pushlstring(L, ppname_data(value), ppname_size(value));
             return 1;
         }
     }
@@ -1446,10 +1484,13 @@ static int pdfelib_pushvalue(lua_State * L, ppobj *object)
             lua_pushnumber(L, object->number);
             break;
         case PPNAME:
-            lua_pushstring(L, (const char *) ppname_decoded(object->name));
+            {
+                ppname * n = ppname_decoded(object->name) ;
+                lua_pushlstring(L, ppname_data(n), ppname_size(n));
+            }
             break;
         case PPSTRING:
-            lua_pushlstring(L,(const char *) object->string, ppstring_size((void *)object->string));
+            lua_pushlstring(L, ppstring_data(object->string), ppstring_size(object->string));
             break;
         case PPARRAY:
             return pusharrayonly(L, object->array);

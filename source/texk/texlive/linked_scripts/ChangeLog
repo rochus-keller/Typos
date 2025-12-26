@@ -1,6 +1,43 @@
-2016-07-20  Karl Berry  <karl@tug.org>
+2024-02-11  Karl Berry  <karl@tug.org>
 
-	* scripts.lst: update scripts.lst
+	* Makefile.am (texmf_other_scripts): whoops, undo
+	mktexlsr.pl, it's overwriting the sh version. Something
+	to look at later.
+
+2024-02-08  Karl Berry  <karl@tug.org>
+
+	* Makefile.am (texmf_other_scripts): add texlive/mktexlsr.pl,
+	since it is used by fmtutil.pl.
+	https://github.com/TeX-Live/texlive-source/pull/63#issuecomment-1932342880
+
+2023-02-28  Karl Berry  <karl@freefriends.org>
+
+	* Makefile.am (install-data-hook) [WIN32]: don't install
+	mtxrun.dll, since ConTeXt isn't handled here any more.
+
+2022-09-11  Reinhard Kotucha  <reinhard.kotucha@web.de>
+
+	* Makefile.am : rename rungs.tlu to rungs.lua
+
+2021-11-22  Karl Berry  <karl@freefriends.org>
+
+	* Makefile.am (texmf_shell_scripts): missed \.
+
+2021-11-20  Karl Berry  <karl@freefriends.org>
+
+	* Makefile.am (texmf_shell_scripts): add xe(la)tex-unsafe.sh.
+
+2020-01-23  Karl Berry  <karl@tug.org>
+
+	* Makefile.am (texmf_shell_scripts): allcm.sh and allneeded.sh
+	in the new texlive-extra/ belong here instead of texmf_other_scripts,
+	since there is no Windows wrapper for them.
+
+2019-12-29  Karl Berry  <karl@tug.org>
+
+	* Makefile.am (texmf_other_scripts): add mktexlsr mktexmf
+	mktexpk mktextfm, now maintained under Master.
+	(bin_links): add mktexlsr:texhash.
 
 2016-04-10  Karl Berry  <karl@tug.org>
 

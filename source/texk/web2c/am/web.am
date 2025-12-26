@@ -1,11 +1,14 @@
-## texk/web2c/am/web.am: Makefile fragment for normal web programs (except tangle).
+## $Id: web.am 65380 2022-12-28 08:09:52Z takuji $
+## texk/web2c/am/web.am: Makefile fragment for the standard web programs --
+## except tangle.
 ##
-## Copyright 2018 Karl Berry <tex-live@tug.org>
+## Copyright 2018-2022 Karl Berry <tex-live@tug.org>
 ## Copyright 2009-2015 Peter Breitenlohner <tex-live@tug.org>
 ## You may freely use, modify and/or distribute this file.
 
 web_programs = bibtex dvicopy dvitype gftodvi gftopk gftype mft \
-	patgen pktogf pktype pltotf pooltype tftopl vftovp vptovf weave
+	patgen pktogf pktype pltotf pooltype tftopl vftovp vptovf \
+	weave twill
 
 ## Basic tests, one for each program.
 ##
@@ -29,9 +32,11 @@ bibtex.p: tangle$(EXEEXT) bibtex.web bibtex.ch
 	$(tangle) bibtex bibtex
 web_tests += tests/bibtex-openout-test.pl tests/bibtex-longline-test.pl
 web_tests += tests/bibtex-mem.test
+web_tests += tests/bibtex-bigauth.test
 web_tests += tests/bibtex-auxinclude.test
 bibtex.log tests/bibtex-openout-test.log tests/bibtex-longline-test.log \
 	tests/bibtex-mem.log \
+	tests/bibtex-bigauth.log \
 	tests/bibtex-auxinclude.log: bibtex$(EXEEXT)
 
 nodist_dvicopy_SOURCES = dvicopy.c dvicopy.h
@@ -170,6 +175,17 @@ weave.p: tangle$(EXEEXT) weave.web weave.ch
 	$(tangle) weave weave
 weave.log: weave$(EXEEXT)
 
+nodist_twill_SOURCES = twill.c twill.h
+twill.c twill.h: twill-web2c
+	@$(web2c) twill
+twill-web2c: twill.p $(web2c_depend)
+	@$(web2c) twill
+twill.p: tangle$(EXEEXT) twill.web
+	$(tangle) twill
+twill.web: tie$(EXEEXT) weave.web weave.ch weav-twill.ch
+	$(tie_m) weave.web weave.ch weav-twill.ch
+twill.log: twill$(EXEEXT)
+
 ## Tests.
 ##
 if WEB
@@ -178,12 +194,16 @@ endif WEB
 EXTRA_DIST += $(web_tests)
 
 ## bibtex.test
+EXTRA_DIST += tests/exampl.bbl
 DISTCLEANFILES += tests/xexampl.aux tests/xexampl.bbl tests/xexampl.blg
 ## tests/bibtex-longline-test.pl
 DISTCLEANFILES += longline.aux longline.bbl longline.bib longline.blg
 ## tests/bibtex-mem.test
 EXTRA_DIST += tests/memdata1.bst tests/memdata2.bst tests/memdata3.bst
 DISTCLEANFILES += tests/memtest.bib tests/memtest?.*
+## tests/bibtex-bigauth.test
+EXTRA_DIST += tests/bibtex-bigauth.aux tests/bibtex-bigauth.bib
+EXTRA_DIST += tests/bibtex-bigauth.tex
 ## tests/bibtex-auxinclinde.test
 EXTRA_DIST += tests/auxinclude.aux tests/auxinclude.bbl tests/auxinclude.bib
 EXTRA_DIST += tests/auxinclude.tex tests/auxinclude2.aux tests/auxinclude2.tex
@@ -217,6 +237,9 @@ DISTCLEANFILES += badvf.* tests/xptmr*.vpl
 DISTCLEANFILES += badvpl.* tests/yptmr*.*
 ## weave.test
 DISTCLEANFILES += pooltype.tex
+## {pdftexdir,xetexdir,ptexdir,uptexdir}/wcfname.test
+EXTRA_DIST += tests/fn-generate.perl
+EXTRA_DIST += tests/fn-utf8.txt tests/fn-euc.txt tests/fn-sjis.txt
 
 ## Test data
 ##

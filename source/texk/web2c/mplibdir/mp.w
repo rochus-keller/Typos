@@ -71,12 +71,12 @@ undergoes any modifications, so that it will be clear which version of
 @^extensions to \MP@>
 @^system dependencies@>
 
-@d default_banner "This is MetaPost, Version 2.00" /* printed when \MP\ starts */
+@d default_banner "This is MetaPost, Version 2.10" /* printed when \MP\ starts */
 @d true 1
 @d false 0
 
 @<Metapost version header@>=
-#define metapost_version "2.00"
+#define metapost_version "2.10"
 
 @ The external library header for \MP\ is |mplib.h|. It contains a
 few typedefs and the header defintions for the externally used
@@ -205,6 +205,7 @@ static int DEBUGENVELOPECOUNTER=0;
 #include "mpmathdouble.h"       /* internal header */
 #include "mpmathdecimal.h"      /* internal header */
 /*|#include "mpmathbinary.h"|*/       /* internal header */
+/*|#include "mpmathinterval.h"|*/       /* internal header */
 #include "mpstrings.h"          /* internal header */
 /* BEGIN PATCH */
 mp_number dx_ap;    /* approximation of dx */
@@ -223,7 +224,10 @@ extern const char *COMPILED_CAIRO_VERSION_STRING;
 extern const char* cairo_version_string (void);
 extern const char *COMPILED_MPFR_VERSION_STRING;
 extern const char* mpfr_get_version (void);
+extern const char *COMPILED_MPFI_VERSION_STRING;
+extern const char* mpfi_get_version (void);
 extern void * mp_initialize_binary_math (MP mp) ;
+extern void * mp_initialize_interval_math(MP mp);
 extern int COMPILED__GNU_MP_VERSION;
 extern int COMPILED__GNU_MP_VERSION_MINOR;
 extern int COMPILED__GNU_MP_VERSION_PATCHLEVEL;
@@ -325,6 +329,35 @@ MP_options *mp_options (void) {
 }
 
 
+@ Here are the three primitives of the interval arithmetic adapted to the others number systems:
+|left_point| and |right_point| of a number |a| simply return |a|, while
+|interval_set| of the pair |(a,b)|  returns the mid point.
+
+@<Declarations@>=
+static void mp_stub_m_get_left_endpoint(MP mp, mp_number * r, mp_number a);
+static void mp_stub_m_get_right_endpoint(MP mp, mp_number * r, mp_number a);
+static void mp_stub_m_interval_set(MP mp, mp_number * r, mp_number a, mp_number b);
+
+
+@ @c
+static void mp_stub_m_get_left_endpoint(MP mp, mp_number * r, mp_number a){
+  number_clone(*r,a);
+}
+static void mp_stub_m_get_right_endpoint(MP mp, mp_number * r, mp_number a){
+  number_clone(*r,a);
+}
+static void mp_stub_m_interval_set(MP mp, mp_number * r, mp_number a, mp_number b){
+ mp_number x;
+ new_number(x);
+ number_add(x,a);number_add(x,b);number_half(x);
+ number_clone(*r,x);
+ free_number(x);
+}
+
+
+
+
+
 @ @<Internal library declarations@>=
 @<Declare subroutines for parsing file names@>
 
@@ -383,7 +416,8 @@ typedef enum {
   mp_angle_type,
   mp_double_type,
   mp_binary_type,
-  mp_decimal_type
+  mp_decimal_type,
+  mp_interval_type
 } mp_number_type;
 typedef union {
   void *num;
@@ -459,6 +493,10 @@ typedef char * (*tostring_func) (MP mp, mp_number A);
 typedef void (*scan_func) (MP mp, int A);
 typedef void (*mp_free_func) (MP mp);
 typedef void (*set_precision_func) (MP mp);
+/* math interval new primitives */
+typedef void (*m_get_left_endpoint_func) (MP mp, mp_number *r, mp_number a);
+typedef void (*m_get_right_endpoint_func) (MP mp, mp_number *r, mp_number a);
+typedef void (*m_interval_set_func) (MP mp, mp_number *r, mp_number a, mp_number b);
 
 typedef struct math_data {
   mp_number precision_default;
@@ -564,6 +602,10 @@ typedef struct math_data {
   scan_func scan_fractional;
   mp_free_func free_math;
   set_precision_func set_precision;
+  /* math interval new primitives */
+  m_get_left_endpoint_func  m_get_left_endpoint;
+  m_get_right_endpoint_func m_get_right_endpoint;
+  m_interval_set_func       m_interval_set;
 } math_data;
 
 
@@ -615,8 +657,15 @@ MP mp_initialize (MP_options * opt) {
     mp->math = mp_initialize_decimal_math(mp);
   } else if (opt->math_mode == mp_math_binary_mode) {
     mp->math = mp_initialize_binary_math(mp);
+  } else if (opt->math_mode == mp_math_interval_mode) {
+    mp->math = mp_initialize_interval_math(mp);
   } else {
     mp->math = mp_initialize_double_math(mp);
+  }
+  if (opt->math_mode != mp_math_interval_mode) {
+   ((math_data *)mp->math)->m_get_left_endpoint = mp_stub_m_get_left_endpoint;
+   ((math_data *)mp->math)->m_get_right_endpoint = mp_stub_m_get_right_endpoint;
+   ((math_data *)mp->math)->m_interval_set       = mp_stub_m_interval_set ;
   }
   @<Find and load preload file, if required@>;
   @<Allocate or initialize variables@>;
@@ -640,6 +689,8 @@ MP mp_initialize (MP_options * opt) {
     set_internal_string (mp_number_system, mp_intern (mp, "decimal"));
   } else if (opt->math_mode == mp_math_binary_mode) {
     set_internal_string (mp_number_system, mp_intern (mp, "binary"));
+  } else if (opt->math_mode == mp_math_interval_mode) {
+    set_internal_string (mp_number_system, mp_intern (mp, "interval"));
   } else {
     set_internal_string (mp_number_system, mp_intern (mp, "double"));
   }
@@ -742,6 +793,7 @@ int max_print_line;     /* width of longest text lines output; should be at leas
 void *userdata; /* this allows the calling application to setup local */
 char *banner;   /* the banner that is printed to the screen and log */
 int ini_version;
+int utf8_mode;
 
 @ @<Dealloc variables@>=
 xfree (mp->banner);
@@ -761,6 +813,7 @@ mp->max_print_line = 100;
 set_lower_limited_value (mp->max_print_line, opt->max_print_line, 79);
 mp->halt_on_error = (opt->halt_on_error ? true : false);
 mp->ini_version = (opt->ini_version ? true : false);
+mp->utf8_mode = (opt->utf8_mode ? true : false);
 
 @ In case somebody has inadvertently made bad settings of the ``constants,''
 \MP\ checks them using a global variable called |bad|.
@@ -920,8 +973,8 @@ enum mp_filetype {
   mp_filetype_text              /* first text file for readfrom and writeto primitives */
 };
 typedef char *(*mp_file_finder) (MP, const char *, const char *, int);
-typedef char *(*mp_script_runner) (MP, const char *);
-typedef char *(*mp_text_maker) (MP, const char *, int mode);
+typedef char *(*mp_script_runner) (MP, const char *, size_t);
+typedef char *(*mp_text_maker) (MP, const char *, size_t, int);
 typedef void *(*mp_file_opener) (MP, const char *, const char *, int);
 typedef char *(*mp_file_reader) (MP, void *, size_t *);
 typedef void (*mp_binfile_reader) (MP, void *, void **, size_t *);
@@ -958,25 +1011,23 @@ static char *mp_find_file (MP mp, const char *fname, const char *fmode,
 }
 
 @ @c
-static char *mp_run_script (MP mp, const char *str) {
+static char *mp_run_script (MP mp, const char *str, size_t len) {
   (void) mp;
-  return mp_strdup (str);
+  return mp_strldup (str, len);
 }
 
 @ @c
-static char *mp_make_text (MP mp, const char *str, int mode) {
+static char *mp_make_text (MP mp, const char *str, size_t len, int mode) {
   (void) mp;
-  return mp_strdup (str);
+  return mp_strldup (str, len);
 }
 
 @ Because |mp_find_file| is used so early, it has to be in the helpers
 section.
 
 @<Declarations@>=
-static char *mp_find_file (MP mp, const char *fname, const char *fmode,
-                           int ftype);
-static void *mp_open_file (MP mp, const char *fname, const char *fmode,
-                           int ftype);
+static char *mp_find_file (MP mp, const char *fname, const char *fmode, int ftype);
+static void *mp_open_file (MP mp, const char *fname, const char *fmode, int ftype);
 static char *mp_read_ascii_file (MP mp, void *f, size_t * size);
 static void mp_read_binary_file (MP mp, void *f, void **d, size_t * size);
 static void mp_close_file (MP mp, void *f);
@@ -984,8 +1035,8 @@ static int mp_eof_file (MP mp, void *f);
 static void mp_flush_file (MP mp, void *f);
 static void mp_write_ascii_file (MP mp, void *f, const char *s);
 static void mp_write_binary_file (MP mp, void *f, void *s, size_t t);
-static char *mp_run_script (MP mp, const char *str);
-static char *mp_make_text (MP mp, const char *str, int mode);
+static char *mp_run_script (MP mp, const char *str, size_t len);
+static char *mp_make_text (MP mp, const char *str, size_t len, int mode);
 
 @ The function to open files can now be very short.
 
@@ -1665,7 +1716,7 @@ The user might want to write unprintable characters.
 
 @<Basic printing...@>=
 void mp_print_char (MP mp, ASCII_code k) {                               /* prints a single character */
-  if (mp->selector < pseudo || mp->selector >= write_file) {
+  if (mp->utf8_mode || mp->selector < pseudo || mp->selector >= write_file) {
     mp_print_visible_char (mp, k);
   } else if (@<Character |k| cannot be printed@>) {
     mp_print (mp, "^^");
@@ -2813,10 +2864,11 @@ the typedef for |mp_number| is here because it has to come very early.
 
 @<Exported types@>=
 typedef enum {
-  mp_math_scaled_mode = 0,
-  mp_math_double_mode = 1,
-  mp_math_binary_mode = 2,
-  mp_math_decimal_mode = 3
+  mp_math_scaled_mode   = 0,
+  mp_math_double_mode   = 1,
+  mp_math_binary_mode   = 2,
+  mp_math_decimal_mode  = 3,
+  mp_math_interval_mode = 4
 } mp_math_mode;
 
 @ @<Option variables@>=
@@ -2958,11 +3010,8 @@ void *mp_xmalloc (MP mp, size_t nmem, size_t size) {
 }
 
 @ @<Internal library declarations@>=
-int mp_snprintf_res ;
-/* Some compilers (i.e. gcc 8.2.0 ) complained with the old */
-/* #define mp_snprintf (void)snprintf                       */
-/* about truncation. For the moment we store the result.    */
-#  define mp_snprintf mp_snprintf_res=snprintf
+/* Avoid warning on format truncation */
+#define mp_snprintf(...) (snprintf(__VA_ARGS__) < 0 ? abort() : (void)0)
 
 @* Dynamic memory allocation.
 
@@ -3272,6 +3321,7 @@ mp_begin_group, /* beginning of a group (\&{begingroup}) */
 mp_nullary, /* an operator without arguments (e.g., \&{normaldeviate}) */
 mp_unary, /* an operator with one argument (e.g., \&{sqrt}) */
 mp_str_op, /* convert a suffix to a string (\&{str}) */
+mp_void_op, /* convert a suffix to a boolean (\&{void}) */
 mp_cycle, /* close a cyclic path (\&{cycle}) */
 mp_primary_binary, /* binary operation taking `\&{of}' (e.g., \&{point}) */
 mp_capsule_token, /* a value that has been put into a token list */
@@ -3706,7 +3756,11 @@ mp_version, /* operation code for \.{mpversion} */
 mp_envelope_of, /* operation code for \.{envelope} */
 mp_boundingpath_of, /* operation code for \.{boundingpath} */
 mp_glyph_infont, /* operation code for \.{glyph} */
-mp_kern_flag /* operation code for \.{kern} */
+mp_kern_flag, /* operation code for \.{kern} */
+mp_m_get_left_endpoint_op, /* math interval new primitives  operation code for \.{interval_get_left_endpoint} */
+mp_m_get_right_endpoint_op, /* math interval new primitives operation code for \.{interval_get_right_endpoint} */
+mp_interval_set_op, /* math interval new primitives operation code for \.{interval_set} */
+
 
 @ @c
 static void mp_print_op (MP mp, quarterword c) {
@@ -4022,6 +4076,16 @@ static void mp_print_op (MP mp, quarterword c) {
       break;
     case mp_glyph_infont:
       mp_print (mp, "glyph");
+      break;
+    /* math interval new primitives */
+    case mp_m_get_left_endpoint_op:
+      mp_print (mp, "interval_get_left_endpoint");
+      break;
+    case mp_m_get_right_endpoint_op:
+      mp_print (mp, "interval_get_right_endpoint");
+      break;
+    case mp_interval_set_op:
+      mp_print (mp, "interval_set");
       break;
     default:
       mp_print (mp, "..");
@@ -4371,6 +4435,7 @@ set_internal_name (mp_number_precision, xstrdup ("numberprecision"));
 set_internal_name (mp_hppp, xstrdup ("hppp"));
 set_internal_name (mp_vppp, xstrdup ("vppp"));
 
+
 @ The following procedure, which is called just before \MP\ initializes its
 input and output, establishes the initial values of the date and time.
 @^system dependencies@>
@@ -4379,9 +4444,32 @@ Note that the values are |scaled| integers. Hence \MP\ can no longer
 be used after the year 32767.
 
 @c
+#if defined(_MSC_VER)
+#define strtoull _strtoui64
+#endif
 static void mp_fix_date_and_time (MP mp) {
-  time_t aclock = time ((time_t *) 0);
-  struct tm *tmptr = localtime (&aclock);
+  char *source_date_epoch;
+  time_t epoch;
+  char *endptr;
+  struct tm *tmptr;
+  source_date_epoch = getenv("SOURCE_DATE_EPOCH");
+  if (source_date_epoch) {
+    errno = 0;
+    epoch = strtoull(source_date_epoch, &endptr, 10);
+    if (*endptr != '\0' || errno != 0) {
+      FATAL1("invalid epoch-seconds-timezone value for environment variable $SOURCE_DATE_EPOCH: %s",
+              source_date_epoch);
+    }
+/* there is a limit 3001.01.01:2059 for epoch in Microsoft C */
+#if defined(_MSC_VER)
+    if (epoch > 32535291599ULL)
+      epoch = 32535291599ULL;
+#endif
+    tmptr = gmtime (&epoch);
+  } else {
+    epoch = time ((time_t *) 0);
+    tmptr = localtime (&epoch);
+  }
   set_internal_from_number (mp_time, unity_t);
   number_multiply_int (internal_value(mp_time), (tmptr->tm_hour * 60 + tmptr->tm_min));
   set_internal_from_number (mp_hour, unity_t);
@@ -4528,8 +4616,9 @@ for (k = 0; k < ' '; k++)
   mp->char_class[k] = invalid_class;
 mp->char_class['\t'] = space_class;
 mp->char_class['\f'] = space_class;
-for (k = 127; k <= 255; k++)
-  mp->char_class[k] = invalid_class;
+for (i=127;i<=255;i++) {
+   mp->char_class[i] = mp->utf8_mode ? letter_class : invalid_class;
+}
 
 @* The hash table.
 
@@ -5028,6 +5117,8 @@ mp_primitive (mp, "step", mp_step_token, 0);
 @:step_}{\&{step} primitive@>;
 mp_primitive (mp, "str", mp_str_op, 0);
 @:str_}{\&{str} primitive@>;
+mp_primitive (mp, "void", mp_void_op, 0);
+@:void_}{\&{void} primitive@>;
 mp_primitive (mp, "tension", mp_tension, 0);
 @:tension_}{\&{tension} primitive@>;
 mp_primitive (mp, "to", mp_to_token, 0);
@@ -5159,6 +5250,9 @@ mp_print (mp, "step");
 break;
 case mp_str_op:
 mp_print (mp, "str");
+break;
+case mp_void_op:
+mp_print (mp, "void");
 break;
 case mp_tension:
 mp_print (mp, "tension");
@@ -7632,6 +7726,14 @@ void mp_toss_knot (MP mp, mp_knot q) {
     q->next = mp->knot_nodes;
     mp->knot_nodes = q;
     mp->num_knot_nodes++;
+    if (mp->math_mode > mp_math_double_mode) {
+      free_number (q->x_coord);
+      free_number (q->y_coord);
+      free_number (q->left_x);
+      free_number (q->left_y);
+      free_number (q->right_x);
+      free_number (q->right_y);
+    }
     return;
   }
   if (mp->math_mode > mp_math_double_mode) {
@@ -7640,6 +7742,8 @@ void mp_toss_knot (MP mp, mp_knot q) {
     mp_xfree (q);
   }
 }
+
+
 void mp_toss_knot_list (MP mp, mp_knot p) {
   mp_knot q;    /* the node being freed */
   mp_knot r;    /* the next node */
@@ -11124,6 +11228,9 @@ This first set goes into the header
 @d convert_angle_to_scaled(A)          (((math_data *)(mp->math))->angle_to_scaled)(&(A));
 @d convert_fraction_to_scaled(A)       (((math_data *)(mp->math))->fraction_to_scaled)(&(A));
 @d convert_scaled_to_fraction(A)       (((math_data *)(mp->math))->scaled_to_fraction)(&(A));
+@d m_get_left_endpoint(R,A)            (((math_data *)(mp->math))->m_get_left_endpoint)(mp,&(R),A)  /* math interval new primitives */
+@d m_get_right_endpoint(R,A)           (((math_data *)(mp->math))->m_get_right_endpoint)(mp,&(R),A) /* math interval new primitives */
+@d m_interval_set(R,A,B)               (((math_data *)(mp->math))->m_interval_set)(mp,&(R),A,B)     /* math interval new primitives */
 @#
 @d number_zero(A)		       number_equal(A, zero_t)
 @d number_infinite(A)		       number_equal(A, inf_t)
@@ -15826,7 +15933,7 @@ CONTINUE:
     	 set_number_from_scaled (mp->cur_tt, 1);
          goto NOT_FOUND;
     }
-  
+
     if (number_to_scaled (mp->delx) - mp->tol <=
         number_to_scaled (stack_max (x_packet (mp->xy))) - number_to_scaled (stack_min (u_packet (mp->uv))))
       if (number_to_scaled (mp->delx) + mp->tol >=
@@ -15837,7 +15944,7 @@ CONTINUE:
               number_to_scaled (stack_min (y_packet (mp->xy))) - number_to_scaled (stack_max (v_packet (mp->uv)))) {
             if (number_to_scaled (mp->cur_t) >= number_to_scaled (mp->max_t)) {
               if ( number_equal(mp->max_t, x_two_t) || number_greater(mp->max_t,x_two_t_low_precision)) {   /* we've done 17+2 bisections */
-                number_divide_int(mp->cur_t,1<<2);number_divide_int(mp->cur_tt,1<<2); /* restore values due bit precision */ 
+                number_divide_int(mp->cur_t,1<<2);number_divide_int(mp->cur_tt,1<<2); /* restore values due bit precision */
                 set_number_from_scaled (mp->cur_t, ((number_to_scaled (mp->cur_t) + 1)/2));
                 set_number_from_scaled (mp->cur_tt, ((number_to_scaled (mp->cur_tt) + 1)/2));
                 return;
@@ -18108,9 +18215,11 @@ new level (having, initially, the same properties as the old).
   if ( mp->input_ptr>mp->max_in_stack ) {
     mp->max_in_stack=mp->input_ptr;
     if ( mp->input_ptr==mp->stack_size ) {
-      int l = (mp->stack_size+(mp->stack_size/4));
-      XREALLOC(mp->input_stack, l, in_state_record);
-      mp->stack_size = l;
+        int l = (mp->stack_size+(mp->stack_size/4));
+        /* The mp->stack_size < 1001 condition is necessary to prevent C stack overflow due infinite recursion. */
+        if (l>1000) {fprintf(stderr, "input stack overflow\n");exit(EXIT_FAILURE);}
+        XREALLOC(mp->input_stack, l, in_state_record);
+        mp->stack_size = l;
     }
   }
   mp->input_stack[mp->input_ptr]=mp->cur_input; /* stack the record */
@@ -19973,7 +20082,7 @@ if (s != NULL) {
     } else {
         mp_back_input (mp);
         if (cur_exp_str ()->len > 0) {
-            char *s = mp->run_script(mp,(const char*) cur_exp_str()->str) ;
+            char *s = mp->run_script(mp,(const char*) cur_exp_str()->str, cur_exp_str()->len) ;
             @<Run a script@>
             free(s);
         }
@@ -20103,7 +20212,7 @@ line and preceded by a space or at the beginning of a line.
             txt[size] = '\0';
             ptr = txt;
         } else {
-            /* strip trailing whitespace, we have a |'\0'| so we are off by one */ 
+            /* strip trailing whitespace, we have a |'\0'| so we are off by one */
             /* |while ((size > 1) && (mp->char_class[(ASCII_code) txt[size-2]] == space_class| $\vbv\vbv$ |txt[size-2] == '\n')) | */
             while ((size > 1) && (mp->char_class[(ASCII_code) txt[size-1]] == space_class || txt[size-1] == '\n')) {
                 decr(size);
@@ -20119,7 +20228,7 @@ line and preceded by a space or at the beginning of a line.
         }
         /* action */
         {
-            char *s = mp->make_text(mp,ptr,verb) ;
+            char *s = mp->make_text(mp,ptr,size,verb) ;
             @<Run a script@>
             free(s);
         }
@@ -20170,7 +20279,7 @@ line and preceded by a space or at the beginning of a line.
     } else {
         mp_back_input (mp);
         if (cur_exp_str ()->len > 0) {
-            char *s = mp->make_text(mp,(const char*) cur_exp_str()->str,0) ;
+            char *s = mp->make_text(mp,(const char*) cur_exp_str()->str,cur_exp_str()->len,0) ;
             @<Run a script@>
             free(s);
         }
@@ -21130,7 +21239,7 @@ void mp_begin_iteration (MP mp) {
       p->value_mod = mp_suffix_sym;
     }
     mp_get_x_next (mp);
-    if (cur_cmd() == mp_within_token) {
+    if (p->value_mod == mp_expr_sym && cur_cmd() == mp_within_token) {
       @<Set up a picture iteration@>;
     } else {
       @<Check for the assignment in a loop header@>;
@@ -23752,6 +23861,25 @@ RESTART:
     mp->cur_exp.type = mp_string_type;
     goto DONE;
     break;
+  case mp_void_op:
+  {
+    /* Convert a suffix to a boolean */
+    mp_value new_expr;
+    memset(&new_expr,0,sizeof(mp_value));
+    new_number(new_expr.data.n);
+    mp_get_x_next (mp);
+    mp_scan_suffix (mp);
+    if (cur_exp_node() == NULL) {
+        set_number_from_boolean (new_expr.data.n, mp_true_code);
+    } else {
+        set_number_from_boolean (new_expr.data.n, mp_false_code);
+    }
+    mp_flush_cur_exp (mp, new_expr);
+    cur_exp_node() = NULL; /* !! do not replace with |set_cur_exp_node()| !! */
+    mp->cur_exp.type = mp_boolean_type;
+    goto DONE;
+  }
+    break;
   case mp_internal_quantity:
     /* Scan an internal numeric quantity */
     /* If an internal quantity appears all by itself on the left of an
@@ -25288,7 +25416,13 @@ mp_primitive (mp, "envelope", mp_primary_binary, mp_envelope_of);
 mp_primitive (mp, "boundingpath", mp_primary_binary, mp_boundingpath_of);
 @:boundingpath_}{\&{boundingpath} primitive@>;
 mp_primitive (mp, "glyph", mp_primary_binary, mp_glyph_infont);
-@:glyph_infont_}{\&{glyph} primitive@>
+@:glyph_infont_}{\&{glyph} primitive@>;
+mp_primitive (mp, "interval_get_left_endpoint", mp_unary, mp_m_get_left_endpoint_op);  /* math interval new primitives */
+@:m_get_left_endpoint_}{\&{mget_left_endpoint} primitive@>;
+mp_primitive (mp, "interval_get_right_endpoint", mp_unary, mp_m_get_right_endpoint_op); /* math interval new primitives */
+@:m_get_right_endpoint_}{\&{mget_right_endpoint} primitive@>;
+mp_primitive (mp, "interval_set", mp_unary, mp_interval_set_op); /* math interval new primitives */
+@:interval_set}{\&{interval_set} primitive@>;
 
 
 @ @<Cases of |print_cmd...@>=
@@ -25459,6 +25593,8 @@ static void mp_do_unary (MP mp, quarterword c) {
   case mp_uniform_deviate:
   case mp_odd_op:
   case mp_char_exists_op:
+  case mp_m_get_left_endpoint_op: /* math interval new primitives */
+  case mp_m_get_right_endpoint_op:/* math interval new primitives */
     if (mp->cur_exp.type != mp_known) {
       mp_bad_unary (mp, c);
     } else {
@@ -25554,7 +25690,41 @@ static void mp_do_unary (MP mp, quarterword c) {
         boolean_reset (mp->char_exists[number_to_scaled(cur_exp_value_number ())]);
         mp->cur_exp.type = mp_boolean_type;
         break;
+      case mp_m_get_left_endpoint_op: /* math interval new primitives */
+        {
+          mp_number r1;
+          new_number (r1);
+          m_get_left_endpoint (r1, cur_exp_value_number ());
+          set_cur_exp_value_number (r1);
+          free_number (r1);
+        }
+        break;
+      case mp_m_get_right_endpoint_op: /* math interval new primitives */
+        {
+          mp_number r1;
+          new_number (r1);
+          m_get_right_endpoint (r1, cur_exp_value_number ());
+          set_cur_exp_value_number (r1);
+          free_number (r1);
+        }
+        break;
+
       }                             /* there are no other cases */
+    }
+    break;
+  case mp_interval_set_op: /* math interval new primitives */
+    if (mp_nice_pair (mp, cur_exp_node (), mp->cur_exp.type)) {
+      mp_number ret_val;
+      memset(&new_expr,0,sizeof(mp_value));
+      new_number(new_expr.data.n);
+      new_number(ret_val);
+      p = value_node (cur_exp_node ());
+      m_interval_set(ret_val, value_number (x_part (p)), value_number (y_part (p)));
+      number_clone (new_expr.data.n, ret_val);
+      free_number (ret_val);
+      mp_flush_cur_exp (mp, new_expr);
+    } else {
+      mp_bad_unary (mp, mp_interval_set_op);
     }
     break;
   case mp_angle_op:
@@ -30866,6 +31036,7 @@ void mp_show_library_versions (void) {
   fprintf(stdout, "Compiled with libpng %s; using %s\n", PNG_LIBPNG_VER_STRING, png_libpng_ver);
   fprintf(stdout, "Compiled with zlib %s; using %s\n", ZLIB_VERSION, zlibVersion());
   fprintf(stdout, "Compiled with mpfr %s; using %s\n", COMPILED_MPFR_VERSION_STRING, mpfr_get_version());
+  fprintf(stdout, "Compiled with mpfi %s; using %s\n", COMPILED_MPFI_VERSION_STRING, mpfi_get_version());
   fprintf(stdout, "Compiled with gmp %d.%d.%d; using %s\n\n", COMPILED__GNU_MP_VERSION, COMPILED__GNU_MP_VERSION_MINOR, COMPILED__GNU_MP_VERSION_PATCHLEVEL, COMPILED_gmp_version);
 }
 
@@ -34420,8 +34591,12 @@ void mp_set_text_box (MP mp, mp_text_node p) {
   size_t k, kk; /* current character and character to stop at */
   four_quarters cc;     /* the |char_info| for the current character */
   mp_number h, d;  /* dimensions of the current character */
+  mp_number minus_inf_t; /* check the -inf of height and depth */
   new_number(h);
   new_number(d);
+  new_number(minus_inf_t);
+  number_clone(minus_inf_t, inf_t);
+  number_negate(minus_inf_t);
   set_number_to_zero(p->width);
   set_number_to_neg_inf(p->height);
   set_number_to_neg_inf(p->depth);
@@ -34436,6 +34611,7 @@ void mp_set_text_box (MP mp, mp_text_node p) {
   @<Set the height and depth to zero if the bounding box is empty@>;
   free_number (h);
   free_number (d);
+  free_number (minus_inf_t);
 }
 
 
@@ -34465,7 +34641,10 @@ void mp_set_text_box (MP mp, mp_text_node p) {
 overflow.
 
 @<Set the height and depth to zero if the bounding box is empty@>=
-if (number_to_scaled(p->height) < -number_to_scaled(p->depth)) {
+if (number_equal(p->height,p->depth) && number_equal(p->height,minus_inf_t)) {
+  set_number_to_zero(p->height);
+  set_number_to_zero(p->depth);
+} else if (number_to_scaled(p->height) < -number_to_scaled(p->depth)) {
   set_number_to_zero(p->height);
   set_number_to_zero(p->depth);
 }
@@ -34749,9 +34928,9 @@ extreme cases so it may have to be shortened on some systems.
 
 @<Use |c| to compute the file extension |s|@>=
 {
-  s = xmalloc (12, 1);
-  mp_snprintf (s, 12, ".%i", (int) c);
-  s[7]='\0';
+  s = xmalloc (14, 1);
+  mp_snprintf (s, 13, ".%i", (int) c);
+  s[13]='\0';
 }
 
 

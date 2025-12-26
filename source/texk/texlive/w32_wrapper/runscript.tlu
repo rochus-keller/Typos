@@ -1,7 +1,7 @@
 
 
-local svnrevision = string.match("$Revision: 50675 $", "%d+") or "0"
-local svndate     = string.match("$Date: 2019-03-31 21:31:37 +0200 (Sun, 31 Mar 2019) $", "[-%d]+") or "2009-12-04"
+local svnrevision = string.match("$Revision: 64296 $", "%d+") or "0"
+local svndate     = string.match("$Date: 2022-09-05 21:26:00 +0200 (Mon, 05 Sep 2022) $", "[-%d]+") or "2009-12-04"
 local bannerstr   = "runscript wrapper utility (rev. " ..
                     svnrevision .. ", " .. svndate .. ")\n" .. 
                     "usage:   runscript script-name [arguments]\n" ..
@@ -285,8 +285,13 @@ local guimode
 
 local function show_error(msg)
   if guimode then
+    local err_cmd
     os.setenv('RUNSCRIPT_ERROR_MESSAGE', msg)
-    if lfs.isfile(TEXDIR..'/tlpkg/tltcl/tclkit.exe') and
+    local errmess_path = TEXDIR .. '/texmf-dist/scripts/texlive/tl-errmess.vbs'
+    local err_cmd = {"wscript", errmess_path:gsub('/','\\')}
+    if lfs.isfile(errmess_path) then
+      os.spawn(err_cmd)
+    elseif lfs.isfile(TEXDIR..'/tlpkg/tltcl/tclkit.exe') and
         lfs.isfile(TEXDIR..'/tlpkg/tltcl/gui_err.tcl') then
       os.spawn{TEXDIR..'/tlpkg/tltcl/tclkit.exe',
           TEXDIR..'/tlpkg/tltcl/gui_err.tcl'}
@@ -403,7 +408,7 @@ end
 
 -- creates directory or directory hierarchy
 local function mkdir_plus(dir)
-  if lfs.mkdir(dir) then
+  if lfs.mkdir(chgstrcp.syscptoutf8(dir)) then
     return true
   end
   -- try with system's mkdir in case we need to create intermediate dirs too
@@ -707,12 +712,18 @@ else
 	     ..TEXDIR..'/tlpkg/tlgs/Resource;'
 	     ..TEXDIR..'/tlpkg/tlgs/kanji;'
 	     ..os.getenv('WINDIR')..'/Fonts;'..TEXMFDIST..'/fonts')
-  os.setenv('GS_DLL', TEXDIR..'/tlpkg/tlgs/bin/gsdll32.dll')
-  GSEXE = TEXDIR..'/tlpkg/tlgs/bin/gswin32c.exe'
-  GSNAME = 'gswin32c.exe'
-  GSDIR = TEXDIR..'/tlpkg/tlgs/bin'
+  if is_64bit_windows_os() then
+    os.setenv('GS_DLL', TEXDIR..'/tlpkg/tlgs/bin/gsdll64.dll')
+    GSEXE = TEXDIR..'/tlpkg/tlgs/bin/gswin64c.exe'
+    GSNAME = 'gswin64c.exe'
+  else
+    os.setenv('GS_DLL', TEXDIR..'/tlpkg/tlgs/bin/gsdll32.dll')
+    GSEXE = TEXDIR..'/tlpkg/tlgs/bin/gswin32c.exe'
+    GSNAME = 'gswin32c.exe'
+  end
 end
 -- now setup the path so that the gs program will be found
+GSDIR = TEXDIR..'/tlpkg/tlgs/bin'
 PATH = prepend_path(PATH, GSDIR, BINDIR)
 os.setenv('PATH', PATH);
 
@@ -781,7 +792,7 @@ elseif progname == 'asy' then
   end
 elseif progname == 'dviout' then
   local fontsdir = kpse.var_value('TEXMFVAR') .. '/fonts'
-  if (lfs.attributes(fontsdir, 'mode') ~= 'directory') then 
+  if (lfs.attributes(chgstrcp.syscptoutf8(fontsdir), 'mode') ~= 'directory') then 
     assert(mkdir_plus(fontsdir))
   end
   local tfmpath = kpse.show_path('tfm')
@@ -789,7 +800,7 @@ elseif progname == 'dviout' then
   tfmpath = string.gsub(tfmpath, '/', '\\')
   local texrt = {}
   for d in string.gmatch(tfmpath, '([^;]+\\fonts)\\tfm[^;]*') do
-    if (lfs.attributes(d, 'mode') == 'directory') then 
+    if (lfs.attributes(chgstrcp.syscptoutf8(d), 'mode') == 'directory') then 
       table.insert(texrt, d)
     end
   end
@@ -818,7 +829,7 @@ elseif progname == 'texworks' then
   local TW_INIPATH = kpse.var_value('TW_INIPATH') or TW_LIBPATH
   os.setenv('TW_LIBPATH', TW_LIBPATH)
   os.setenv('TW_INIPATH', TW_INIPATH)
-  if (TW_INIPATH and lfs.attributes(TW_INIPATH, 'mode') ~= 'directory') then
+  if (TW_INIPATH and lfs.attributes(chgstrcp.syscptoutf8(TW_INIPATH), 'mode') ~= 'directory') then
     -- TeXworks needs directory holding its configuration to exist
     assert(mkdir_plus(TW_INIPATH))
   end
@@ -855,15 +866,15 @@ if not ARGV then
   local ext = string.match(string.lower(progfullname), '%.[^\\/.]*$') or ''
   if (ext == '.lua') or (ext == '.tlu') or (ext == '.texlua') then -- lua script
     arg[0] = progfullname
-  elseif (ext == '.tcl' and guimode) then -- tcl script; use built-in tclkit?
+  elseif (ext == '.tcl' and guimode) then -- tcl script; use built-in tcl/tk?
     local try_extern_tcl =
         (kpse.var_value('TEXLIVE_WINDOWS_TRY_EXTERNAL_TCL') == '1') and
         not is_restricted_progname
     local TCLEXENAME, TCLEXE
     if try_extern_tcl then
-      TCLEXENAME, TCLEXE = check_command(extension_map['.tcl'][1], PATH)
+      TCLEXE, TCLEXENAME = check_command(extension_map['.tcl'][1], PATH)
     end
-    if try_extern_tcl and not TCLEXENAME then
+    if try_extern_tcl and not TCLEXE then
       local exttcl_warn = [[
 External Tcl missing or outdated. Please install a recent Tcl, or configure
 TeX Live to always use the builtin Tcl for gui scripts:
@@ -874,9 +885,17 @@ Meanwhile, continuing with built-in Tcl...
     else -- did find something
       ARGV = {[0]=TCLEXE, TCLEXENAME}
     end
-    if not TCLEXENAME then
-      ARGV = {[0]=TEXDIR..'/tlpkg/tltcl/tclkit.exe', 'tclkit.exe'}
-      PATH = prepend_path(PATH, TEXDIR:gsub('/','\\')..'\\tlpkg\\tltcl')
+    if not TCLEXE then
+      -- kit: tlpkg/tltcl/tclkit.exe
+      -- regular wish: tlpkg/tltcl/bin/wish.exe
+      -- we ignore the fact that a non-kit tcl/tk provides wish AND tclsh
+      if lfs.isfile(TEXDIR..'/tlpkg/tltcl/tclkit.exe') then
+        ARGV = {[0]=TEXDIR..'/tlpkg/tltcl/tclkit.exe', 'tclkit.exe'}
+        PATH = prepend_path(PATH, TEXDIR:gsub('/','\\')..'\\tlpkg\\tltcl')
+      elseif lfs.isfile(TEXDIR..'/tlpkg/tltcl/bin/wish.exe') then
+        ARGV = {[0]=TEXDIR..'/tlpkg/tltcl/bin/wish.exe', 'wish.exe'}
+        PATH = prepend_path(PATH, TEXDIR:gsub('/','\\')..'\\tlpkg\\tltcl\\bin')
+      end
     end
     table.insert(ARGV, _q(progfullname:gsub('/','\\')))
     if (argline and argline ~= '') then argline = '-- '..argline end
@@ -896,7 +915,7 @@ end
 if ARGV then
   table.insert(ARGV, argline) -- pass through original arguments
   if string.find (table.concat(ARGV, ' '), 'perl.exe') and extperl_warn then
-
+  
     show_error(extperl_warn)
   end
   local ret = assert(os.spawn(ARGV))

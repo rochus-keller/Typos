@@ -76,7 +76,7 @@ unsigned fix_mem_max;
 
 /*tex how much memory is in use */
 
-int var_used, dyn_used;
+int dyn_used;
 
 /*tex head of the list of available one-word nodes */
 
@@ -1905,6 +1905,9 @@ static next_line_retval next_line(void)
             }
             force_eof = false;
             /*tex \LUA\ input or \.{\\scantextokens} */
+            if (tracing_scan_tokens_par > 0 && (iname == 20 || iname == 19)) {
+                print_char(')');
+            }
             if (iname == 21 || iname == 19) {
                 end_file_reading();
             } else {
@@ -2352,8 +2355,11 @@ void ins_the_toks(void)
 
 */
 
-void combine_the_toks(int how)
+# define immediate_permitted(n,target) ((eq_level(toks_base + n) == cur_level) && (token_ref_count(target) == 0))
+
+void combine_the_toks(void)
 {
+    halfword how = cur_chr;
     halfword source = null;
     halfword target = null;
     halfword append = (how == 0) || (how == 1) || (how == 4) || (how == 5);
@@ -2394,7 +2400,7 @@ void combine_the_toks(int how)
                         token_link(source) = null;
                     } else if (append) {
                         /*tex Append. */
-                        if (token_ref_count(target) == 0) {
+                        if (immediate_permitted(nt,target)) {
                             p = t;
                             while (token_link(p) != null) {
                                 p = token_link(p);
@@ -2404,13 +2410,12 @@ void combine_the_toks(int how)
                                 s = token_link(s);
                             }
                         } else {
-                            token_ref_count(target)--;
                             append_copied_toks_list(t,s);
                             set_toks_register(nt,temp_token_head,global);
                         }
                     } else {
                         /* prepend */
-                        if (token_ref_count(target) == 0) {
+                        if (immediate_permitted(nt,target)) {
                             h = null;
                             p = null ;
                             while (s != null) {
@@ -2423,7 +2428,6 @@ void combine_the_toks(int how)
                             set_token_link(p,t);
                             set_token_link(target,h);
                         } else {
-                            token_ref_count(target)--;
                             append_copied_toks_list(s,t);
                             set_toks_register(nt,temp_token_head,global);
                         }
@@ -2454,7 +2458,7 @@ void combine_the_toks(int how)
             t = token_link(target);
             if (append) {
                 /*tex Append. */
-                if (token_ref_count(target) == 0) {
+                if (immediate_permitted(nt,target)) {
                     p = t;
                     while (token_link(p) != null) {
                         p = token_link(p);
@@ -2464,13 +2468,12 @@ void combine_the_toks(int how)
                         s = token_link(s);
                     }
                 } else {
-                    token_ref_count(target)--;
                     append_copied_toks_list(t,s);
                     set_toks_register(nt,temp_token_head,global);
                 }
             } else {
                 /*tex Prepend. */
-                if (token_ref_count(target) == 0) {
+                if (immediate_permitted(nt,target)) {
                     h = null;
                     p = null;
                     while (s != null) {
@@ -2483,7 +2486,6 @@ void combine_the_toks(int how)
                     set_token_link(p,t);
                     set_token_link(target,h);
                 } else {
-                    token_ref_count(target)--;
                     append_copied_toks_list(s,t);
                     set_toks_register(nt,temp_token_head,global);
                 }
@@ -2617,8 +2619,11 @@ static int do_variable_pdf(halfword c)
     else if (scan_keyword("pkfixeddpi"))           { do_variable_backend_int(c_pdf_pk_fixed_dpi); }
     else if (scan_keyword("suppressoptionalinfo")) { do_variable_backend_int(c_pdf_suppress_optional_info); }
     else if (scan_keyword("omitcidset"))           { do_variable_backend_int(c_pdf_omit_cidset); }
-    else if (scan_keyword("omitcharset"))          { do_variable_backend_int(c_pdf_omit_charset); }
     else if (scan_keyword("recompress"))           { do_variable_backend_int(c_pdf_recompress); }
+    else if (scan_keyword("omitcharset"))          { do_variable_backend_int(c_pdf_omit_charset); }
+    else if (scan_keyword("omitinfodict"))         { do_variable_backend_int(c_pdf_omit_infodict); }
+    else if (scan_keyword("omitmediabox"))         { do_variable_backend_int(c_pdf_omit_mediabox); }
+    else if (scan_keyword("linking"))              { do_variable_backend_int(c_pdf_linking); }
 
     else if (scan_keyword("horigin"))              { do_variable_backend_dimen(d_pdf_h_origin); }
     else if (scan_keyword("vorigin"))              { do_variable_backend_dimen(d_pdf_v_origin); }
@@ -2872,6 +2877,8 @@ void conv_toks(void)
             warning_index = save_warning_index;
             scanner_status = save_scanner_status;
             ins_list(token_link(def_ref));
+            token_link(def_ref) = null;
+            free_avail(def_ref);
             def_ref = save_def_ref;
             restore_cur_string(u);
             /*tex No further action. */
@@ -3468,6 +3475,8 @@ void read_toks(int n, halfword r, halfword j)
                     n = -1;
                 }
             } else {
+                /*tex  initialize limit to avoid printing some garbage. */
+                ilimit=0;
                 fatal_error
                     ("*** (cannot \\read from terminal in nonstop modes)");
             }

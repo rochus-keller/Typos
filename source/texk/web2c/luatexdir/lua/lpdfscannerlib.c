@@ -78,7 +78,7 @@
 #include <lauxlib.h>
 #include <lualib.h>
 
-#include "luapplib/pplib.h"
+#include "pplib.h"
 
 #include <lua/luatex-api.h>
 

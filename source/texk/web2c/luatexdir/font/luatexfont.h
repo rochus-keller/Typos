@@ -119,17 +119,18 @@ typedef struct {
 /* tounicode.c */
 
 int write_cid_tounicode(PDF, fo_entry *, internal_font_number);
-void glyph_unicode_free(void);
-void def_tounicode(str_number, str_number);
 int write_tounicode(PDF, char **, char *);
+int write_raw_tounicode(PDF, internal_font_number, char *);
+void def_tounicode(str_number, str_number);
+void glyph_unicode_free(void);
 
 /* vfpacket.c */
 
 void replace_packet_fonts(internal_font_number f, int *old_fontid, int *new_fontid, int count);
 int *packet_local_fonts(internal_font_number f, int *num);
 
-int packet_cur_s;               /* current |do_vf_packet()| recursion level */
-int packet_stack_ptr;           /* pointer into |packet_stack| */
+extern int packet_cur_s;               /* current |do_vf_packet()| recursion level */
+extern int packet_stack_ptr;           /* pointer into |packet_stack| */
 vf_struct *new_vfstruct(void);
 
 /* writecff.c */
@@ -143,6 +144,7 @@ void writetype0(PDF pdf, fd_entry * fd);
 /* writefont.c */
 
 void do_pdf_font(PDF, internal_font_number);
+int do_pdf_preroll_font(PDF, internal_font_number);
 fd_entry *lookup_fd_entry(char *);
 fd_entry *new_fd_entry(internal_font_number);
 void write_fontstuff(PDF);
@@ -194,7 +196,10 @@ internal_font_number copy_font_info(internal_font_number f);
 /* writet3.c */
 
 extern FILE *t3_file;
-void writet3(PDF, internal_font_number);
+
+void writet3pk(PDF, internal_font_number);
+void prerollt3user(PDF, internal_font_number);
+void writet3user(PDF, internal_font_number);
 
 extern unsigned char *t3_buffer;
 extern int t3_size;

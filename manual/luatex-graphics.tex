@@ -515,9 +515,9 @@ In contrast with the normal stand alone \type {mpost} command, there is
 \stopfunctioncall
 
 If for some reason you want to stop using an \MPLIB\ instance while processing is
-not yet actually done, you can call \type finish}. Eventually, used memory
+not yet actually done, you can call \type{finish}. Eventually, used memory
 will be freed and open files will be closed by the \LUA\ garbage collector, but
-an explicit \type finish} is the only way to capture the final part of the
+an explicit \type{finish} is the only way to capture the final part of the
 output streams.
 
 \subsection{Result table}
@@ -822,7 +822,7 @@ anonymous capsules like loop variables are not accessible).
 <table>   p = get_path   (mp,<string> name)
 \stopfunctioncall
 
-The path is returned a a table with subtables that have six numbers: the
+The path is returned as a table with subtables that have six numbers: the
 coordinates of the point, pre- and postcontrol. A \type {cycle} fields indicates
 if a path is cyclic.
 
