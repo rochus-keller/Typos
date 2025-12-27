@@ -46,19 +46,19 @@ mp_string mp_make_string(MP mp);
     str_room(1); \
     *(mp->cur_string+mp->cur_length)= (unsigned char)(A); \
     mp->cur_length++; \
-} while (0)
+    } while (0)
 #define str_room(wsize) do { \
     size_t nsize; \
     if ((mp->cur_length+(size_t)wsize) >  mp->cur_string_size) { \
-        nsize =  mp->cur_string_size + mp->cur_string_size / 5 + EXTRA_STRING; \
-        if (nsize < (size_t)(wsize)) { \
-            nsize =  (size_t)wsize + EXTRA_STRING; \
-        } \
-        mp->cur_string =  (unsigned char *) mp_xrealloc(mp, mp->cur_string, (unsigned)nsize, sizeof(unsigned char)); \
-        memset (mp->cur_string+mp->cur_length,0,(nsize-mp->cur_length)); \
-        mp->cur_string_size =  nsize; \
+    nsize =  mp->cur_string_size + mp->cur_string_size / 5 + EXTRA_STRING; \
+    if (nsize < (size_t)(wsize)) { \
+    nsize =  (size_t)wsize + EXTRA_STRING; \
     } \
-} while (0)
+    mp->cur_string =  (unsigned char *) mp_xrealloc(mp, mp->cur_string, (unsigned)nsize, sizeof(unsigned char)); \
+    memset (mp->cur_string+mp->cur_length,0,(nsize-mp->cur_length)); \
+    mp->cur_string_size =  nsize; \
+    } \
+    } while (0)
 
 
 /*:18*//*19:*/
@@ -77,10 +77,10 @@ void mp_reset_cur_string(MP mp);
 
 #define delete_str_ref(A) do {  \
     if ( (A)->refs < MAX_STR_REF ) { \
-       if ( (A)->refs >  1 ) ((A)->refs)--;  \
-       else mp_flush_string(mp, (A)); \
+    if ( (A)->refs >  1 ) ((A)->refs)--;  \
+    else mp_flush_string(mp, (A)); \
     } \
-  } while (0)
+    } while (0)
 
 /*:22*//*23:*/
 #line 302 "../../../source/texk/web2c/mplibdir/mpstrings.w"
