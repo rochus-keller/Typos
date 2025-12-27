@@ -1,6 +1,6 @@
 
-#include "utilmd5.h"
-#include "utilsha.h"
+#include "util/utilmd5.h"
+#include "util/utilsha.h"
 
 #include "pplib.h"
 

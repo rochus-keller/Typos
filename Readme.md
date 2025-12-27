@@ -2,16 +2,19 @@
 
 This repository will slowly evolve into a new statically typed document language and typesetting system.
 
-NOTE that this project is in an early stage and work-in-progress.
+**Motivation for this project:**
+LuaTeX produces excellent typography, but with a terrible document description language. Typst seems to be a much better language, but the quality of the typography is still far from LuaTeX. Why has no one created a decent document description language for LuaTeX yet? It's about time someone gave it a try.
+
+**NOTE** that this project is in an early stage and work-in-progress.
 
 ### Planned features
 
 - [x] Build a stand-alone version of LuaTeX and verify that it works
-- [ ] Remove all unused parts from the repository
-- [ ] Remove the TeX frontend and the mktexfmt machinery 
-- [ ] Replace kpathsea and ptexenc by LeanQt 
-- [ ] Specify a statically (gradually) typed typesetting language in the Oberon+/Luon lineage
-- [ ] Implement a new frontend and page layouter
+- [x] Replace build system by BUSY
+- [ ] Remove all unused parts from the repository including the autotools build (WIP)
+- [ ] Implement a simple OTF font loader glue which responds the callback and orchestrates the necessary libs
+- [ ] Specify a statically (gradually) typed typesetting language in the Oberon+/Luon or Typst lineage
+- [ ] Implement a new frontend 
 
 ### Status on December 26, 2025
 
@@ -23,6 +26,19 @@ I therefore [downloaded the LuaTeX 1.18.0 version](https://gitlab.lisn.upsaclay.
 According to my research, 1.18.0 includes all features I need, is very stable, and can be built with C99 and C++11. More recent versions seem to require
 later C and C++ versions. I was able to successfully build 1.18.0 on Debian Bookworm x64 with the command 
 `export MAKEINFO=true; BUILDLUAHB=TRUE; CFLAGS="-O2 -fcommon" ./build.sh`. I verified that HarfBuzz etc. is actually included, and the result passes my basic tests. 
+
+### Status on December 27, 2025
+
+Now we have again a working BUSY build which is complete, fast and works well with the source level debugger. The build.sh has been removed (since broken). I will 
+soon also remove the autotools build so that I can make configuration changes without the need to update two build systems.
+
+### How to build
+
+Use the [BUSY build system](https://github.com/rochus-keller/busy/) or open the BUSY file with [LeanCreator](https://github.com/rochus-keller/leancreator/).
+So far there is only a BUSY file in the luatex subdirectory.
+
+The build was successfully tested on Linux x64. It is likely to also work on Linux x86 or macOS. 
+Win32 has not been tested yet and likely doesn't build without changes.
 
 ### Additional Credits
 

@@ -7,8 +7,8 @@
 #include <string.h>
 #include <assert.h>
 
-#include "utiliof.h"
-#include "utillog.h"
+#include "util/utiliof.h"
+#include "util/utillog.h"
 
 #include "ppapi.h"
 #include "ppheap.h"

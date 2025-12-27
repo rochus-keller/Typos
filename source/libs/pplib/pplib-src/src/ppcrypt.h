@@ -3,8 +3,8 @@
 #define PP_CRYPT_H
 
 #include "ppfilter.h"
-#include "utilcrypt.h"
-#include "utilcryptdef.h"
+#include "util/utilcrypt.h"
+#include "util/utilcryptdef.h"
 
 #define PPCRYPT_MAX_PASSWORD 127
 #define PPCRYPT_MAX_KEY 32
