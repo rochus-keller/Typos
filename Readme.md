@@ -3,7 +3,7 @@
 This repository will slowly evolve into a new statically typed document language and typesetting system.
 
 **Motivation for this project:**
-LuaTeX produces excellent typography, but with a terrible document description language. Typst seems to be a much better language, but the quality of the typography is still far from LuaTeX. Why has no one created a decent document description language for LuaTeX yet? It's about time someone gave it a try.
+LuaTeX produces excellent typography, but with a terrible document description language. Typst seems to be a much better language, but the quality of the typography is still far from LuaTeX. Why has no one created a decent document description language for LuaTeX yet? It's about time someone gives it a try.
 
 **NOTE** that this project is in an early stage and work-in-progress.
 
@@ -11,7 +11,8 @@ LuaTeX produces excellent typography, but with a terrible document description l
 
 - [x] Build a stand-alone version of LuaTeX and verify that it works
 - [x] Replace build system by BUSY
-- [ ] Remove all unused parts from the repository including the autotools build (WIP)
+- [x] Removed all autotools files and readme files thereof
+- [ ] Remove all unused parts from the repository (WIP)
 - [ ] Implement a simple OTF font loader glue which responds the callback and orchestrates the necessary libs
 - [ ] Specify a statically (gradually) typed typesetting language in the Oberon+/Luon or Typst lineage
 - [ ] Implement a new frontend 
@@ -29,8 +30,8 @@ later C and C++ versions. I was able to successfully build 1.18.0 on Debian Book
 
 ### Status on December 27, 2025
 
-Now we have again a working BUSY build which is complete, fast and works well with the source level debugger. The build.sh has been removed (since broken). I will 
-soon also remove the autotools build so that I can make configuration changes without the need to update two build systems.
+Now we have again a working BUSY build which is complete, fast and works well with the source level debugger. The build.sh and all autotool related 
+files have been removed so that I can make configuration changes without the need to update two build systems.
 
 ### How to build
 
