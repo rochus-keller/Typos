@@ -668,7 +668,7 @@ kpathsea_path_search_list_generic (kpathsea kpse,
     for (i = 0; i < STR_LIST_LENGTH (ret_list); i++) {
       fprintf (stderr, " %s", STR_LIST_ELT (ret_list, i));
     }
-    fputs (".\n", stderr);
+    fputs ("\n", stderr);
   }
 #endif
     goto out;

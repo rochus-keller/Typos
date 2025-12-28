@@ -389,6 +389,7 @@ void luainterpreter(void)
     luaopen_pdf(L);
     luaopen_pdfe(L);
     luaopen_pdfscanner(L);
+    luaopen_fontloader(L);
     if (!lua_only) {
         luaopen_img(L);
     }

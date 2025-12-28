@@ -261,6 +261,7 @@ init_path (kpathsea kpse, kpse_format_info_type *info,
        as well as PATH.prog.  */
     if (!var) { /* Try PATH.prog. */
       string evar = concat3 (env_name, ".", kpse->program_name);
+      const char* tmp = evar;
       env_value = getenv (evar);
       if (env_value && *env_value) {
         var = evar;

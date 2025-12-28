@@ -298,7 +298,7 @@ read_all_cnf (kpathsea kpse)
     }
   }
 }
-
+
 /* Read the cnf files on the first call.  Return the first value in the
    returned list -- this will be from the last-read cnf file.  */
 

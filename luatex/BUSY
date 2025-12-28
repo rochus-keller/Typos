@@ -1448,11 +1448,18 @@ let luaffi : SourceSet {
     ]
 }
 
+let loadfont : SourceSet {
+    .configs += [ config luaconfig ]
+    .sources = [
+    ./texk/web2c/luatexdir/load-font/font_loader.c
+    ]
+}
+
 let luatex ! : Executable {
     .configs += config;
     .deps += [ zlib zziplib lua53 libpng kpathsea web2c dvi font image lang luabind fontforge
                 luafontloader luamd5 luapplib pdf slnunicode tex unilib utils mplibdir luapeg
                 libmd5 synctexdir luatexdir luafilesystem luasocket luazip luaffi
-                graphite2 harfbuzz luaharfbuzz ]
+                graphite2 harfbuzz luaharfbuzz loadfont ]
     # NOTE: main is in luatex.c
 }

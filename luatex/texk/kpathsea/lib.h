@@ -56,7 +56,7 @@ extern "C" {
   fprintf (stderr, "fatal: ");
 #endif
 
-#define END_FATAL() fputs (".\n", stderr); exit (1); } while (0)
+#define END_FATAL() fputs ("\n", stderr); exit (1); } while (0)
 
 #define FATAL(str)                                                      \
   START_FATAL (); fputs (str, stderr); END_FATAL ()
@@ -74,7 +74,7 @@ extern "C" {
    START_FATAL (); fprintf (stderr, str, e1, e2, e3, e4, e5, e6); END_FATAL ()
 
 #define START_WARNING() do { fputs ("warning: ", stderr)
-#define END_WARNING() fputs (".\n", stderr); fflush (stderr); } while (0)
+#define END_WARNING() fputs ("\n", stderr); fflush (stderr); } while (0)
 
 #define WARNING(str)                                                    \
   START_WARNING (); fputs (str, stderr); END_WARNING ()

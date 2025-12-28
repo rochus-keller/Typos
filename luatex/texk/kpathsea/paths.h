@@ -1,6 +1,6 @@
 /* paths.h: Generated from texmf.cnf. */
 
-#define DEFAULT_TEXPATH ""
+#define DEFAULT_TEXPATH ".//"
 
 #ifndef DEFAULT_TEXMFROOT
 //#define DEFAULT_TEXMFROOT "$SELFAUTOPARENT"
