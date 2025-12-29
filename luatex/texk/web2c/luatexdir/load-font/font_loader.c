@@ -22,6 +22,7 @@
 #include <string.h>
 #include <math.h>
 #include <stdio.h>
+#include <assert.h>
 
 /*
  * Override OpTeX's file checker to always say "YES".
@@ -35,6 +36,8 @@ static int always_true(lua_State *L) {
 
 /* A generic dummy function for empty hooks */
 static int dummy_func(lua_State *L) {
+    fprintf(stderr,"*** luaotfload.main called\n");
+    fflush(stderr);
     return 0;
 }
 
@@ -85,6 +88,8 @@ static int luaotfload_stub(lua_State *L) {
 
 static int is_otf_request(const char *name) {
     /* bracketed filename OR explicit .otf/.ttf */
+    if( *name == ':' )
+        return 1;
     return (strchr(name,'[') && strchr(name,']')) ||
            (strstr(name, ".otf") != NULL) ||
            (strstr(name, ".ttf") != NULL) ||
@@ -101,6 +106,7 @@ static int call_font_reader(lua_State *L, const char *funcname, const char *name
         lua_pop(L, 1);
         // stack: -
         fprintf(stderr,"*** call_font_reader(%s %s) get global font failed\n", funcname, name);
+        fflush(stderr);
         return 0;
     }
 
@@ -113,6 +119,7 @@ static int call_font_reader(lua_State *L, const char *funcname, const char *name
         lua_pop(L, 1);
         // stack: -
         fprintf(stderr,"*** call_font_reader(%s %s) font[funcname] is not a function\n", funcname, name);
+        fflush(stderr);
         return 0;
     }
 
@@ -125,6 +132,7 @@ static int call_font_reader(lua_State *L, const char *funcname, const char *name
         const char *err = lua_tostring(L, -1);
         fprintf(stderr, "*** font.%s(%s,%g) ERROR: %s\n",
                 funcname, name, (double)size, err ? err : "(non-string)");
+        fflush(stderr);
         lua_pop(L, 1);
         // stack: -
         lua_pushnil(L);
@@ -153,9 +161,16 @@ static int define_font(lua_State *L)
         size = (-655.36) * size;  /* same normalization used in LuaTeX wiki examples */
 
     fprintf(stderr,"*** define_font(%s)\n", name);
+    fflush(stderr);
 
     /* LuaTeX passes (name, size, id); keep at most 3 args on stack. */
     lua_settop(L, 3);
+
+    if (strcmp(name, "nullfont") == 0) {
+        fprintf(stderr,"*** define_font(%s) cannot load nullfont\n", name);
+        fflush(stderr);
+        return 0;
+    }
 
     if (!is_otf_request(name)) {
         /* Prefer VF if present, else TFM */
@@ -165,25 +180,41 @@ static int define_font(lua_State *L)
         lua_pop(L, 1); /* pop nil */
         if (call_font_reader(L, "read_tfm", name, size) && !lua_isnil(L, -1))
             return 1;
-        lua_pop(L, 1);
-        return 0;
+        // stack: null
+        return 1;
     }
 
     /* ---------- 1) parse filename ---------- */
     char filename[1024];
     filename[0] = '\0';
+    static char last_filename[127] = {0};
 
-    const char *start = strchr(name, '[');
-    const char *end   = strchr(name, ']');
-    if (start && end && end > start) {
-        size_t len = (size_t)(end - start - 1);
-        if (len >= sizeof(filename)) len = sizeof(filename) - 1;
-        memcpy(filename, start + 1, len);
-        filename[len] = '\0';
-    } else {
-        strncpy(filename, name, sizeof(filename) - 1);
-        filename[sizeof(filename) - 1] = '\0';
+    if( name && *name == ':' )
+    {
+        if( last_filename[0] == 0 )
+        {
+            fprintf(stderr,"*** define_font(%s) font without name\n", name);
+            fflush(stderr);
+            return 0;
+        }else
+            strcpy(filename,last_filename);
+    }else
+    {
+        const char *start = strchr(name, '[');
+        const char *end   = strchr(name, ']');
+        if (start && end && end > start) {
+            size_t len = (size_t)(end - start - 1);
+            if (len >= sizeof(filename)) len = sizeof(filename) - 1;
+            memcpy(filename, start + 1, len);
+            filename[len] = '\0';
+        } else {
+            strncpy(filename, name, sizeof(filename) - 1);
+            filename[sizeof(filename) - 1] = '\0';
+        }
+        strcpy(last_filename, filename);
     }
+
+    // stack: -
 
     /* ---------- 2) kpse.find_file ---------- */
     lua_getglobal(L, "kpse");
@@ -191,6 +222,7 @@ static int define_font(lua_State *L)
     if (!lua_istable(L, -1)) {
         lua_pop(L, 1);
         fprintf(stderr,"*** define_font(%s) failure kpse\n", name);
+        fflush(stderr);
         return 0; }
 
     lua_getfield(L, -1, "find_file");
@@ -203,6 +235,7 @@ static int define_font(lua_State *L)
     if (lua_pcall(L, 3, 1, 0) != LUA_OK) {
         lua_pop(L, 2); /* error + kpse */
         fprintf(stderr,"*** define_font(%s) failure call kpse.find_file\n", name);
+        fflush(stderr);
         return 0;
     }
 
@@ -210,6 +243,7 @@ static int define_font(lua_State *L)
     if (!lua_isstring(L, -1)) {
         lua_pop(L, 2); /* result + kpse */
         fprintf(stderr,"*** define_font(%s) failure result kpse.find_file\n", name);
+        fflush(stderr);
         return 0;
     }
 
@@ -227,6 +261,7 @@ static int define_font(lua_State *L)
         lua_pop(L, 1);
         // stack: -
         fprintf(stderr,"*** define_font(%s) failure luaharfbuzz\n", name);
+        fflush(stderr);
         return 0; }
     const int hb_idx = lua_gettop(L);
 
@@ -237,6 +272,7 @@ static int define_font(lua_State *L)
         lua_pop(L, 2);
         // stack: -
         fprintf(stderr,"*** define_font(%s) failure Face\n", name);
+        fflush(stderr);
         return 0;
     }
     lua_getfield(L, -1, "new");
@@ -252,6 +288,7 @@ static int define_font(lua_State *L)
         lua_pop(L, 2);
         // stack: -
         fprintf(stderr,"*** define_font(%s) failure Face.new\n", name);
+        fflush(stderr);
         return 0;
     }
     // stack: hb, face
@@ -263,6 +300,7 @@ static int define_font(lua_State *L)
         lua_pop(L, 3);
         // stack: -
         fprintf(stderr,"*** define_font(%s) failure Font\n", name);
+        fflush(stderr);
         return 0;
     }
     lua_getfield(L, -1, "new");
@@ -278,6 +316,7 @@ static int define_font(lua_State *L)
         lua_pop(L, 3);
         // stack: -
         fprintf(stderr,"*** define_font(%s) failure Font.new\n", name);
+        fflush(stderr);
         return 0;
     }
 
@@ -295,6 +334,7 @@ static int define_font(lua_State *L)
         lua_pop(L, 3);
         // stack: -
         fprintf(stderr,"*** define_font(%s) failure get_upem\n", name);
+        fflush(stderr);
         return 0;
     }
 
@@ -332,34 +372,21 @@ static int define_font(lua_State *L)
             lua_pop(L, 1); /* error */
         }
         // stack: hb, face, font, tbl
-    } else {
-        lua_pop(L, 1); /* non-function */
-        // stack: hb, face, font, tbl
-        /* Fallback: luaharfbuzz.ot_math_has_data(face) if your binding uses that style. */
-        lua_getfield(L, hb_idx, "ot_math_has_data");
-        // stack: hb, face, font, tbl, func
-        if (lua_isfunction(L, -1)) {
-            lua_pushvalue(L, face_idx);
-            // stack: hb, face, font, tbl, func, face
-            if (lua_pcall(L, 1, 1, 0) == LUA_OK) {
-                has_math = lua_toboolean(L, -1);
-                // stack: hb, face, font, tbl, bool
-                lua_pop(L, 1);
-            } else {
-                // stack: hb, face, font, tbl, msg
-                lua_pop(L, 1);
-            }
-        } else {
-            lua_pop(L, 1);
-        }
-        // stack: hb, face, font, tbl
     }
+
+#ifdef TYPOS_DEBUG
+    assert(lua_istable(L,-1));
+    lua_getfield(L, -1, "mode");
+    assert( lua_isstring(L, -1) && strcmp(lua_tostring(L,-1), "harf") == 0 );
+    lua_pop(L,1);
+#endif
+
 
     if (has_math) {
         /* Only do this if your luaharfbuzz build actually provides these helpers. */
-        lua_getfield(L, hb_idx, "ot_math_constant_get_table");
-        // stack: hb, face, font, tbl, func
-        if (lua_isfunction(L, -1) && lua_pcall(L, 0, 1, 0) == LUA_OK && lua_istable(L, -1)) {
+        lua_getfield(L, hb_idx, "ot_math_constants");
+        // stack: hb, face, font, tbl, tbl
+        if (lua_istable(L, -1)) {
             const int map_idx = lua_gettop(L);
 
             lua_newtable(L);
@@ -403,44 +430,71 @@ static int define_font(lua_State *L)
 
     lua_getfield(L, font_idx, "get_nominal_glyph");
     const int f_gid = lua_gettop(L);
+    // stack: hb, face, font, restbl, charstbl, func
     lua_getfield(L, font_idx, "get_glyph_h_advance");
     const int f_adv = lua_gettop(L);
+    // stack: hb, face, font, restbl, charstbl, func, func
 
     for (int cp = 32; cp < 0x10000; cp++) {
+        // stack: hb, face, font, restbl, charstbl, func, func
         lua_pushvalue(L, f_gid);
+        // stack: hb, face, font, restbl, charstbl, func, func, func
         lua_pushvalue(L, font_idx);
+        // stack: hb, face, font, restbl, charstbl, func, func, func, font
         lua_pushinteger(L, cp);
+        // stack: hb, face, font, restbl, charstbl, func, func, func, font, cp
         lua_call(L, 2, 1);
         int gid = (int)lua_tointeger(L, -1);
+        // stack: hb, face, font, restbl, charstbl, func, func, gid
         lua_pop(L, 1);
-        if (gid <= 0) continue;
+        // stack: hb, face, font, restbl, charstbl, func, func
+        if (gid <= 0)
+            continue;
 
         lua_newtable(L);
         const int cd_idx = lua_gettop(L);
-
+        // stack: hb, face, font, restbl, charstbl, func, func, cdtbl
         lua_pushvalue(L, f_adv);
+        // stack: hb, face, font, restbl, charstbl, func, func, cdtbl, func
         lua_pushvalue(L, font_idx);
+        // stack: hb, face, font, restbl, charstbl, func, func, cdtbl, func, font
         lua_pushinteger(L, gid);
+        // stack: hb, face, font, restbl, charstbl, func, func, cdtbl, func, font, gid
         lua_call(L, 2, 1);
         lua_Number adv = lua_tonumber(L, -1);
+        // stack: hb, face, font, restbl, charstbl, func, func, cdtbl, adv
         lua_pop(L, 1);
+        // stack: hb, face, font, restbl, charstbl, func, func, cdtbl
 
         lua_pushnumber(L, floor(adv * scale));
+        // stack: hb, face, font, restbl, charstbl, func, func, cdtbl, width
         lua_setfield(L, cd_idx, "width");
+        // stack: hb, face, font, restbl, charstbl, func, func, cdtbl
 
         lua_rawseti(L, chars_idx, cp);
+        // stack: hb, face, font, restbl, charstbl, func, func
     }
+    // stack: hb, face, font, restbl, charstbl, func, func
 
     lua_pop(L, 2); /* pop cached funcs */
+    // stack: hb, face, font, restbl, charstbl
     lua_setfield(L, res_idx, "characters"); /* pops chars */
+    // stack: hb, face, font, restbl
 
     /* leave only result table as return value */
-    /* stack currently: ... hb face font result */
-    lua_replace(L, 1);    /* put result at stack slot 1 */
-    lua_settop(L, 1);     /* discard hb/face/font */
+    lua_replace(L, -4);
+    // stack: restbl, face, font
+    lua_pop(L, 2);     /* discard hb/face/font */
+    // stack: restbl
 
-    //fprintf(stderr,"*** define_font(%s) ok return %s\n", name, lua_type(L, -1));
-
+#ifdef TYPOS_DEBUG
+    const int top = lua_gettop(L);
+    assert(lua_istable(L,-1));
+    lua_getfield(L, -1, "mode");
+    assert( lua_isstring(L, -1) && strcmp(lua_tostring(L,-1), "harf") == 0 );
+    lua_pop(L,1);
+    // fprintf(stderr,"*** define_font(%s) ok return\n", name);
+#endif
 
     return 1;
 }
@@ -450,20 +504,43 @@ static int define_font(lua_State *L)
 
 void luaopen_fontloader(lua_State *L) {
 
+#if 1
     lua_getglobal(L, "package");
+    lua_getfield(L, -1, "preload");
+    lua_pushcfunction(L, luaotfload_stub);
+    lua_setfield(L, -2, "luaotfload-main");
+    lua_pop(L, 2); /* preload, package */
+#else
+    // stack: -
+    lua_getglobal(L, "package");
+    // stack: package
     lua_getfield(L, -1, "loaded"); /* Stack: package, loaded */
-    lua_newtable(L);
+    // stack: package, loaded
+    luaotfload_stub(L);
+    // stack: package, loaded, tbl
     /* Add any dummy fields OpTeX might check, usually none needed if stub is minimal */
     lua_pushstring(L, "0.0.0");
+    // stack: package, loaded, tbl, str
     lua_setfield(L, -2, "version");
+    // stack: package, loaded, tbl,
     lua_setfield(L, -2, "luaotfload-main");
-    lua_pop(L, 2); /* Pop loaded, package */
+    // stack: package, loaded
+    lua_pop(L, 2);
+    // stack: -
+#endif
 
+    // stack: -
     lua_getglobal(L, "callback");
+    // stack: callback
     lua_getfield(L, -1, "register");
+    // stack: callback, func
     lua_pushstring(L, "define_font");
+    // stack: callback, func, str
     lua_pushcfunction(L, define_font);
-    lua_call(L, 2, 1);
+    // stack: callback, func, str, func
+    lua_call(L, 2, 0);
+    // stack: callback
     lua_pop(L, 1);
+    // stack: -
 }
 

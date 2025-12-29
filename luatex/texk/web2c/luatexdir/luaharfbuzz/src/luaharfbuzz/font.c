@@ -248,6 +248,14 @@ static int font_get_var_coords_normalized(lua_State *L) {
   return count;
 }
 
+static int font_math_get_constant(lua_State *L) {
+  Font *f = (Font *)luaL_checkudata(L, 1, "harfbuzz.Font");
+  hb_ot_math_constant_t c = (hb_ot_math_constant_t) luaL_checkinteger(L, 2);
+  hb_position_t p = hb_ot_math_get_constant(*f, c);
+  lua_pushinteger(L, p);
+  return 1;
+}
+
 static const struct luaL_Reg font_methods[] = {
   { "__gc", font_destroy },
   { "set_scale", font_set_scale },
@@ -266,6 +274,7 @@ static const struct luaL_Reg font_methods[] = {
   { "set_var_coords_normalized", font_set_var_coords_normalized },
   { "set_var_named_instance", font_set_var_named_instance },
   { "get_var_coords_normalized", font_get_var_coords_normalized },
+  { "ot_math_get_constant", font_math_get_constant },
   { NULL, NULL }
 };
 

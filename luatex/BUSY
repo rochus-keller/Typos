@@ -8,6 +8,9 @@ let config : Config {
     }else {
         error("target toolchain not supported")
     }
+    if build_mode == `debug {
+        .defines += "TYPOS_DEBUG"
+    }
 }
 
 let zlib : SourceSet {

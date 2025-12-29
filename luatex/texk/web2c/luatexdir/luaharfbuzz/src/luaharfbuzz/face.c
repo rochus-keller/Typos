@@ -94,6 +94,13 @@ static int face_get_name(lua_State *L) {
   return 1;
 }
 
+static int face_math_has_data(lua_State *L) {
+  Face *f = (Face *)luaL_checkudata(L, 1, "harfbuzz.Face");
+
+  lua_pushboolean(L, hb_ot_math_has_data(*f));
+  return 1;
+}
+
 static int face_get_table(lua_State *L) {
   Face *f = (Face *)luaL_checkudata(L, 1, "harfbuzz.Face");
   Tag *t = (Tag *)luaL_checkudata(L, 2, "harfbuzz.Tag");
@@ -647,6 +654,7 @@ static const struct luaL_Reg face_methods[] = {
   { "ot_var_named_instance_get_design_coords", face_var_named_instance_get_design_coords },
   { "ot_var_normalize_variations", face_var_normalize_variations },
   { "ot_var_normalize_coords", face_var_normalize_coords },
+  { "ot_math_has_data", face_math_has_data },
   { NULL, NULL }
 };
 
