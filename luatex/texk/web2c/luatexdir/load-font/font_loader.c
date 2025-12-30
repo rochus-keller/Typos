@@ -111,6 +111,8 @@ static int call_font_reader(lua_State *L, const char *funcname, const char *name
         // stack: nil
         return 1;
     }
+    fprintf(stderr,"*** call_font_reader(%s %s) WARNING old TeX fonts are obsolete and only marginally supported\n", funcname, name);
+    fflush(stderr);
     // stack: result (fonttable or nil)
     return 1;
 }
@@ -132,7 +134,7 @@ static int error_return(lua_State *L, const char* message, const char* name)
     return 1;
 }
 
-static int find_file(lua_State* L, char* filename, const char* name)
+static int find_file(lua_State* L, char* filename, int fnsize, const char* name)
 {
     // stack: -
 
@@ -163,15 +165,15 @@ static int find_file(lua_State* L, char* filename, const char* name)
     }
 
     // stack: kpse, result
-    strncpy(filename, lua_tostring(L, -1), sizeof(filename) - 1);
-    filename[sizeof(filename) - 1] = '\0';
+    strncpy(filename, lua_tostring(L, -1), fnsize - 1);
+    filename[fnsize - 1] = '\0';
     lua_pop(L, 2); /* result + kpse */
 
     // stack: -
     return 0;
 }
 
-static int parse_filename(lua_State* L, char* filename, const char* name)
+static int parse_filename(lua_State* L, char* filename, int fnsize, const char* name)
 {
     // TODO: so far this only considers the actual name in [] without the additiona attributes following it
     static char last_filename[127] = {0};
@@ -188,12 +190,13 @@ static int parse_filename(lua_State* L, char* filename, const char* name)
         const char *end   = strchr(name, ']');
         if (start && end && end > start) {
             size_t len = (size_t)(end - start - 1);
-            if (len >= sizeof(filename)) len = sizeof(filename) - 1;
+            if (len >= fnsize)
+                len = fnsize - 1;
             memcpy(filename, start + 1, len);
             filename[len] = '\0';
         } else {
-            strncpy(filename, name, sizeof(filename) - 1);
-            filename[sizeof(filename) - 1] = '\0';
+            strncpy(filename, name, fnsize - 1);
+            filename[fnsize - 1] = '\0';
         }
         strcpy(last_filename, filename);
     }
@@ -202,37 +205,41 @@ static int parse_filename(lua_State* L, char* filename, const char* name)
 
 static int push_hb_face_font(lua_State* L, char* filename, const char* name)
 {
+    const int top = lua_gettop(L);
     lua_getglobal(L, "luaharfbuzz");
     // stack: hb
     if (!lua_istable(L, -1)) {
         lua_pop(L, 1);
         // stack: -
+        assert(top == lua_gettop(L));
         return error_return(L, "*** define_font(%s) failure luaharfbuzz\n", name);
     }
     const int hb_idx = lua_gettop(L);
 
     /* face = luaharfbuzz.Face.new(filename) */
     lua_getfield(L, hb_idx, "Face");
-    // stack: hb, Face
+    // stack: hb, tbl
     if (!lua_istable(L, -1)) {
         lua_pop(L, 2);
         // stack: -
+        assert(top == lua_gettop(L));
         return error_return(L, "*** define_font(%s) failure Face\n", name);
     }
     lua_getfield(L, -1, "new");
-    // stack: hb, Face, func
+    // stack: hb, tbl, func
     lua_pushstring(L, filename);
-    // stack: hb, Face, func, arg
+    // stack: hb, tbl, func, arg
     lua_call(L, 1, 1);           /* returns face object */
-    // stack: hb, Face, result
-    lua_remove(L, -2);           /* remove Face table */
-    // stack: hb, result
-    const int face_idx = lua_gettop(L);
-    if (lua_isnil(L, face_idx)) {
-        lua_pop(L, 2);
+    // stack: hb, tbl, face
+    if (lua_isnil(L, -1)) {
+        lua_pop(L, 3);
         // stack: -
+        assert(top == lua_gettop(L));
         return error_return(L, "*** define_font(%s) failure Face.new\n", name);
     }
+    lua_remove(L, -2);           /* remove Face table */
+    // stack: hb, face
+    const int face_idx = lua_gettop(L);
     // stack: hb, face
 
     /* font = luaharfbuzz.Font.new(face) */
@@ -241,6 +248,7 @@ static int push_hb_face_font(lua_State* L, char* filename, const char* name)
     if (!lua_istable(L, -1)) {
         lua_pop(L, 3);
         // stack: -
+        assert(top == lua_gettop(L));
         return error_return(L, "*** define_font(%s) failure Font\n", name);
     }
     lua_getfield(L, -1, "new");
@@ -255,9 +263,11 @@ static int push_hb_face_font(lua_State* L, char* filename, const char* name)
     if (lua_isnil(L, font_idx)) {
         lua_pop(L, 3);
         // stack: -
+        assert(top == lua_gettop(L));
         return error_return(L, "*** define_font(%s) failure Font.new\n", name);
     }
     // stack: hb, face, font
+    assert(top+3 == lua_gettop(L));
     return 0;
 }
 
@@ -281,7 +291,19 @@ static lua_Number get_upem(lua_State *L, int face_idx, const char* name)
     return upem;
 }
 
-static int create_result_table(lua_State *L, const char* filename, lua_Number size)
+static int is_open_type(const char* filename)
+{
+    FILE* f = fopen(filename,"r");
+    if( f == NULL )
+        return 0;
+    char buf[4] = {0};
+    fread(buf, 4, 1, f);
+    const int res = strncmp(buf, "OTTO", 4);
+    fclose(f);
+    return res == 0;
+}
+
+static int create_result_table(lua_State *L, const char* filename, int face_idx, lua_Number size, lua_Number upem)
 {
     // stack: -
     const int top = lua_gettop(L);
@@ -290,45 +312,49 @@ static int create_result_table(lua_State *L, const char* filename, lua_Number si
     // stack: tbl
     const int res_idx = lua_gettop(L);
 
-    lua_pushstring(L, filename);
-    lua_setfield(L, res_idx, "name");
+    lua_getfield(L, face_idx, "get_name");
+    lua_pushvalue(L, face_idx);
+    lua_pushinteger(L, 4); // Full Font Name
+    lua_call(L, 2, 1);
+    lua_setfield(L, res_idx, "fullname");
 
     lua_pushstring(L, filename);
     lua_setfield(L, res_idx, "filename");
 
-    // 2. Set format="opentype" (Crucial!)
-    lua_pushstring(L, "opentype");
+    lua_getfield(L, face_idx, "get_name");
+    lua_pushvalue(L, face_idx);
+    lua_pushinteger(L, 6); // PostScript Name
+    lua_call(L, 2, 1);
+    lua_pushvalue(L, -1); // duplicate
+    lua_setfield(L, res_idx, "psname");
+    lua_setfield(L, res_idx, "name");
+
+    lua_pushnumber(L, size);
+    lua_setfield(L, res_idx, "size");
+
+    lua_pushnumber(L, 655360); // TODO: assumption, usually 10pt = 655360 sp
+    lua_setfield(L, res_idx, "designsize");
+
+    if( is_open_type(filename) )
+        lua_pushstring(L, "opentype");
+    else
+        lua_pushstring(L, "truetype");
     lua_setfield(L, res_idx, "format");
 
-    // 3. Set type="real"
+    lua_pushinteger(L, 2); // unicode
+    lua_setfield(L, res_idx, "encodingbytes");
+
+    lua_pushstring(L, "harf");
+    lua_setfield(L, res_idx, "mode");
+
     lua_pushstring(L, "real");
     lua_setfield(L, res_idx, "type");
 
-    // 4. Set embedding="subset"
+    lua_pushinteger(L, (lua_Integer)upem);
+    lua_setfield(L, res_idx, "unitsperem");
+
     lua_pushstring(L, "subset");
     lua_setfield(L, res_idx, "embedding");
-
-    // 5. Provide cidinfo (standard for OTF)
-    lua_newtable(L);
-        lua_pushstring(L, "Adobe");
-        lua_setfield(L, -2, "registry");
-        lua_pushstring(L, "Identity");
-        lua_setfield(L, -2, "ordering");
-        lua_pushinteger(L, 0);
-        lua_setfield(L, -2, "supplement");
-    lua_setfield(L, res_idx, "cidinfo");
-
-    // 6. Ensure encodingbytes=2 (Unicode)
-    lua_pushinteger(L, 2);
-    lua_setfield(L, res_idx, "encodingbytes");
-
-    // stack: tbl
-    lua_pushnumber(L, size);
-    lua_setfield(L, res_idx, "size");
-    // stack: tbl
-    lua_pushstring(L, "harf");
-    lua_setfield(L, res_idx, "mode");
-    // stack: tbl
 
     assert( lua_gettop(L) == top + 1);
     return 0;
@@ -400,69 +426,134 @@ static int fill_math(lua_State *L, int hb_idx, int font_idx, int res_idx, lua_Nu
     return 0;
 }
 
-static int fill_chars_table(lua_State *L, int font_idx, int res_idx, lua_Number scale)
+static int fill_chars_table(lua_State *L, int font_idx, int res_idx, lua_Number scale, lua_Number* space_width)
 {
+    const int top = lua_gettop(L);
     // stack: -
     lua_newtable(L);
     const int chars_idx = lua_gettop(L);
     // stack: charstbl
 
     lua_getfield(L, font_idx, "get_nominal_glyph");
-    const int f_gid = lua_gettop(L);
+    const int get_nominal_glyph = lua_gettop(L); //   (Font, Codepoint) -> GlyphID
     // stack: charstbl, func
     lua_getfield(L, font_idx, "get_glyph_h_advance");
-    const int f_adv = lua_gettop(L);
+    const int get_glyph_h_advance = lua_gettop(L);  // (Font, GlyphID) -> advance for for horizontal text
     // stack: charstbl, func, func
+    lua_getfield(L, font_idx, "get_glyph_extents");
+    const int get_glyph_extents = lua_gettop(L);
+    // stack: charstbl, func, func, func
 
     for (int cp = 32; cp < 0x10000; cp++) {
-        // stack: charstbl, func, func
-        lua_pushvalue(L, f_gid);
-        // stack: charstbl, func, func, func
+        lua_pushvalue(L, get_nominal_glyph);
         lua_pushvalue(L, font_idx);
-        // stack: charstbl, func, func, func, font
         lua_pushinteger(L, cp);
-        // stack: charstbl, func, func, func, font, cp
         lua_call(L, 2, 1);
-        int gid = (int)lua_tointeger(L, -1);
-        // stack: charstbl, func, func, gid
+        const int gid = (int)lua_tointeger(L, -1);
         lua_pop(L, 1);
-        // stack: charstbl, func, func
         if (gid <= 0)
             continue;
 
         lua_newtable(L);
         const int cd_idx = lua_gettop(L);
-        // stack: charstbl, func, func, cdtbl
-        lua_pushvalue(L, f_adv);
-        // stack: charstbl, func, func, cdtbl, func
-        lua_pushvalue(L, font_idx);
-        // stack: charstbl, func, func, cdtbl, func, font
-        lua_pushinteger(L, gid);
-        // stack: charstbl, func, func, cdtbl, func, font, gid
-        lua_call(L, 2, 1);
-        lua_Number adv = lua_tonumber(L, -1);
-        // stack: charstbl, func, func, cdtbl, adv
-        lua_pop(L, 1);
-        // stack: charstbl, func, func, cdtbl
 
-        lua_pushnumber(L, floor(adv * scale));
-        // stack: charstbl, func, func, cdtbl, width
+        lua_pushvalue(L, get_glyph_h_advance);
+        lua_pushvalue(L, font_idx);
+        lua_pushinteger(L, gid);
+        lua_call(L, 2, 1);
+        const lua_Number advance = lua_tonumber(L, -1);
+        if( cp == 32 && space_width )
+            *space_width = advance;
+        lua_pop(L, 1);
+
+        lua_pushnumber(L, floor(advance * scale));
         lua_setfield(L, cd_idx, "width");
-        // stack: charstbl, func, func, cdtbl
+
+        lua_pushvalue(L, get_glyph_extents);
+        lua_pushvalue(L, font_idx);
+        lua_pushinteger(L, gid);
+        lua_call(L, 2, 1);
+        if( !lua_isnil(L, -1) )
+        {
+            lua_getfield(L, -1, "y_bearing");
+            const lua_Number y_bearing = lua_tonumber(L, -1);
+            lua_pop(L, 1);
+            lua_getfield(L, -1, "height");
+            const lua_Number height = lua_tonumber(L, -1);
+            lua_pop(L, 1);
+            lua_pushnumber(L, floor(y_bearing * scale));
+            lua_setfield(L, cd_idx, "height");
+            lua_Number depth = -(y_bearing + height);
+            if( depth < 0.0 )
+                depth = 0.0;
+            lua_pushnumber(L, floor(depth * scale));
+            lua_setfield(L, cd_idx, "depth");
+        }
+        lua_pop(L, 1);
 
         lua_pushinteger(L, gid);
         lua_setfield(L, cd_idx, "index");
 
-        lua_rawseti(L, chars_idx, cp);
-        // stack: charstbl, func, func
-    }
-    // stack: charstbl, func, func
+        lua_pushinteger(L, cp);
+        lua_setfield(L, cd_idx, "tounicode");
 
-    lua_pop(L, 2); /* pop cached funcs */
+        lua_rawseti(L, chars_idx, cp);
+        // stack: charstbl, func, func, func
+    }
+    // stack: charstbl, func, func, func
+
+    lua_pop(L, 3); /* pop cached funcs */
     // stack: charstbl
     lua_setfield(L, res_idx, "characters"); /* pops chars */
     // stack: -
+    assert( top == lua_gettop(L));
     return 0;
+}
+
+static void set_char_params(lua_State *L, int res_idx, lua_Number space_width, lua_Number size, lua_Number scale)
+{
+    const int top = lua_gettop(L);
+    lua_newtable(L);
+    const int param_idx = lua_gettop(L);
+
+    lua_pushnumber(L, 0);
+    lua_pushvalue(L, -1);
+    lua_setfield(L, param_idx, "slant");
+    lua_rawseti(L, param_idx, 1);
+
+    lua_pushinteger(L, floor(space_width * scale));
+    lua_pushvalue(L, -1);
+    lua_setfield(L, param_idx, "space");
+    lua_rawseti(L, param_idx, 2);
+
+    lua_pushinteger(L, floor(space_width * scale * 0.5));
+    lua_pushvalue(L, -1);
+    lua_setfield(L, param_idx, "spacestretch");
+    lua_rawseti(L, param_idx, 3);
+
+    lua_pushinteger(L, floor(space_width * scale * 0.33) );
+    lua_pushvalue(L, -1);
+    lua_setfield(L, param_idx, "spaceshrink");
+    lua_rawseti(L, param_idx, 4);
+
+    lua_pushinteger(L, floor(space_width * scale * 0.45));
+    lua_pushvalue(L, -1);
+    lua_setfield(L, param_idx, "xheight");
+    lua_rawseti(L, param_idx, 5);
+
+    lua_pushinteger(L, floor(size));
+    lua_pushvalue(L, -1);
+    lua_setfield(L, param_idx, "quad");
+    lua_rawseti(L, param_idx, 6);
+
+    lua_pushinteger(L, floor(space_width * scale * 0.33));
+    lua_pushvalue(L, -1);
+    lua_setfield(L, param_idx, "extraspace");
+    lua_rawseti(L, param_idx, 7);
+
+    lua_setfield(L, res_idx, "parameters");
+
+    assert( top == lua_gettop(L));
 }
 
 static int define_font(lua_State *L)
@@ -497,12 +588,12 @@ static int define_font(lua_State *L)
     char filename[1024];
     filename[0] = '\0';
 
-    if( parse_filename(L, filename, name) )
+    if( parse_filename(L, filename, sizeof(filename), name) )
         return 1;
 
     // stack: -
 
-    if( find_file(L, filename, name) )
+    if( find_file(L, filename, sizeof(filename), name) )
         return 1;
 
     // stack: -
@@ -520,20 +611,27 @@ static int define_font(lua_State *L)
     if (upem <= 0)
         return 1;
 
-    lua_Number scale = size / upem;
+    const lua_Number scale = size / upem;
 
-    if( create_result_table(L, filename, size) )
+    if( create_result_table(L, filename, face_idx, size, upem) )
         return 1;
     const int res_idx = lua_gettop(L);
 
     const int has_math = check_if_math(L, face_idx);
 
     if (has_math)
-        if( !fill_math(L, hb_idx, font_idx, res_idx, scale) )
+        if( fill_math(L, hb_idx, font_idx, res_idx, scale) )
             return 1;
 
-    if( !fill_chars_table(L, font_idx, res_idx, scale) )
+    lua_Number space_width;
+    if( fill_chars_table(L, font_idx, res_idx, scale, &space_width) )
         return 1;
+
+    if( space_width == 0.0 )
+        space_width = upem * 0.25; // Robust fallback
+
+    set_char_params(L, res_idx, space_width, size, scale);
+
     // stack: hb, face, font, restbl
 
     /* leave only result table as return value */
