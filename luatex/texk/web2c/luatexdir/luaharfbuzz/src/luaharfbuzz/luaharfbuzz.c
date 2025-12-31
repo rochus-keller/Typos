@@ -1,4 +1,6 @@
 #include "luaharfbuzz.h"
+#include "tex/texmathparams.h"
+
 #ifdef LuajitTeX
 static int lua_absindex (lua_State *L, int i) {
   if (i < 0 && i > LUA_REGISTRYINDEX)
@@ -174,10 +176,10 @@ int luaopen_luaharfbuzz (lua_State *L) {
 
   lua_newtable(L);
   const int tbl = lua_gettop(L);
-  for( int i = 0; ot_math_constants[i].name != 0; i++ )
+  for( int i = 1; i < MATH_param_last; i++ )
   {
-      lua_pushstring(L, ot_math_constants[i].name);
-      lua_pushinteger(L, ot_math_constants[i].id);
+      lua_pushstring(L, MATH_param_names[i]);
+      lua_pushinteger(L, i);
       lua_rawset(L, tbl);
   }
   lua_setfield(L, -2,"ot_math_constants" );

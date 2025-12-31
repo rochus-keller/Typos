@@ -356,6 +356,9 @@ static int create_result_table(lua_State *L, const char* filename, int face_idx,
     lua_pushstring(L, "subset");
     lua_setfield(L, res_idx, "embedding");
 
+    lua_pushboolean(L, 0);
+    lua_setfield(L, res_idx, "nomath");
+
     assert( lua_gettop(L) == top + 1);
     return 0;
 }
@@ -406,7 +409,12 @@ static int fill_math(lua_State *L, int hb_idx, int font_idx, int res_idx, lua_Nu
                 if (lua_pcall(L, 2, 1, 0) == LUA_OK) {
                     lua_Number val = lua_tonumber(L, -1);
                     lua_pop(L, 1);
-                    lua_pushnumber(L, floor(val * scale));
+                    if (strstr(param_name, "Percent") != NULL) {
+                         lua_pushinteger(L, (lua_Integer)val);
+                    } else {
+                         lua_pushinteger(L, (lua_Integer)floor(val * scale));
+                    }
+                    //lua_pushnumber(L, floor(val * scale));
                     lua_setfield(L, mp_idx, param_name);
                 } else {
                     lua_pop(L, 1); /* error */
@@ -419,7 +427,8 @@ static int fill_math(lua_State *L, int hb_idx, int font_idx, int res_idx, lua_Nu
         }
 
         lua_pop(L, 1); /* pop constants map */
-        lua_setfield(L, res_idx, "mathparameters"); /* pops mp table */
+        lua_setfield(L, res_idx, "MathConstants");  /* pops mp table */
+        // mathparameters is obviously the wrong name when analyzing the LuaTex source code
     } else {
         lua_pop(L, 1); /* pop whatever came back */
     }
@@ -559,7 +568,8 @@ static void set_char_params(lua_State *L, int res_idx, lua_Number space_width, l
 static int define_font(lua_State *L)
 {
     const char *name = luaL_checkstring(L, 1);
-    lua_Number size  = normalize_size(luaL_checknumber(L, 2));
+    lua_Number size  = luaL_checknumber(L, 2);
+    size = normalize_size(size);
 
     if (size < 0)
         size = (-655.36) * size;  /* same normalization used in LuaTeX wiki examples */

@@ -1,0 +1,34 @@
+% 1. Set catcodes for Lua blocks
+\catcode`\{=1
+\catcode`\}=2
+
+% 2. Enable ALL primitives (this gives us \outputmode, \pagewidth, etc.)
+\directlua{ tex.enableprimitives('', tex.extraprimitives()) }
+
+\outputmode=1
+\pagewidth=210mm \pageheight=297mm
+\hsize=170mm \vsize=257mm
+\parindent=0pt
+\parfillskip=0pt plus 1fil
+\output{} \deadcycles=0
+
+\font\mytest="[FiraMath-Regular.otf]" at 12pt
+
+% Make sure family 0 exists
+\textfont0=\mytest
+\scriptfont0=\mytest
+\scriptscriptfont0=\mytest
+
+\shipout\vbox{
+  \mytest
+
+  \hbox{Inline: $a^2+b^2=c^2$.}
+
+  \vskip 10pt
+  \hbox{Fraction (primitive): $ {a+b \over c+d} $.}
+
+  \vskip 10pt
+  \hbox{Sub/sup: $x_1^2 + x_2^2$.}
+}
+\end
+

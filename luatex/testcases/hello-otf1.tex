@@ -1,0 +1,29 @@
+% 1. Set catcodes for Lua blocks
+\catcode`\{=1
+\catcode`\}=2
+
+% 2. Enable ALL primitives (this gives us \outputmode, \pagewidth, etc.)
+\directlua{ tex.enableprimitives('', tex.extraprimitives()) }
+
+% 3. Set output mode to PDF using the modern primitive
+\outputmode=1
+\pagewidth=210mm \pageheight=297mm
+\hsize=170mm \vsize=257mm
+\parindent=0pt
+\parfillskip=0pt plus 1fil
+
+\font\mytest="[FiraMath-Regular.otf]" at 12pt
+
+\shipout\vbox{
+  \hbox{\mytest Hello World from custom LuaHBTeX (PDF mode).}
+}
+
+\shipout\vbox{
+  \hrule height 10pt width 10pt
+  \vskip 20pt
+  \hbox{\mytest Hello World}
+}
+
+\end
+
+

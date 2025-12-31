@@ -1,0 +1,37 @@
+% Standard Plain TeX definitions for page breaking
+\def\supereject{\par\penalty-20000 } % -20000 forces a page break and flushes insertions
+\def\bye{\par\vfill\supereject\end}
+
+% Force PDF output
+\outputmode=1
+
+% Suppress "overfull hbox" warnings for this test
+\hbadness=10000
+
+% Ensure \pm is defined (if not already in format)
+\ifdefined\pm \else \Umathchardef\pm = 2 0 "00B1 \fi
+
+% --- Test Content ---
+
+$$ \left( a + b \right)^2 = a^2 + 2ab + b^2 $$
+
+\vskip 1cm
+
+Hello World from minimal LuaHBTex.
+
+\vskip 1cm
+
+$ \frac{x+y}{z} + \sqrt{a^2 + b^2} $
+
+\vskip 1cm
+
+$$ x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a} $$
+
+\vskip 1cm
+
+% Define sum operator if missing
+\ifdefined\sumop \else \Umathchardef\sumop=1 0 "2211 \fi
+$\sumop_{i=0}^{n} i$
+
+\bye
+

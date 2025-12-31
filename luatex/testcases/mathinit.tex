@@ -1,0 +1,83 @@
+% Basic catcodes
+\catcode`\{=1 \catcode`\}=2 \catcode`\$=3 \catcode`\&=4 \catcode`\#=6 \catcode`\\=0 \catcode`\^=7 \catcode`\_=8
+\catcode`\ =10 \catcode`\^^M=5 \catcode`\a=11 \catcode`\z=11 \catcode`\A=11 \catcode`\Z=11
+
+\directlua{ tex.enableprimitives('', tex.extraprimitives()) }
+
+% Define the font using the integrated loader.
+\font\tenmath="[FiraMath-Regular.otf]" at 10pt
+
+% Assign the font to the math families
+\textfont0=\tenmath
+\scriptfont0=\tenmath
+\scriptscriptfont0=\tenmath
+
+% Verification Block
+\directlua{
+  local f = font.getfont(font.current())
+  if f then
+    if f.MathConstants then
+      print("SUCCESS: 'MathConstants' table found.")
+      % Example: Print a specific value to verify (e.g., AxisHeight)
+      % Values are usually in font design units
+      print("AxisHeight:", f.MathConstants.AxisHeight)
+      
+      % Force a parameter update if the engine didn't do it automatically
+      % (Standard LuaTeX does this automatically when MathConstants is present)
+      if tex.getmath("mathaxis", "display") == 0 then
+          print("WARNING: Math parameters were not applied automatically.")
+       else
+          print("CONFIRMED: Engine applied MathConstants to internal parameters.")
+      end
+    else
+      print("ERROR: No 'MathConstants' table found. Check font loader.")
+    end
+  end
+}
+
+% Standard mapping for the test
+\def\loop#1\repeat{\def\body{#1}\iterate}
+\def\iterate{\body \let\next\iterate \else\let\next\relax\fi \next}
+\count0=`0 \loop \Umathcode\count0 = 7 0 \count0 \ifnum\count0 < `9 \advance\count0 by 1 \repeat
+\count0=`a \loop \Umathcode\count0 = 7 0 \count0 \ifnum\count0 < `z \advance\count0 by 1 \repeat
+\count0=`A \loop \Umathcode\count0 = 7 0 \count0 \ifnum\count0 < `Z \advance\count0 by 1 \repeat
+
+\Umathcode`+=2 0 `+
+\Umathcode`-=2 0 `-
+\Umathcode`(=4 0 `(
+\Umathcode`)=5 0 `)
+\Umathcode`/=0 0 `/
+\Umathcode`*=2 0 `*
+
+% Delimiter codes
+% Note: We use `\{ and `\} on the left because backtick-escape works for catcode 1/2.
+% But on the right (the value), we must strictly provide the slot number.
+
+\Udelcode`( = 0 0 `(
+\Udelcode`) = 0 0 `)
+\Udelcode`[ = 0 0 `[
+\Udelcode`] = 0 0 `]
+
+% For braces, use the numeric ASCII values 123 ("7B) and 125 ("7D)
+% Simplest safe way:
+\Udelcode`\{ = 0 0 "7B   % Hex 7B is 123 ({)
+\Udelcode`\} = 0 0 "7D   % Hex 7D is 125 (})
+
+\Udelcode`| = 0 0 `|
+
+% Initialize the main text font to something usable
+\font\mainfont="[FiraMath-Regular.otf]" at 10pt
+\mainfont
+\def\bye{\par\vfill\supereject\end}
+\def\fmtname{plain} % Helpful for some loggers
+
+% \over is a primitive in TeX, so \frac is just a wrapper
+\def\frac#1#2{{#1\over#2}}
+
+% \sqrt uses the \Uradical primitive for OpenType math
+% Syntax: \Uradical <fam> <char>
+% "221A is the Unicode slot for the square root symbol
+\def\sqrt{\Uradical 0 "221A }
+
+\dump
+
