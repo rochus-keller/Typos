@@ -1,0 +1,385 @@
+let config : Config {
+    .defines += [ "HAVE_CONFIG_H" ] # not used: "NO_DEBUG"
+    if target_toolchain == `gcc {
+        .lib_names += [ "m" "stdc++" ]
+        .ldflags += "-shared-libgcc"
+    }else if target_toolchain == `msvc {
+        # nothing to do
+    }else {
+        error("target toolchain not supported")
+    }
+    if build_mode == `debug {
+        .defines += "TYPOS_DEBUG"
+    }
+}
+
+let zlib : SourceSet {
+    .configs += config;
+    .defines += "USE_MMAP"
+    .sources = [
+	./zlib/zlib-src/adler32.c
+	./zlib/zlib-src/compress.c
+	./zlib/zlib-src/crc32.c
+	./zlib/zlib-src/deflate.c
+	./zlib/zlib-src/gzclose.c
+	./zlib/zlib-src/gzlib.c
+	./zlib/zlib-src/gzread.c
+	./zlib/zlib-src/gzwrite.c
+	./zlib/zlib-src/infback.c
+	./zlib/zlib-src/inffast.c
+	./zlib/zlib-src/inflate.c
+	./zlib/zlib-src/inftrees.c
+	./zlib/zlib-src/trees.c
+	./zlib/zlib-src/uncompr.c
+	./zlib/zlib-src/zutil.c
+    ]
+    .sources = [
+    ./zlib/config.h
+    ./zlib/zconf.h
+    ./zlib/zlib-src/crc32.h
+    ./zlib/zlib-src/deflate.h
+    ./zlib/zlib-src/gzguts.h
+    ./zlib/zlib-src/inffast.h
+    ./zlib/zlib-src/inffixed.h
+    ./zlib/zlib-src/inflate.h
+    ./zlib/zlib-src/inftrees.h
+    ./zlib/zlib-src/trees.h
+    ./zlib/zlib-src/zlib.h
+    ./zlib/zlib-src/zutil.h
+    ./zlib/zlib-src/contrib/blast/blast.h
+    ./zlib/zlib-src/contrib/infback9/infback9.h
+    ./zlib/zlib-src/contrib/infback9/inffix9.h
+    ./zlib/zlib-src/contrib/infback9/inflate9.h
+    ./zlib/zlib-src/contrib/infback9/inftree9.h
+    ./zlib/zlib-src/contrib/iostream/zfstream.h
+    ./zlib/zlib-src/contrib/iostream2/zstream.h
+    ./zlib/zlib-src/contrib/iostream3/zfstream.h
+    ./zlib/zlib-src/contrib/minizip/crypt.h
+    ./zlib/zlib-src/contrib/minizip/ioapi.h
+    ./zlib/zlib-src/contrib/minizip/iowin32.h
+    ./zlib/zlib-src/contrib/minizip/mztools.h
+    ./zlib/zlib-src/contrib/minizip/unzip.h
+    ./zlib/zlib-src/contrib/minizip/zip.h
+    ./zlib/zlib-src/contrib/puff/puff.h
+    ./zlib/zlib-src/examples/gzlog.h
+    ./zlib/zlib-src/examples/zran.h
+    ]
+}
+
+let harfbuzz : SourceSet {
+    .configs += config;
+    .defines += [ "HB_NO_MT" "HAVE_FALLBACK=1" "GRAPHITE2_STATIC" ]
+    .include_dirs += [ ./harfbuzz ./harfbuzz/harfbuzz-src/src ./graphite2/include ./graphite2/graphite2-src/include ]
+    .sources = [
+    ./harfbuzz/harfbuzz-src/src/hb-aat-layout.cc
+    ./harfbuzz/harfbuzz-src/src/hb-aat-map.cc
+    ./harfbuzz/harfbuzz-src/src/hb-blob.cc
+    ./harfbuzz/harfbuzz-src/src/hb-buffer-serialize.cc
+    ./harfbuzz/harfbuzz-src/src/hb-buffer-verify.cc
+    ./harfbuzz/harfbuzz-src/src/hb-buffer.cc
+    ./harfbuzz/harfbuzz-src/src/hb-common.cc
+    ./harfbuzz/harfbuzz-src/src/hb-draw.cc
+    ./harfbuzz/harfbuzz-src/src/hb-face-builder.cc
+    ./harfbuzz/harfbuzz-src/src/hb-face.cc
+    ./harfbuzz/harfbuzz-src/src/hb-fallback-shape.cc
+    ./harfbuzz/harfbuzz-src/src/hb-font.cc
+    ./harfbuzz/harfbuzz-src/src/hb-map.cc
+    ./harfbuzz/harfbuzz-src/src/hb-number.cc
+    ./harfbuzz/harfbuzz-src/src/hb-ot-cff1-table.cc
+    ./harfbuzz/harfbuzz-src/src/hb-ot-cff2-table.cc
+    ./harfbuzz/harfbuzz-src/src/hb-ot-color.cc
+    ./harfbuzz/harfbuzz-src/src/hb-ot-face.cc
+    ./harfbuzz/harfbuzz-src/src/hb-ot-font.cc
+    ./harfbuzz/harfbuzz-src/src/hb-ot-layout.cc
+    ./harfbuzz/harfbuzz-src/src/hb-ot-map.cc
+    ./harfbuzz/harfbuzz-src/src/hb-ot-math.cc
+    ./harfbuzz/harfbuzz-src/src/hb-ot-meta.cc
+    ./harfbuzz/harfbuzz-src/src/hb-ot-metrics.cc
+    ./harfbuzz/harfbuzz-src/src/hb-ot-name.cc
+    ./harfbuzz/harfbuzz-src/src/hb-ot-shape-fallback.cc
+    ./harfbuzz/harfbuzz-src/src/hb-ot-shape-normalize.cc
+    ./harfbuzz/harfbuzz-src/src/hb-ot-shape.cc
+    ./harfbuzz/harfbuzz-src/src/hb-ot-shaper-arabic.cc
+    ./harfbuzz/harfbuzz-src/src/hb-ot-shaper-default.cc
+    ./harfbuzz/harfbuzz-src/src/hb-ot-shaper-hangul.cc
+    ./harfbuzz/harfbuzz-src/src/hb-ot-shaper-hebrew.cc
+    ./harfbuzz/harfbuzz-src/src/hb-ot-shaper-indic-table.cc
+    ./harfbuzz/harfbuzz-src/src/hb-ot-shaper-indic.cc
+    ./harfbuzz/harfbuzz-src/src/hb-ot-shaper-khmer.cc
+    ./harfbuzz/harfbuzz-src/src/hb-ot-shaper-myanmar.cc
+    ./harfbuzz/harfbuzz-src/src/hb-ot-shaper-syllabic.cc
+    ./harfbuzz/harfbuzz-src/src/hb-ot-shaper-thai.cc
+    ./harfbuzz/harfbuzz-src/src/hb-ot-shaper-use.cc
+    ./harfbuzz/harfbuzz-src/src/hb-ot-shaper-vowel-constraints.cc
+    ./harfbuzz/harfbuzz-src/src/hb-ot-tag.cc
+    ./harfbuzz/harfbuzz-src/src/hb-ot-var.cc
+    ./harfbuzz/harfbuzz-src/src/hb-outline.cc
+    ./harfbuzz/harfbuzz-src/src/hb-paint-extents.cc
+    ./harfbuzz/harfbuzz-src/src/hb-paint.cc
+    ./harfbuzz/harfbuzz-src/src/hb-set.cc
+    ./harfbuzz/harfbuzz-src/src/hb-shape-plan.cc
+    ./harfbuzz/harfbuzz-src/src/hb-shape.cc
+    ./harfbuzz/harfbuzz-src/src/hb-shaper.cc
+    ./harfbuzz/harfbuzz-src/src/hb-static.cc
+    ./harfbuzz/harfbuzz-src/src/hb-style.cc
+    ./harfbuzz/harfbuzz-src/src/hb-subset-cff-common.cc
+    ./harfbuzz/harfbuzz-src/src/hb-subset-cff1.cc
+    ./harfbuzz/harfbuzz-src/src/hb-subset-cff2.cc
+    ./harfbuzz/harfbuzz-src/src/hb-subset-instancer-solver.cc
+    ./harfbuzz/harfbuzz-src/src/hb-ucd.cc
+    ./harfbuzz/harfbuzz-src/src/hb-unicode.cc
+    ]
+    .sources = [
+    ./harfbuzz/config.h
+    ./harfbuzz/hb-version.h
+    ./harfbuzz/harfbuzz-src/src/hb.hh
+    ./harfbuzz/harfbuzz-src/src/hb-aat-layout.hh
+    ./harfbuzz/harfbuzz-src/src/hb-aat-layout-ankr-table.hh
+    ./harfbuzz/harfbuzz-src/src/hb-aat-layout-bsln-table.hh
+    ./harfbuzz/harfbuzz-src/src/hb-aat-layout-common.hh
+    ./harfbuzz/harfbuzz-src/src/hb-aat-layout-feat-table.hh
+    ./harfbuzz/harfbuzz-src/src/hb-aat-layout-just-table.hh
+    ./harfbuzz/harfbuzz-src/src/hb-aat-layout-kerx-table.hh
+    ./harfbuzz/harfbuzz-src/src/hb-aat-layout-morx-table.hh
+    ./harfbuzz/harfbuzz-src/src/hb-aat-layout-opbd-table.hh
+    ./harfbuzz/harfbuzz-src/src/hb-aat-layout-trak-table.hh
+    ./harfbuzz/harfbuzz-src/src/hb-aat-ltag-table.hh
+    ./harfbuzz/harfbuzz-src/src/hb-aat-map.hh
+    ./harfbuzz/harfbuzz-src/src/hb-algs.hh
+    ./harfbuzz/harfbuzz-src/src/hb-array.hh
+    ./harfbuzz/harfbuzz-src/src/hb-atomic.hh
+    ./harfbuzz/harfbuzz-src/src/hb-bimap.hh
+    ./harfbuzz/harfbuzz-src/src/hb-bit-page.hh
+    ./harfbuzz/harfbuzz-src/src/hb-bit-set.hh
+    ./harfbuzz/harfbuzz-src/src/hb-bit-set-invertible.hh
+    ./harfbuzz/harfbuzz-src/src/hb-blob.hh
+    ./harfbuzz/harfbuzz-src/src/hb-buffer.hh
+    ./harfbuzz/harfbuzz-src/src/hb-buffer-deserialize-json.hh
+    ./harfbuzz/harfbuzz-src/src/hb-buffer-deserialize-text-glyphs.hh
+    ./harfbuzz/harfbuzz-src/src/hb-buffer-deserialize-text-unicode.hh
+    ./harfbuzz/harfbuzz-src/src/hb-cache.hh
+    ./harfbuzz/harfbuzz-src/src/hb-cairo-utils.hh
+    ./harfbuzz/harfbuzz-src/src/hb-cff1-interp-cs.hh
+    ./harfbuzz/harfbuzz-src/src/hb-cff2-interp-cs.hh
+    ./harfbuzz/harfbuzz-src/src/hb-cff-interp-common.hh
+    ./harfbuzz/harfbuzz-src/src/hb-cff-interp-cs-common.hh
+    ./harfbuzz/harfbuzz-src/src/hb-cff-interp-dict-common.hh
+    ./harfbuzz/harfbuzz-src/src/hb-config.hh
+    ./harfbuzz/harfbuzz-src/src/hb-cplusplus.hh
+    ./harfbuzz/harfbuzz-src/src/hb-debug.hh
+    ./harfbuzz/harfbuzz-src/src/hb-dispatch.hh
+    ./harfbuzz/harfbuzz-src/src/hb-draw.hh
+    ./harfbuzz/harfbuzz-src/src/hb-face.hh
+    ./harfbuzz/harfbuzz-src/src/hb-font.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ft-colr.hh
+    ./harfbuzz/harfbuzz-src/src/hb-iter.hh
+    ./harfbuzz/harfbuzz-src/src/hb-kern.hh
+    ./harfbuzz/harfbuzz-src/src/hb-limits.hh
+    ./harfbuzz/harfbuzz-src/src/hb-machinery.hh
+    ./harfbuzz/harfbuzz-src/src/hb-map.hh
+    ./harfbuzz/harfbuzz-src/src/hb-meta.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ms-feature-ranges.hh
+    ./harfbuzz/harfbuzz-src/src/hb-multimap.hh
+    ./harfbuzz/harfbuzz-src/src/hb-mutex.hh
+    ./harfbuzz/harfbuzz-src/src/hb-null.hh
+    ./harfbuzz/harfbuzz-src/src/hb-number.hh
+    ./harfbuzz/harfbuzz-src/src/hb-number-parser.hh
+    ./harfbuzz/harfbuzz-src/src/hb-object.hh
+    ./harfbuzz/harfbuzz-src/src/hb-open-file.hh
+    ./harfbuzz/harfbuzz-src/src/hb-open-type.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-cff1-std-str.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-cff1-table.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-cff2-table.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-cff-common.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-cmap-table.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-face.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-face-table-list.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-gasp-table.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-glyf-table.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-hdmx-table.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-head-table.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-hhea-table.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-hmtx-table.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-kern-table.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-layout.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-layout-base-table.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-layout-common.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-layout-gdef-table.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-layout-gpos-table.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-layout-gsubgpos.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-layout-gsub-table.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-layout-jstf-table.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-map.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-math-table.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-maxp-table.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-meta-table.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-metrics.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-name-language.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-name-language-static.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-name-table.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-os2-table.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-os2-unicode-ranges.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-post-macroman.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-post-table.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-post-table-v2subset.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-shape.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-shape-fallback.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-shape-normalize.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-shaper.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-shaper-arabic.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-shaper-arabic-fallback.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-shaper-arabic-joining-list.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-shaper-arabic-pua.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-shaper-arabic-table.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-shaper-arabic-win1256.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-shaper-indic.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-shaper-indic-machine.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-shaper-khmer-machine.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-shaper-myanmar-machine.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-shaper-syllabic.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-shaper-use-machine.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-shaper-use-table.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-shaper-vowel-constraints.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-stat-table.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-tag-table.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-var-avar-table.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-var-common.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-var-cvar-table.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-var-fvar-table.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-var-gvar-table.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-var-hvar-table.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-var-mvar-table.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ot-vorg-table.hh
+    ./harfbuzz/harfbuzz-src/src/hb-outline.hh
+    ./harfbuzz/harfbuzz-src/src/hb-paint.hh
+    ./harfbuzz/harfbuzz-src/src/hb-paint-extents.hh
+    ./harfbuzz/harfbuzz-src/src/hb-pool.hh
+    ./harfbuzz/harfbuzz-src/src/hb-priority-queue.hh
+    ./harfbuzz/harfbuzz-src/src/hb-repacker.hh
+    ./harfbuzz/harfbuzz-src/src/hb-sanitize.hh
+    ./harfbuzz/harfbuzz-src/src/hb-serialize.hh
+    ./harfbuzz/harfbuzz-src/src/hb-set.hh
+    ./harfbuzz/harfbuzz-src/src/hb-set-digest.hh
+    ./harfbuzz/harfbuzz-src/src/hb-shape-plan.hh
+    ./harfbuzz/harfbuzz-src/src/hb-shaper.hh
+    ./harfbuzz/harfbuzz-src/src/hb-shaper-impl.hh
+    ./harfbuzz/harfbuzz-src/src/hb-shaper-list.hh
+    ./harfbuzz/harfbuzz-src/src/hb-string-array.hh
+    ./harfbuzz/harfbuzz-src/src/hb-subset.hh
+    ./harfbuzz/harfbuzz-src/src/hb-subset-accelerator.hh
+    ./harfbuzz/harfbuzz-src/src/hb-subset-cff-common.hh
+    ./harfbuzz/harfbuzz-src/src/hb-subset-input.hh
+    ./harfbuzz/harfbuzz-src/src/hb-subset-instancer-solver.hh
+    ./harfbuzz/harfbuzz-src/src/hb-subset-plan.hh
+    ./harfbuzz/harfbuzz-src/src/hb-subset-plan-member-list.hh
+    ./harfbuzz/harfbuzz-src/src/hb-ucd-table.hh
+    ./harfbuzz/harfbuzz-src/src/hb-unicode.hh
+    ./harfbuzz/harfbuzz-src/src/hb-unicode-emoji-table.hh
+    ./harfbuzz/harfbuzz-src/src/hb-utf.hh
+    ./harfbuzz/harfbuzz-src/src/hb-vector.hh
+    ./harfbuzz/harfbuzz-src/src/hb-wasm-api.hh
+    ./harfbuzz/harfbuzz-src/src/hb-wasm-api-blob.hh
+    ./harfbuzz/harfbuzz-src/src/hb-wasm-api-buffer.hh
+    ./harfbuzz/harfbuzz-src/src/hb-wasm-api-common.hh
+    ./harfbuzz/harfbuzz-src/src/hb-wasm-api-face.hh
+    ./harfbuzz/harfbuzz-src/src/hb-wasm-api-font.hh
+    ./harfbuzz/harfbuzz-src/src/hb-wasm-api-shape.hh
+    ./harfbuzz/harfbuzz-src/src/hb.h
+    ./harfbuzz/harfbuzz-src/src/hb-aat.h
+    ./harfbuzz/harfbuzz-src/src/hb-aat-layout.h
+    ./harfbuzz/harfbuzz-src/src/hb-blob.h
+    ./harfbuzz/harfbuzz-src/src/hb-buffer.h
+    ./harfbuzz/harfbuzz-src/src/hb-cairo.h
+    ./harfbuzz/harfbuzz-src/src/hb-common.h
+    ./harfbuzz/harfbuzz-src/src/hb-coretext.h
+    ./harfbuzz/harfbuzz-src/src/hb-deprecated.h
+    ./harfbuzz/harfbuzz-src/src/hb-directwrite.h
+    ./harfbuzz/harfbuzz-src/src/hb-draw.h
+    ./harfbuzz/harfbuzz-src/src/hb-face.h
+    ./harfbuzz/harfbuzz-src/src/hb-font.h
+    ./harfbuzz/harfbuzz-src/src/hb-ft.h
+    ./harfbuzz/harfbuzz-src/src/hb-gdi.h
+    ./harfbuzz/harfbuzz-src/src/hb-glib.h
+    ./harfbuzz/harfbuzz-src/src/hb-gobject.h
+    ./harfbuzz/harfbuzz-src/src/hb-gobject-structs.h
+    ./harfbuzz/harfbuzz-src/src/hb-graphite2.h
+    ./harfbuzz/harfbuzz-src/src/hb-icu.h
+    ./harfbuzz/harfbuzz-src/src/hb-map.h
+    ./harfbuzz/harfbuzz-src/src/hb-ot.h
+    ./harfbuzz/harfbuzz-src/src/hb-ot-color.h
+    ./harfbuzz/harfbuzz-src/src/hb-ot-deprecated.h
+    ./harfbuzz/harfbuzz-src/src/hb-ot-font.h
+    ./harfbuzz/harfbuzz-src/src/hb-ot-layout.h
+    ./harfbuzz/harfbuzz-src/src/hb-ot-math.h
+    ./harfbuzz/harfbuzz-src/src/hb-ot-meta.h
+    ./harfbuzz/harfbuzz-src/src/hb-ot-metrics.h
+    ./harfbuzz/harfbuzz-src/src/hb-ot-name.h
+    ./harfbuzz/harfbuzz-src/src/hb-ot-shape.h
+    ./harfbuzz/harfbuzz-src/src/hb-ot-var.h
+    ./harfbuzz/harfbuzz-src/src/hb-paint.h
+    ./harfbuzz/harfbuzz-src/src/hb-set.h
+    ./harfbuzz/harfbuzz-src/src/hb-shape.h
+    ./harfbuzz/harfbuzz-src/src/hb-shape-plan.h
+    ./harfbuzz/harfbuzz-src/src/hb-style.h
+    ./harfbuzz/harfbuzz-src/src/hb-subset.h
+    ./harfbuzz/harfbuzz-src/src/hb-subset-repacker.h
+    ./harfbuzz/harfbuzz-src/src/hb-unicode.h
+    ./harfbuzz/harfbuzz-src/src/hb-uniscribe.h
+    ./harfbuzz/harfbuzz-src/src/hb-wasm-api.h
+    ]
+}
+
+let libpng : SourceSet {
+    .configs += config;
+    .defines += [ "PNG_CONFIGURE_LIBPNG" "PNG_NO_MMX_CODE" ]
+    .include_dirs += ./libpng
+    .sources = [
+	./libpng/libpng-src/png.c
+	./libpng/libpng-src/pngerror.c
+	./libpng/libpng-src/pngget.c
+	./libpng/libpng-src/pngmem.c
+	./libpng/libpng-src/pngpread.c
+	./libpng/libpng-src/pngread.c
+	./libpng/libpng-src/pngrio.c
+	./libpng/libpng-src/pngrtran.c
+	./libpng/libpng-src/pngrutil.c
+	./libpng/libpng-src/pngset.c
+	./libpng/libpng-src/pngtrans.c
+	./libpng/libpng-src/pngwio.c
+	./libpng/libpng-src/pngwrite.c
+	./libpng/libpng-src/pngwtran.c
+	./libpng/libpng-src/pngwutil.c
+	./libpng/libpng-src/powerpc/filter_vsx_intrinsics.c
+	./libpng/libpng-src/powerpc/powerpc_init.c
+    ]
+    .sources = [
+    ./libpng/config.h
+    ./libpng/libpng-src/png.h
+    ./libpng/libpng-src/pngconf.h
+    ./libpng/libpng-src/pngdebug.h
+    ./libpng/libpng-src/pnginfo.h
+    ./libpng/libpng-src/pnglibconf.h
+    ./libpng/libpng-src/pngpriv.h
+    ./libpng/libpng-src/pngstruct.h
+    ./libpng/libpng-src/contrib/gregbook/readpng.h
+    ./libpng/libpng-src/contrib/gregbook/readpng2.h
+    ./libpng/libpng-src/contrib/gregbook/writepng.h
+    ./libpng/libpng-src/contrib/libtests/pngstest-errors.h
+    ./libpng/libpng-src/contrib/pngminim/decoder/pngusr.h
+    ./libpng/libpng-src/contrib/pngminim/encoder/pngusr.h
+    ./libpng/libpng-src/contrib/pngminim/preader/pngusr.h
+    ./libpng/libpng-src/contrib/tools/sRGB.h
+    ./libpng/libpng-src/contrib/visupng/cexcept.h
+    ./libpng/libpng-src/contrib/visupng/PngFile.h
+    ./libpng/libpng-src/contrib/visupng/resource.h
+    ]
+}
+
+let typos ! : Executable {
+    .configs += config;
+    .deps += [ zlib libpng harfbuzz ]
+    # NOTE: main is in luatex.c
+    .sources = [
+	./main.c
+	]
+}
