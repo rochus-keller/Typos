@@ -3,6 +3,7 @@ let config : Config {
     if target_toolchain == `gcc {
         .lib_names += [ "m" "stdc++" ]
         .ldflags += "-shared-libgcc"
+        .cflags_c += [ "-fno-strict-aliasing" "-fno-common" ]
     }else if target_toolchain == `msvc {
         # nothing to do
     }else {
@@ -32,37 +33,6 @@ let zlib : SourceSet {
 	./zlib/zlib-src/trees.c
 	./zlib/zlib-src/uncompr.c
 	./zlib/zlib-src/zutil.c
-    ]
-    .sources = [
-    ./zlib/config.h
-    ./zlib/zconf.h
-    ./zlib/zlib-src/crc32.h
-    ./zlib/zlib-src/deflate.h
-    ./zlib/zlib-src/gzguts.h
-    ./zlib/zlib-src/inffast.h
-    ./zlib/zlib-src/inffixed.h
-    ./zlib/zlib-src/inflate.h
-    ./zlib/zlib-src/inftrees.h
-    ./zlib/zlib-src/trees.h
-    ./zlib/zlib-src/zlib.h
-    ./zlib/zlib-src/zutil.h
-    ./zlib/zlib-src/contrib/blast/blast.h
-    ./zlib/zlib-src/contrib/infback9/infback9.h
-    ./zlib/zlib-src/contrib/infback9/inffix9.h
-    ./zlib/zlib-src/contrib/infback9/inflate9.h
-    ./zlib/zlib-src/contrib/infback9/inftree9.h
-    ./zlib/zlib-src/contrib/iostream/zfstream.h
-    ./zlib/zlib-src/contrib/iostream2/zstream.h
-    ./zlib/zlib-src/contrib/iostream3/zfstream.h
-    ./zlib/zlib-src/contrib/minizip/crypt.h
-    ./zlib/zlib-src/contrib/minizip/ioapi.h
-    ./zlib/zlib-src/contrib/minizip/iowin32.h
-    ./zlib/zlib-src/contrib/minizip/mztools.h
-    ./zlib/zlib-src/contrib/minizip/unzip.h
-    ./zlib/zlib-src/contrib/minizip/zip.h
-    ./zlib/zlib-src/contrib/puff/puff.h
-    ./zlib/zlib-src/examples/gzlog.h
-    ./zlib/zlib-src/examples/zran.h
     ]
 }
 
@@ -129,7 +99,298 @@ let harfbuzz : SourceSet {
     ./harfbuzz/harfbuzz-src/src/hb-ucd.cc
     ./harfbuzz/harfbuzz-src/src/hb-unicode.cc
     ]
+
+}
+
+let libpng : SourceSet {
+    .configs += config;
+    .defines += [ "PNG_CONFIGURE_LIBPNG" "PNG_NO_MMX_CODE" ]
+    .include_dirs += [
+        ./zlib/zlib-src
+        ./libpng
+    ]
     .sources = [
+	./libpng/libpng-src/png.c
+	./libpng/libpng-src/pngerror.c
+	./libpng/libpng-src/pngget.c
+	./libpng/libpng-src/pngmem.c
+	./libpng/libpng-src/pngpread.c
+	./libpng/libpng-src/pngread.c
+	./libpng/libpng-src/pngrio.c
+	./libpng/libpng-src/pngrtran.c
+	./libpng/libpng-src/pngrutil.c
+	./libpng/libpng-src/pngset.c
+	./libpng/libpng-src/pngtrans.c
+	./libpng/libpng-src/pngwio.c
+	./libpng/libpng-src/pngwrite.c
+	./libpng/libpng-src/pngwtran.c
+	./libpng/libpng-src/pngwutil.c
+	./libpng/libpng-src/powerpc/filter_vsx_intrinsics.c
+	./libpng/libpng-src/powerpc/powerpc_init.c
+    ]
+}
+
+let cairo : SourceSet {
+    .configs += config;
+    .defines += [ "_REENTRANT" "_FORTIFY_SOURCE=2" ]
+    .include_dirs += [
+    ./zlib/zlib-src
+    ./pixman/pixman
+    ./freetype/include
+    ]
+    .sources += [
+    ./cairo/src/cairo.c
+    ./cairo/src/cairo-analysis-surface.c
+    ./cairo/src/cairo-arc.c
+    ./cairo/src/cairo-array.c
+    ./cairo/src/cairo-atomic.c
+    ./cairo/src/cairo-base64-stream.c
+    ./cairo/src/cairo-base85-stream.c
+    ./cairo/src/cairo-bentley-ottmann.c
+    ./cairo/src/cairo-bentley-ottmann-rectangular.c
+    ./cairo/src/cairo-bentley-ottmann-rectilinear.c
+    ./cairo/src/cairo-botor-scan-converter.c
+    ./cairo/src/cairo-boxes.c
+    ./cairo/src/cairo-boxes-intersect.c
+    ./cairo/src/cairo-cache.c
+    ./cairo/src/cairo-cff-subset.c
+    ./cairo/src/cairo-clip.c
+    ./cairo/src/cairo-clip-boxes.c
+    ./cairo/src/cairo-clip-polygon.c
+    ./cairo/src/cairo-clip-region.c
+    ./cairo/src/cairo-clip-surface.c
+    ./cairo/src/cairo-clip-tor-scan-converter.c
+    ./cairo/src/cairo-color.c
+    ./cairo/src/cairo-composite-rectangles.c
+    ./cairo/src/cairo-compositor.c
+    ./cairo/src/cairo-contour.c
+    ./cairo/src/cairo-damage.c
+    ./cairo/src/cairo-debug.c
+    ./cairo/src/cairo-default-context.c
+    ./cairo/src/cairo-deflate-stream.c
+    ./cairo/src/cairo-device.c
+    ./cairo/src/cairo-error.c
+    ./cairo/src/cairo-fallback-compositor.c
+    ./cairo/src/cairo-fixed.c
+    ./cairo/src/cairo-font-face.c
+    ./cairo/src/cairo-font-face-twin.c
+    ./cairo/src/cairo-font-face-twin-data.c
+    ./cairo/src/cairo-font-options.c
+    ./cairo/src/cairo-freed-pool.c
+    ./cairo/src/cairo-freelist.c
+    ./cairo/src/cairo-ft-font.c
+    ./cairo/src/cairo-gstate.c
+    ./cairo/src/cairo-hash.c
+    ./cairo/src/cairo-hull.c
+    ./cairo/src/cairo-image-compositor.c
+    ./cairo/src/cairo-image-info.c
+    ./cairo/src/cairo-image-source.c
+    ./cairo/src/cairo-image-surface.c
+    ./cairo/src/cairo-line.c
+    ./cairo/src/cairo-lzw.c
+    ./cairo/src/cairo-mask-compositor.c
+    ./cairo/src/cairo-matrix.c
+    ./cairo/src/cairo-mempool.c
+    ./cairo/src/cairo-mesh-pattern-rasterizer.c
+    ./cairo/src/cairo-misc.c
+    ./cairo/src/cairo-mono-scan-converter.c
+    ./cairo/src/cairo-mutex.c
+    ./cairo/src/cairo-no-compositor.c
+    ./cairo/src/cairo-observer.c
+    ./cairo/src/cairo-output-stream.c
+    ./cairo/src/cairo-paginated-surface.c
+    ./cairo/src/cairo-path.c
+    ./cairo/src/cairo-path-bounds.c
+    ./cairo/src/cairo-path-fill.c
+    ./cairo/src/cairo-path-fixed.c
+    ./cairo/src/cairo-path-in-fill.c
+    ./cairo/src/cairo-path-stroke.c
+    ./cairo/src/cairo-path-stroke-boxes.c
+    ./cairo/src/cairo-path-stroke-polygon.c
+    ./cairo/src/cairo-path-stroke-traps.c
+    ./cairo/src/cairo-path-stroke-tristrip.c
+    ./cairo/src/cairo-pattern.c
+    ./cairo/src/cairo-pdf-interchange.c
+    ./cairo/src/cairo-pdf-operators.c
+    ./cairo/src/cairo-pdf-shading.c
+    ./cairo/src/cairo-pdf-surface.c
+    ./cairo/src/cairo-pen.c
+    ./cairo/src/cairo-png.c
+    ./cairo/src/cairo-polygon.c
+    ./cairo/src/cairo-polygon-intersect.c
+    ./cairo/src/cairo-polygon-reduce.c
+    ./cairo/src/cairo-ps-surface.c
+    ./cairo/src/cairo-raster-source-pattern.c
+    ./cairo/src/cairo-recording-surface.c
+    ./cairo/src/cairo-rectangle.c
+    ./cairo/src/cairo-rectangular-scan-converter.c
+    ./cairo/src/cairo-region.c
+    ./cairo/src/cairo-rtree.c
+    ./cairo/src/cairo-scaled-font.c
+    ./cairo/src/cairo-scaled-font-subsets.c
+    ./cairo/src/cairo-shape-mask-compositor.c
+    ./cairo/src/cairo-slope.c
+    ./cairo/src/cairo-spans.c
+    ./cairo/src/cairo-spans-compositor.c
+    ./cairo/src/cairo-spline.c
+    ./cairo/src/cairo-stroke-dash.c
+    ./cairo/src/cairo-stroke-style.c
+    ./cairo/src/cairo-surface.c
+    ./cairo/src/cairo-surface-clipper.c
+    ./cairo/src/cairo-surface-fallback.c
+    ./cairo/src/cairo-surface-observer.c
+    ./cairo/src/cairo-surface-offset.c
+    ./cairo/src/cairo-surface-snapshot.c
+    ./cairo/src/cairo-surface-subsurface.c
+    ./cairo/src/cairo-surface-wrapper.c
+    ./cairo/src/cairo-svg-surface.c
+    ./cairo/src/cairo-tag-attributes.c
+    ./cairo/src/cairo-tag-stack.c
+    ./cairo/src/cairo-time.c
+    ./cairo/src/cairo-tor22-scan-converter.c
+    ./cairo/src/cairo-tor-scan-converter.c
+    ./cairo/src/cairo-toy-font-face.c
+    ./cairo/src/cairo-traps.c
+    ./cairo/src/cairo-traps-compositor.c
+    ./cairo/src/cairo-tristrip.c
+    ./cairo/src/cairo-truetype-subset.c
+    ./cairo/src/cairo-type1-fallback.c
+    ./cairo/src/cairo-type1-glyph-names.c
+    ./cairo/src/cairo-type1-subset.c
+    ./cairo/src/cairo-type3-glyph-surface.c
+    ./cairo/src/cairo-unicode.c
+    ./cairo/src/cairo-user-font.c
+    ./cairo/src/cairo-version.c
+    ./cairo/src/cairo-wideint.c
+    ]
+
+}
+
+let pixman : SourceSet {
+    .configs += config;
+    .include_dirs += [ ./pixman/pixman ]
+    .sources += [
+    #./pixman/pixman/pixman-ssse3.c
+    ./pixman/pixman/pixman.c
+    ./pixman/pixman/pixman-access.c
+    ./pixman/pixman/pixman-access-accessors.c
+    ./pixman/pixman/pixman-arm.c
+    ./pixman/pixman/pixman-bits-image.c
+    ./pixman/pixman/pixman-combine32.c
+    ./pixman/pixman/pixman-combine-float.c
+    ./pixman/pixman/pixman-conical-gradient.c
+    ./pixman/pixman/pixman-edge.c
+    ./pixman/pixman/pixman-edge-accessors.c
+    ./pixman/pixman/pixman-fast-path.c
+    ./pixman/pixman/pixman-filter.c
+    ./pixman/pixman/pixman-general.c
+    ./pixman/pixman/pixman-glyph.c
+    ./pixman/pixman/pixman-gradient-walker.c
+    ./pixman/pixman/pixman-image.c
+    ./pixman/pixman/pixman-implementation.c
+    ./pixman/pixman/pixman-linear-gradient.c
+    ./pixman/pixman/pixman-matrix.c
+    ./pixman/pixman/pixman-mips.c
+    ./pixman/pixman/pixman-noop.c
+    ./pixman/pixman/pixman-ppc.c
+    ./pixman/pixman/pixman-radial-gradient.c
+    ./pixman/pixman/pixman-region16.c
+    ./pixman/pixman/pixman-region32.c
+    ./pixman/pixman/pixman-solid-fill.c
+    ./pixman/pixman/pixman-timer.c
+    ./pixman/pixman/pixman-trap.c
+    ./pixman/pixman/pixman-utils.c
+    ./pixman/pixman/pixman-x86.c
+    ]
+}
+
+let freetype : SourceSet {
+    .configs += config;
+    .defines += [ "FT2_BUILD_LIBRARY" ]
+    .include_dirs += [
+        ./zlib/zlib-src
+        ./freetype/include
+    ]
+    .sources += [
+    ./freetype/src/autofit/autofit.c
+    ./freetype/src/bdf/bdf.c
+    ./freetype/src/cff/cff.c
+    ./freetype/src/dlg/dlg.c
+    ./freetype/src/base/ftbase.c
+    ./freetype/src/base/ftbbox.c
+    ./freetype/src/base/ftbdf.c
+    ./freetype/src/base/ftbitmap.c
+    ./freetype/src/bzip2/ftbzip2.c
+    ./freetype/src/cache/ftcache.c
+    ./freetype/src/base/ftcid.c
+    ./freetype/src/base/ftdebug.c
+    ./freetype/src/base/ftfstype.c
+    ./freetype/src/base/ftgasp.c
+    ./freetype/src/base/ftglyph.c
+    ./freetype/src/base/ftgxval.c
+    ./freetype/src/gzip/ftgzip.c
+    ./freetype/src/base/ftinit.c
+    ./freetype/src/lzw/ftlzw.c
+    ./freetype/src/base/ftmm.c
+    ./freetype/src/base/ftotval.c
+    ./freetype/src/base/ftpatent.c
+    ./freetype/src/base/ftpfr.c
+    ./freetype/src/base/ftstroke.c
+    ./freetype/src/base/ftsynth.c
+    ./freetype/src/base/ftsystem.c
+    ./freetype/src/base/fttype1.c
+    ./freetype/src/base/ftwinfnt.c
+    ./freetype/src/pcf/pcf.c
+    ./freetype/src/pfr/pfr.c
+    ./freetype/src/psaux/psaux.c
+    ./freetype/src/pshinter/pshinter.c
+    ./freetype/src/psnames/psnames.c
+    ./freetype/src/raster/raster.c
+    ./freetype/src/sdf/sdf.c
+    ./freetype/src/sfnt/sfnt.c
+    ./freetype/src/smooth/smooth.c
+    ./freetype/src/svg/svg.c
+    ./freetype/src/truetype/truetype.c
+    ./freetype/src/type1/type1.c
+    ./freetype/src/cid/type1cid.c
+    ./freetype/src/type42/type42.c
+    ./freetype/src/winfonts/winfnt.c
+    ]
+}
+
+let headers : SourceSet {
+    .sources += [
+    ./zlib/config.h
+    ./zlib/zconf.h
+    ./zlib/zlib-src/crc32.h
+    ./zlib/zlib-src/deflate.h
+    ./zlib/zlib-src/gzguts.h
+    ./zlib/zlib-src/inffast.h
+    ./zlib/zlib-src/inffixed.h
+    ./zlib/zlib-src/inflate.h
+    ./zlib/zlib-src/inftrees.h
+    ./zlib/zlib-src/trees.h
+    ./zlib/zlib-src/zlib.h
+    ./zlib/zlib-src/zutil.h
+    ./zlib/zlib-src/contrib/blast/blast.h
+    ./zlib/zlib-src/contrib/infback9/infback9.h
+    ./zlib/zlib-src/contrib/infback9/inffix9.h
+    ./zlib/zlib-src/contrib/infback9/inflate9.h
+    ./zlib/zlib-src/contrib/infback9/inftree9.h
+    ./zlib/zlib-src/contrib/iostream/zfstream.h
+    ./zlib/zlib-src/contrib/iostream2/zstream.h
+    ./zlib/zlib-src/contrib/iostream3/zfstream.h
+    ./zlib/zlib-src/contrib/minizip/crypt.h
+    ./zlib/zlib-src/contrib/minizip/ioapi.h
+    ./zlib/zlib-src/contrib/minizip/iowin32.h
+    ./zlib/zlib-src/contrib/minizip/mztools.h
+    ./zlib/zlib-src/contrib/minizip/unzip.h
+    ./zlib/zlib-src/contrib/minizip/zip.h
+    ./zlib/zlib-src/contrib/puff/puff.h
+    ./zlib/zlib-src/examples/gzlog.h
+    ./zlib/zlib-src/examples/zran.h
+    ]
+    .sources += [
     ./harfbuzz/config.h
     ./harfbuzz/hb-version.h
     ./harfbuzz/harfbuzz-src/src/hb.hh
@@ -327,32 +588,7 @@ let harfbuzz : SourceSet {
     ./harfbuzz/harfbuzz-src/src/hb-uniscribe.h
     ./harfbuzz/harfbuzz-src/src/hb-wasm-api.h
     ]
-}
-
-let libpng : SourceSet {
-    .configs += config;
-    .defines += [ "PNG_CONFIGURE_LIBPNG" "PNG_NO_MMX_CODE" ]
-    .include_dirs += ./libpng
-    .sources = [
-	./libpng/libpng-src/png.c
-	./libpng/libpng-src/pngerror.c
-	./libpng/libpng-src/pngget.c
-	./libpng/libpng-src/pngmem.c
-	./libpng/libpng-src/pngpread.c
-	./libpng/libpng-src/pngread.c
-	./libpng/libpng-src/pngrio.c
-	./libpng/libpng-src/pngrtran.c
-	./libpng/libpng-src/pngrutil.c
-	./libpng/libpng-src/pngset.c
-	./libpng/libpng-src/pngtrans.c
-	./libpng/libpng-src/pngwio.c
-	./libpng/libpng-src/pngwrite.c
-	./libpng/libpng-src/pngwtran.c
-	./libpng/libpng-src/pngwutil.c
-	./libpng/libpng-src/powerpc/filter_vsx_intrinsics.c
-	./libpng/libpng-src/powerpc/powerpc_init.c
-    ]
-    .sources = [
+    .sources += [
     ./libpng/config.h
     ./libpng/libpng-src/png.h
     ./libpng/libpng-src/pngconf.h
@@ -373,13 +609,233 @@ let libpng : SourceSet {
     ./libpng/libpng-src/contrib/visupng/PngFile.h
     ./libpng/libpng-src/contrib/visupng/resource.h
     ]
+    .sources += [
+    ./cairo/src/cairo.h
+    ./cairo/src/cairo-analysis-surface-private.h
+    ./cairo/src/cairo-arc-private.h
+    ./cairo/src/cairo-array-private.h
+    ./cairo/src/cairo-atomic-private.h
+    ./cairo/src/cairo-backend-private.h
+    ./cairo/src/cairo-beos.h
+    ./cairo/src/cairo-boxes-private.h
+    ./cairo/src/cairo-box-inline.h
+    ./cairo/src/cairo-cache-private.h
+    ./cairo/src/cairo-clip-inline.h
+    ./cairo/src/cairo-clip-private.h
+    ./cairo/src/cairo-cogl.h
+    ./cairo/src/cairo-cogl-context-private.h
+    ./cairo/src/cairo-cogl-gradient-private.h
+    ./cairo/src/cairo-cogl-private.h
+    ./cairo/src/cairo-cogl-utils-private.h
+    ./cairo/src/cairo-combsort-inline.h
+    ./cairo/src/cairo-compiler-private.h
+    ./cairo/src/cairo-composite-rectangles-private.h
+    ./cairo/src/cairo-compositor-private.h
+    ./cairo/src/cairo-contour-inline.h
+    ./cairo/src/cairo-contour-private.h
+    ./cairo/src/cairo-damage-private.h
+    ./cairo/src/cairo-default-context-private.h
+    ./cairo/src/cairo-deprecated.h
+    ./cairo/src/cairo-device-private.h
+    ./cairo/src/cairo-directfb.h
+    ./cairo/src/cairo-drm.h
+    ./cairo/src/cairo-error-inline.h
+    ./cairo/src/cairo-error-private.h
+    ./cairo/src/cairo-features.h
+    ./cairo/src/cairo-fixed-private.h
+    ./cairo/src/cairo-fixed-type-private.h
+    ./cairo/src/cairo-fontconfig-private.h
+    ./cairo/src/cairo-freed-pool-private.h
+    ./cairo/src/cairo-freelist-private.h
+    ./cairo/src/cairo-freelist-type-private.h
+    ./cairo/src/cairo-ft.h
+    ./cairo/src/cairo-ft-private.h
+    ./cairo/src/cairo-gl.h
+    ./cairo/src/cairo-gl-dispatch-private.h
+    ./cairo/src/cairo-gl-ext-def-private.h
+    ./cairo/src/cairo-gl-gradient-private.h
+    ./cairo/src/cairo-gl-private.h
+    ./cairo/src/cairo-gstate-private.h
+    ./cairo/src/cairo-hash-private.h
+    ./cairo/src/cairo-image-info-private.h
+    ./cairo/src/cairo-image-surface-inline.h
+    ./cairo/src/cairo-image-surface-private.h
+    ./cairo/src/cairoint.h
+    ./cairo/src/cairo-line-inline.h
+    ./cairo/src/cairo-line-private.h
+    ./cairo/src/cairo-list-inline.h
+    ./cairo/src/cairo-list-private.h
+    ./cairo/src/cairo-malloc-private.h
+    ./cairo/src/cairo-mempool-private.h
+    ./cairo/src/cairo-mutex-impl-private.h
+    ./cairo/src/cairo-mutex-list-private.h
+    ./cairo/src/cairo-mutex-private.h
+    ./cairo/src/cairo-mutex-type-private.h
+    ./cairo/src/cairo-os2.h
+    ./cairo/src/cairo-os2-private.h
+    ./cairo/src/cairo-output-stream-private.h
+    ./cairo/src/cairo-paginated-private.h
+    ./cairo/src/cairo-paginated-surface-private.h
+    ./cairo/src/cairo-path-fixed-private.h
+    ./cairo/src/cairo-path-private.h
+    ./cairo/src/cairo-pattern-inline.h
+    ./cairo/src/cairo-pattern-private.h
+    ./cairo/src/cairo-pdf.h
+    ./cairo/src/cairo-pdf-operators-private.h
+    ./cairo/src/cairo-pdf-shading-private.h
+    ./cairo/src/cairo-pdf-surface-private.h
+    ./cairo/src/cairo-pixman-private.h
+    ./cairo/src/cairo-private.h
+    ./cairo/src/cairo-ps.h
+    ./cairo/src/cairo-ps-surface-private.h
+    ./cairo/src/cairo-qt.h
+    ./cairo/src/cairo-quartz.h
+    ./cairo/src/cairo-quartz-image.h
+    ./cairo/src/cairo-quartz-private.h
+    ./cairo/src/cairo-recording-surface-inline.h
+    ./cairo/src/cairo-recording-surface-private.h
+    ./cairo/src/cairo-reference-count-private.h
+    ./cairo/src/cairo-region-private.h
+    ./cairo/src/cairo-rtree-private.h
+    ./cairo/src/cairo-scaled-font-private.h
+    ./cairo/src/cairo-scaled-font-subsets-private.h
+    ./cairo/src/cairo-script.h
+    ./cairo/src/cairo-script-private.h
+    ./cairo/src/cairo-slope-private.h
+    ./cairo/src/cairo-spans-compositor-private.h
+    ./cairo/src/cairo-spans-private.h
+    ./cairo/src/cairo-stroke-dash-private.h
+    ./cairo/src/cairo-supported-features.h
+    ./cairo/src/cairo-surface-backend-private.h
+    ./cairo/src/cairo-surface-clipper-private.h
+    ./cairo/src/cairo-surface-fallback-private.h
+    ./cairo/src/cairo-surface-inline.h
+    ./cairo/src/cairo-surface-observer-inline.h
+    ./cairo/src/cairo-surface-observer-private.h
+    ./cairo/src/cairo-surface-offset-private.h
+    ./cairo/src/cairo-surface-private.h
+    ./cairo/src/cairo-surface-snapshot-inline.h
+    ./cairo/src/cairo-surface-snapshot-private.h
+    ./cairo/src/cairo-surface-subsurface-inline.h
+    ./cairo/src/cairo-surface-subsurface-private.h
+    ./cairo/src/cairo-surface-wrapper-private.h
+    ./cairo/src/cairo-svg.h
+    ./cairo/src/cairo-svg-surface-private.h
+    ./cairo/src/cairo-tag-attributes-private.h
+    ./cairo/src/cairo-tag-stack-private.h
+    ./cairo/src/cairo-tee.h
+    ./cairo/src/cairo-tee-surface-private.h
+    ./cairo/src/cairo-time-private.h
+    ./cairo/src/cairo-traps-private.h
+    ./cairo/src/cairo-tristrip-private.h
+    ./cairo/src/cairo-truetype-subset-private.h
+    ./cairo/src/cairo-type1-private.h
+    ./cairo/src/cairo-type3-glyph-surface-private.h
+    ./cairo/src/cairo-types-private.h
+    ./cairo/src/cairo-user-font-private.h
+    ./cairo/src/cairo-version.h
+    ./cairo/src/cairo-vg.h
+    ./cairo/src/cairo-wideint-private.h
+    ./cairo/src/cairo-wideint-type-private.h
+    ./cairo/src/cairo-win32.h
+    ./cairo/src/cairo-xcb.h
+    ./cairo/src/cairo-xcb-private.h
+    ./cairo/src/cairo-xlib.h
+    ./cairo/src/cairo-xlib-private.h
+    ./cairo/src/cairo-xlib-surface-private.h
+    ./cairo/src/cairo-xlib-xrender.h
+    ./cairo/src/cairo-xlib-xrender-private.h
+    ./cairo/src/cairo-xml.h
+    ./cairo/src/config.h
+    ./cairo/src/test-compositor-surface.h
+    ./cairo/src/test-compositor-surface-private.h
+    ./cairo/src/test-null-compositor-surface.h
+    ./cairo/src/test-paginated-surface.h
+    ]
+    .sources += [
+    ./pixman/pixman/config.h
+    ./pixman/pixman/loongson-mmintrin.h
+    ./pixman/pixman/pixman.h
+    ./pixman/pixman/pixman-accessor.h
+    ./pixman/pixman/pixman-arm-asm.h
+    ./pixman/pixman/pixman-arm-common.h
+    ./pixman/pixman/pixman-arm-neon-asm.h
+    ./pixman/pixman/pixman-arm-simd-asm.h
+    ./pixman/pixman/pixman-combine32.h
+    ./pixman/pixman/pixman-compiler.h
+    ./pixman/pixman/pixman-edge-imp.h
+    ./pixman/pixman/pixman-inlines.h
+    ./pixman/pixman/pixman-mips-dspr2.h
+    ./pixman/pixman/pixman-mips-dspr2-asm.h
+    ./pixman/pixman/pixman-private.h
+    ./pixman/pixman/pixman-version.h
+    ]
+    .sources += [
+    ./freetype/include/freetype/freetype.h
+    ./freetype/include/freetype/ftadvanc.h
+    ./freetype/include/freetype/ftbbox.h
+    ./freetype/include/freetype/ftbdf.h
+    ./freetype/include/freetype/ftbitmap.h
+    ./freetype/include/freetype/ftbzip2.h
+    ./freetype/include/freetype/ftcache.h
+    ./freetype/include/freetype/ftchapters.h
+    ./freetype/include/freetype/ftcid.h
+    ./freetype/include/freetype/ftcolor.h
+    ./freetype/include/freetype/ftdriver.h
+    ./freetype/include/freetype/fterrdef.h
+    ./freetype/include/freetype/fterrors.h
+    ./freetype/include/freetype/ftfntfmt.h
+    ./freetype/include/freetype/ftgasp.h
+    ./freetype/include/freetype/ftglyph.h
+    ./freetype/include/freetype/ftgxval.h
+    ./freetype/include/freetype/ftgzip.h
+    ./freetype/include/freetype/ftimage.h
+    ./freetype/include/freetype/ftincrem.h
+    ./freetype/include/freetype/ftlcdfil.h
+    ./freetype/include/freetype/ftlist.h
+    ./freetype/include/freetype/ftlogging.h
+    ./freetype/include/freetype/ftlzw.h
+    ./freetype/include/freetype/ftmac.h
+    ./freetype/include/freetype/ftmm.h
+    ./freetype/include/freetype/ftmodapi.h
+    ./freetype/include/freetype/ftmoderr.h
+    ./freetype/include/freetype/ftotval.h
+    ./freetype/include/freetype/ftoutln.h
+    ./freetype/include/freetype/ftparams.h
+    ./freetype/include/freetype/ftpfr.h
+    ./freetype/include/freetype/ftrender.h
+    ./freetype/include/freetype/ftsizes.h
+    ./freetype/include/freetype/ftsnames.h
+    ./freetype/include/freetype/ftstroke.h
+    ./freetype/include/freetype/ftsynth.h
+    ./freetype/include/freetype/ftsystem.h
+    ./freetype/include/freetype/fttrigon.h
+    ./freetype/include/freetype/fttypes.h
+    ./freetype/include/freetype/ftwinfnt.h
+    ./freetype/include/freetype/otsvg.h
+    ./freetype/include/freetype/t1tables.h
+    ./freetype/include/freetype/ttnameid.h
+    ./freetype/include/freetype/tttables.h
+    ./freetype/include/freetype/tttags.h
+    ./freetype/include/freetype/config/ftconfig.h
+    ./freetype/include/freetype/config/ftheader.h
+    ./freetype/include/freetype/config/ftmodule.h
+    ./freetype/include/freetype/config/ftoption.h
+    ./freetype/include/freetype/config/ftstdlib.h
+    ./freetype/include/freetype/config/integer-types.h
+    ./freetype/include/freetype/config/mac-support.h
+    ./freetype/include/freetype/config/public-macros.h
+    ]
 }
 
 let typos ! : Executable {
     .configs += config;
-    .deps += [ zlib libpng harfbuzz ]
-    # NOTE: main is in luatex.c
+    .deps += [ zlib libpng harfbuzz cairo pixman freetype ]
+    .include_dirs += [
+    ./cairo/src
+    ./freetype/include
+    ]
     .sources = [
-	./main.c
+    ./tests/create_pdf_1.c
 	]
 }
