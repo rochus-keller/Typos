@@ -358,6 +358,103 @@ let freetype : SourceSet {
     ]
 }
 
+let microtex : SourceSet {
+    .configs += config;
+    # TODO: we need a different implemntation of graphic_cairo.cpp not depending on pango
+    # .defines += [ "BUILD_GTK" ]
+    .include_dirs += [
+    ./microtex/src
+    ]
+    .sources += [
+    # atom folder
+    ./microtex/src/atom/atom_basic.cpp
+    ./microtex/src/atom/atom_char.cpp
+    ./microtex/src/atom/atom_impl.cpp
+    ./microtex/src/atom/atom_matrix.cpp
+    ./microtex/src/atom/atom_row.cpp
+    ./microtex/src/atom/atom_space.cpp
+    ./microtex/src/atom/colors_def.cpp
+    ./microtex/src/atom/unit_conversion.cpp
+    # box folder
+    ./microtex/src/box/box.cpp
+    ./microtex/src/box/box_factory.cpp
+    ./microtex/src/box/box_group.cpp
+    ./microtex/src/box/box_single.cpp
+    # core folder
+    ./microtex/src/core/core.cpp
+    ./microtex/src/core/formula.cpp
+    ./microtex/src/core/formula_def.cpp
+    ./microtex/src/core/glue.cpp
+    ./microtex/src/core/localized_num.cpp
+    ./microtex/src/core/macro.cpp
+    ./microtex/src/core/macro_def.cpp
+    ./microtex/src/core/macro_impl.cpp
+    ./microtex/src/core/parser.cpp
+    # fonts folder
+    ./microtex/src/fonts/alphabet.cpp
+    ./microtex/src/fonts/font_basic.cpp
+    ./microtex/src/fonts/font_info.cpp
+    ./microtex/src/fonts/fonts.cpp
+    # utils folder
+    ./microtex/src/utils/string_utils.cpp
+    ./microtex/src/utils/utf.cpp
+    ./microtex/src/utils/utils.cpp
+    # top
+    ./microtex/src/latex.cpp
+    ./microtex/src/render.cpp
+    ./microtex/src/platform/cairo/graphic_cairo.cpp
+    # res folder
+    ./microtex/src/res/builtin/formula_mappings.res.cpp
+    ./microtex/src/res/builtin/symbol_mapping.res.cpp
+    ./microtex/src/res/builtin/tex_param.res.cpp
+    ./microtex/src/res/builtin/tex_symbols.res.cpp
+    ./microtex/src/res/font/bi10.def.cpp
+    ./microtex/src/res/font/bx10.def.cpp
+    ./microtex/src/res/font/cmbsy10.def.cpp
+    ./microtex/src/res/font/cmbx10.def.cpp
+    ./microtex/src/res/font/cmbxti10.def.cpp
+    ./microtex/src/res/font/cmex10.def.cpp
+    ./microtex/src/res/font/cmmi10.def.cpp
+    ./microtex/src/res/font/cmmi10_unchanged.def.cpp
+    ./microtex/src/res/font/cmmib10.def.cpp
+    ./microtex/src/res/font/cmmib10_unchanged.def.cpp
+    ./microtex/src/res/font/cmr10.def.cpp
+    ./microtex/src/res/font/cmss10.def.cpp
+    ./microtex/src/res/font/cmssbx10.def.cpp
+    ./microtex/src/res/font/cmssi10.def.cpp
+    ./microtex/src/res/font/cmsy10.def.cpp
+    ./microtex/src/res/font/cmti10.def.cpp
+    ./microtex/src/res/font/cmti10_unchanged.def.cpp
+    ./microtex/src/res/font/cmtt10.def.cpp
+    ./microtex/src/res/font/dsrom10.def.cpp
+    ./microtex/src/res/font/eufb10.def.cpp
+    ./microtex/src/res/font/eufm10.def.cpp
+    ./microtex/src/res/font/i10.def.cpp
+    ./microtex/src/res/font/moustache.def.cpp
+    ./microtex/src/res/font/msam10.def.cpp
+    ./microtex/src/res/font/msbm10.def.cpp
+    ./microtex/src/res/font/r10.def.cpp
+    ./microtex/src/res/font/r10_unchanged.def.cpp
+    ./microtex/src/res/font/rsfs10.def.cpp
+    ./microtex/src/res/font/sb10.def.cpp
+    ./microtex/src/res/font/sbi10.def.cpp
+    ./microtex/src/res/font/si10.def.cpp
+    ./microtex/src/res/font/special.def.cpp
+    ./microtex/src/res/font/ss10.def.cpp
+    ./microtex/src/res/font/stmary10.def.cpp
+    ./microtex/src/res/font/tt10.def.cpp
+    ./microtex/src/res/parser/font_parser.cpp
+    ./microtex/src/res/parser/formula_parser.cpp
+    ./microtex/src/res/reg/builtin_font_reg.cpp
+    ./microtex/src/res/reg/builtin_syms_reg.cpp
+    ./microtex/src/res/sym/amsfonts.def.cpp
+    ./microtex/src/res/sym/amssymb.def.cpp
+    ./microtex/src/res/sym/base.def.cpp
+    ./microtex/src/res/sym/stmaryrd.def.cpp
+    ./microtex/src/res/sym/symspecial.def.cpp
+    ]
+}
+
 let headers : SourceSet {
     .sources += [
     ./zlib/config.h
@@ -826,16 +923,65 @@ let headers : SourceSet {
     ./freetype/include/freetype/config/mac-support.h
     ./freetype/include/freetype/config/public-macros.h
     ]
+    .sources += [
+    ./microtex/src/common.h
+    ./microtex/src/config.h
+    ./microtex/src/latex.h
+    ./microtex/src/render.h
+    ./microtex/src/atom/atom.h
+    ./microtex/src/atom/atom_basic.h
+    ./microtex/src/atom/atom_char.h
+    ./microtex/src/atom/atom_impl.h
+    ./microtex/src/atom/atom_matrix.h
+    ./microtex/src/atom/atom_row.h
+    ./microtex/src/atom/atom_space.h
+    ./microtex/src/box/box.h
+    ./microtex/src/box/box_factory.h
+    ./microtex/src/box/box_group.h
+    ./microtex/src/box/box_single.h
+    ./microtex/src/core/core.h
+    ./microtex/src/core/formula.h
+    ./microtex/src/core/glue.h
+    ./microtex/src/core/macro.h
+    ./microtex/src/core/macro_impl.h
+    ./microtex/src/core/parser.h
+    ./microtex/src/fonts/alphabet.h
+    ./microtex/src/fonts/font_basic.h
+    ./microtex/src/fonts/font_info.h
+    ./microtex/src/fonts/font_reg.h
+    ./microtex/src/fonts/fonts.h
+    ./microtex/src/fonts/symbol_reg.h
+    ./microtex/src/fonts/tex_font.h
+    ./microtex/src/graphic/graphic.h
+    ./microtex/src/graphic/graphic_basic.h
+    ./microtex/src/platform/cairo/graphic_cairo.h
+    ./microtex/src/res/font_def.res.h
+    ./microtex/src/res/symbol_def.res.h
+    ./microtex/src/res/parser/font_parser.h
+    ./microtex/src/res/parser/formula_parser.h
+    ./microtex/src/res/reg/builtin_font_reg.h
+    ./microtex/src/res/reg/builtin_syms_reg.h
+    ./microtex/src/utils/dict_tree.h
+    ./microtex/src/utils/enums.h
+    ./microtex/src/utils/exceptions.h
+    ./microtex/src/utils/indexed_arr.h
+    ./microtex/src/utils/log.h
+    ./microtex/src/utils/nums.h
+    ./microtex/src/utils/string_utils.h
+    ./microtex/src/utils/utf.h
+    ./microtex/src/utils/utils.h
+    ]
 }
 
 let typos ! : Executable {
     .configs += config;
-    .deps += [ zlib libpng harfbuzz cairo pixman freetype ]
+    .deps += [ zlib libpng harfbuzz cairo pixman freetype microtex ]
     .include_dirs += [
     ./cairo/src
     ./freetype/include
     ]
+    .lib_names += "tinyxml2"
     .sources = [
-    ./tests/create_pdf_1.c
+    ./tests/main.c
 	]
 }
