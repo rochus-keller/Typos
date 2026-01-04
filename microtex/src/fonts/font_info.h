@@ -5,6 +5,7 @@
 #include "fonts/font_basic.h"
 #include "graphic/graphic.h"
 #include "utils/indexed_arr.h"
+#include <cassert>
 
 namespace tex {
 
@@ -71,7 +72,7 @@ public:
 
   static inline const std::vector<FontInfo*>& __infos() { return _infos; }
 
-  static inline FontInfo* __get(int id) { return _infos[id]; }
+  static inline FontInfo* __get(int id) { assert(id < _infos.size()); return _infos[id]; }
 
   static void __register(const FontSet& set);
 

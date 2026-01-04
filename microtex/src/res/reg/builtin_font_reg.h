@@ -8,6 +8,7 @@
  * DEFAULT FONT TABLES
  * Page 437 in [The TeXBook]
  */
+// TODO: sync with builtin_font_reg.cpp
 DECL_FONT_REG(msbm10);
 DECL_FONT_REG(cmex10);
 DECL_FONT_REG(cmmi10);

@@ -1,6 +1,7 @@
 #include "fonts/fonts.h"
 
 #include <cmath>
+#include <cassert>
 
 #include "common.h"
 #include "fonts/symbol_reg.h"
@@ -205,7 +206,8 @@ Char DefaultTeXFont::getChar(
 }
 
 sptr<Metrics> DefaultTeXFont::getMetrics(const CharFont& cf, float size) {
-  auto info = getInfo(cf.fontId);
+  FontInfo* info = getInfo(cf.fontId);
+  assert(info != 0);
   const float* m = info->getMetrics(cf.chr);
   Metrics* met = new Metrics(
     m[WIDTH], m[HEIGHT], m[DEPTH], m[IT], size * Formula::PIXELS_PER_POINT, size);

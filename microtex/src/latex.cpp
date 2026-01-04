@@ -11,7 +11,7 @@
 using namespace std;
 using namespace tex;
 
-string tex::RES_BASE = "res";
+string tex::RES_BASE = "fonts"; // orig: res
 static string CHECK_FILE = ".clatexmath-res_root";
 #ifdef _WIN32
 static char PATH_SEPERATOR = ';';

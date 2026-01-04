@@ -38,8 +38,11 @@ let zlib : SourceSet {
 
 let harfbuzz : SourceSet {
     .configs += config;
-    .defines += [ "HB_NO_MT" "HAVE_FALLBACK=1" "GRAPHITE2_STATIC" ]
-    .include_dirs += [ ./harfbuzz ./harfbuzz/harfbuzz-src/src ./graphite2/include ./graphite2/graphite2-src/include ]
+    .defines += [ "HB_NO_MT" "HAVE_FALLBACK=1" "HAVE_FREETYPE" ]
+    .include_dirs += [
+    ./harfbuzz/harfbuzz-src/src
+    ./freetype/include
+    ]
     .sources = [
     ./harfbuzz/harfbuzz-src/src/hb-aat-layout.cc
     ./harfbuzz/harfbuzz-src/src/hb-aat-map.cc
@@ -98,6 +101,7 @@ let harfbuzz : SourceSet {
     ./harfbuzz/harfbuzz-src/src/hb-subset-instancer-solver.cc
     ./harfbuzz/harfbuzz-src/src/hb-ucd.cc
     ./harfbuzz/harfbuzz-src/src/hb-unicode.cc
+    ./harfbuzz/harfbuzz-src/src/hb-ft.cc
     ]
 
 }
@@ -361,9 +365,12 @@ let freetype : SourceSet {
 let microtex : SourceSet {
     .configs += config;
     # TODO: we need a different implemntation of graphic_cairo.cpp not depending on pango
-    # .defines += [ "BUILD_GTK" ]
+    .defines += [ "BUILD_GTK" ]
     .include_dirs += [
     ./microtex/src
+    ./freetype/include
+    ./harfbuzz/harfbuzz-src/src
+    ./cairo/src
     ]
     .sources += [
     # atom folder
@@ -408,41 +415,43 @@ let microtex : SourceSet {
     ./microtex/src/res/builtin/symbol_mapping.res.cpp
     ./microtex/src/res/builtin/tex_param.res.cpp
     ./microtex/src/res/builtin/tex_symbols.res.cpp
-    ./microtex/src/res/font/bi10.def.cpp
-    ./microtex/src/res/font/bx10.def.cpp
+
+    ./microtex/src/res/font/bi10.def.cpp # not used
+    ./microtex/src/res/font/bx10.def.cpp # not used
     ./microtex/src/res/font/cmbsy10.def.cpp
     ./microtex/src/res/font/cmbx10.def.cpp
-    ./microtex/src/res/font/cmbxti10.def.cpp
+    ./microtex/src/res/font/cmbxti10.def.cpp # not used
     ./microtex/src/res/font/cmex10.def.cpp
     ./microtex/src/res/font/cmmi10.def.cpp
     ./microtex/src/res/font/cmmi10_unchanged.def.cpp
     ./microtex/src/res/font/cmmib10.def.cpp
     ./microtex/src/res/font/cmmib10_unchanged.def.cpp
     ./microtex/src/res/font/cmr10.def.cpp
-    ./microtex/src/res/font/cmss10.def.cpp
-    ./microtex/src/res/font/cmssbx10.def.cpp
-    ./microtex/src/res/font/cmssi10.def.cpp
+    ./microtex/src/res/font/cmss10.def.cpp # not used
+    ./microtex/src/res/font/cmssbx10.def.cpp # not used
+    ./microtex/src/res/font/cmssi10.def.cpp # not used
     ./microtex/src/res/font/cmsy10.def.cpp
-    ./microtex/src/res/font/cmti10.def.cpp
-    ./microtex/src/res/font/cmti10_unchanged.def.cpp
-    ./microtex/src/res/font/cmtt10.def.cpp
-    ./microtex/src/res/font/dsrom10.def.cpp
-    ./microtex/src/res/font/eufb10.def.cpp
-    ./microtex/src/res/font/eufm10.def.cpp
-    ./microtex/src/res/font/i10.def.cpp
-    ./microtex/src/res/font/moustache.def.cpp
+    ./microtex/src/res/font/cmti10.def.cpp # not used
+    ./microtex/src/res/font/cmti10_unchanged.def.cpp # not used
+    ./microtex/src/res/font/cmtt10.def.cpp # not used
+    ./microtex/src/res/font/dsrom10.def.cpp # not used
+    ./microtex/src/res/font/eufb10.def.cpp # not used
+    ./microtex/src/res/font/eufm10.def.cpp # not used
+    ./microtex/src/res/font/i10.def.cpp # not used
+    ./microtex/src/res/font/moustache.def.cpp # not used
     ./microtex/src/res/font/msam10.def.cpp
     ./microtex/src/res/font/msbm10.def.cpp
-    ./microtex/src/res/font/r10.def.cpp
-    ./microtex/src/res/font/r10_unchanged.def.cpp
-    ./microtex/src/res/font/rsfs10.def.cpp
-    ./microtex/src/res/font/sb10.def.cpp
-    ./microtex/src/res/font/sbi10.def.cpp
-    ./microtex/src/res/font/si10.def.cpp
-    ./microtex/src/res/font/special.def.cpp
-    ./microtex/src/res/font/ss10.def.cpp
-    ./microtex/src/res/font/stmary10.def.cpp
-    ./microtex/src/res/font/tt10.def.cpp
+    ./microtex/src/res/font/r10.def.cpp # not used
+    ./microtex/src/res/font/r10_unchanged.def.cpp # not used
+    ./microtex/src/res/font/rsfs10.def.cpp # not used
+    ./microtex/src/res/font/sb10.def.cpp # not used
+    ./microtex/src/res/font/sbi10.def.cpp # not used
+    ./microtex/src/res/font/si10.def.cpp # not used
+    ./microtex/src/res/font/special.def.cpp # not used
+    ./microtex/src/res/font/ss10.def.cpp # not used
+    ./microtex/src/res/font/stmary10.def.cpp # not used
+    ./microtex/src/res/font/tt10.def.cpp # not used
+
     ./microtex/src/res/parser/font_parser.cpp
     ./microtex/src/res/parser/formula_parser.cpp
     ./microtex/src/res/reg/builtin_font_reg.cpp
@@ -488,8 +497,8 @@ let headers : SourceSet {
     ./zlib/zlib-src/examples/zran.h
     ]
     .sources += [
-    ./harfbuzz/config.h
-    ./harfbuzz/hb-version.h
+    ./harfbuzz/harfbuzz-src/src/config.h
+    ./harfbuzz/harfbuzz-src/src/hb-version.h
     ./harfbuzz/harfbuzz-src/src/hb.hh
     ./harfbuzz/harfbuzz-src/src/hb-aat-layout.hh
     ./harfbuzz/harfbuzz-src/src/hb-aat-layout-ankr-table.hh
@@ -979,9 +988,11 @@ let typos ! : Executable {
     .include_dirs += [
     ./cairo/src
     ./freetype/include
+    ./microtex/src
+    ./harfbuzz/harfbuzz-src/src
     ]
     .lib_names += "tinyxml2"
     .sources = [
-    ./tests/main.c
+    ./tests/create_pdf_2.cpp
 	]
 }

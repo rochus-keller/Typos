@@ -1,6 +1,6 @@
 #include "res/font_def.res.h"
 
-DEF_FONT(cmmib10, fonts/base/cmmib10.ttf, 0)
+DEF_FONT(cmmib10, cmmib10.ttf, 0)
 
 xHeight(0.444445) quad(1.149994)
 

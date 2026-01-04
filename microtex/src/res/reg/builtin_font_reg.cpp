@@ -2,8 +2,13 @@
 
 using namespace tex;
 
+
+
+
+
 DEF_FONT_SET(Builtin)
 
+// TODO: sync with builtin_font_reg.h
 REG_FONT(msbm10)
 REG_FONT(cmex10)
 REG_FONT(cmmi10)

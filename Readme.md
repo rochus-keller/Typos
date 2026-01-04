@@ -14,6 +14,7 @@ required parts from TexLive. As a concession to feasibility, the system will onl
 - [x] Replace build systems of all libraries by BUSY
 - [x] Removed all autotools files and readme files thereof
 - [x] Implement a test application to show that the Cairo PDF backend works
+- [x] Integrate MicroTex and implement test application to show that formula PDF printing works in hight quality
 - [ ] Implement all required Knuth algorithms (paragraph, table and page layout)
 - [ ] Specify a statically (gradually) typed typesetting language in the Oberon+/Luon or Typst lineage
 - [ ] Implement a new frontend 
@@ -37,6 +38,12 @@ my goal to implement a lean, stand-alone application. See the readme of the "sec
 I now have all the fundamental libraries in the repository, migrated to the BUSY build system, and stripped of unused files. The project includes a test
 application which draws some geometric figures and text lines with different font sizes in a PDF. Cairo thereby directly uses the font face from FreeType
 without any dependency on fontconfig or other operating system font APIs. Next I will integrate MicroTex and test formula rendering.
+
+### Status on January 4, 2026
+
+This version includes a modified MicroTeX. It can print mathematical formulas written in a subset of LuaTeX to a PDF (see the formulaN.tex files in the 
+testcases directory). To make this work I had to re-implement the graphic_cairo.cpp/h so it uses HarfBuzz instead of Pango and accesses Cairo directly
+without C++ wrapper. Next I will remove the tinyxml2 dependency from MicroTex and reduce more unused fonts.
 
 ### How to build
 

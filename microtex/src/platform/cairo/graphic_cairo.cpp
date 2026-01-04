@@ -1,335 +1,428 @@
-#include "config.h"
+/*
+* Copyright 2026 Rochus Keller <mailto:me@rochus-keller.ch>
+*
+* This file is part of the Typos project.
+*
+* The following is the license that applies to this copy of the
+* file. For a license to use the file under conditions
+* other than those described here, please email to me@rochus-keller.ch.
+*
+* GNU General Public License Usage
+* This file may be used under the terms of the GNU General Public
+* License (GPL) versions 2.0 or 3.0 as published by the Free Software
+* Foundation and appearing in the file LICENSE.GPL included in
+* the packaging of this file. Please review the following information
+* to ensure GNU General Public Licensing requirements will be met:
+* http://www.fsf.org/licensing/licenses/info/GPLv2.html and
+* http://www.gnu.org/copyleft/gpl.html.
+*/
 
-#if defined(BUILD_GTK) && !defined(MEM_CHECK)
+// NOTE: migrated from the original graphic_cairo.h, but with HarfBuzz instead of Pango and no wrappers
 
-#include "platform/cairo/graphic_cairo.h"
+#include "graphic_cairo.h"
+#include <cassert>
+#include <cmath>
+#include <codecvt>
+#include <locale>
+#include <sstream>
 
-#include <fontconfig/fontconfig.h>
+namespace tex {
 
-#include <utility>
+// ---------------- Font_cairo::Face ----------------
 
-using namespace tex;
-using namespace std;
-
-map<string, string> Font_cairo::_families;
-map<string, Cairo::RefPtr<Cairo::FtFontFace>> Font_cairo::_cairoFtFaces;
-
-Font_cairo::Font_cairo(string family, int style, float size)
-  : _family(std::move(family)), _style(style), _size((double) size) {}
-
-Font_cairo::Font_cairo(const string& file, float size) : Font_cairo("", PLAIN, size) {
-  loadFont(file);
+Font_cairo::Face::~Face() {
+    if (hb_font) {
+        hb_font_destroy(hb_font);
+        hb_font = nullptr;
+    }
+    if (cairo_face) {
+        cairo_font_face_destroy(cairo_face);
+        cairo_face = nullptr;
+    }
+    if (ft_face) {
+        FT_Done_Face(ft_face);
+        ft_face = nullptr;
+    }
 }
 
-void Font_cairo::loadFont(const string& file) {
-  auto ffaceEntry = _cairoFtFaces.find(file);
-  auto familyEntry = _families.find(file);
-  if (ffaceEntry != _cairoFtFaces.end() && familyEntry != _families.end()) {
-    // already loaded
-    _family = familyEntry->second;
-    _fface = ffaceEntry->second;
-#ifdef HAVE_LOG
-    __log << file << " already loaded, skip\n";
-#endif
-    return;
-  }
+// ---------------- Font_cairo ----------------
 
-  // query font via fontconfig
-  const FcChar8* f = (const FcChar8*) file.c_str();
+Font_cairo::Font_cairo(std::string family, int style, float size)
+    : _style(style), _size(size), _family(std::move(family)) {}
 
-  // get font family from file first
-  int count;
-  FcChar8* family = NULL;
-  FcBlanks* blanks = FcConfigGetBlanks(NULL);
-  FcPattern* p = FcFreeTypeQuery(f, 0, blanks, &count);
-  FcPatternGetString(p, FC_FAMILY, 0, &family);
-#ifdef HAVE_LOG
-  __dbg("Load font: %s, count: %d\n", file.c_str(), count);
-  FcPatternPrint(p);
-#endif
-
-  // load font to fontconfig
-  FcBool status = FcConfigAppFontAddFile(NULL, f);
-#ifdef HAVE_LOG
-  if (!status) __dbg(ANSI_COLOR_RED "Load %s failed\n" ANSI_RESET, file.c_str());
-#endif
-
-  _family = (const char*) family;
-  _families[file] = _family;
-
-  _fface = Cairo::FtFontFace::create(p);
-  _cairoFtFaces[file] = _fface;
-
-  // release
-  FcPatternDestroy(p);
+Font_cairo::Font_cairo(const std::string& file, float size)
+    : _style(PLAIN), _size(size), _file(file) {
+    _face = loadFaceForFileAndSize(file, size);
+    _family = _face ? _face->family : "";
 }
 
-string Font_cairo::getFamily() const {
-  return _family;
+std::string Font_cairo::getFamily() const { return _family; }
+int Font_cairo::getStyle() const { return _style; }
+float Font_cairo::getSize() const { return _size; }
+
+cairo_font_face_t* Font_cairo::getCairoFontFace() const {
+    return _face ? _face->cairo_face : nullptr;
 }
 
-Cairo::RefPtr<Cairo::FtFontFace> Font_cairo::getCairoFontFace() const {
-  return _fface;
-}
-
-int Font_cairo::getStyle() const {
-  return _style;
-}
-
-float Font_cairo::getSize() const {
-  return (float) _size;
+hb_font_t* Font_cairo::getHbFont() const {
+    return _face ? _face->hb_font : nullptr;
 }
 
 sptr<Font> Font_cairo::deriveFont(int style) const {
-  return sptrOf<Font_cairo>(_family, style, _size);
+    // Keep same file if file-based; TODO: family→file mapping.
+    if (!_file.empty())
+        return sptr<Font>(new Font_cairo(_file, _size)); // style ignored for file fonts
+    return sptr<Font>(new Font_cairo(_family, style, _size));
 }
 
-bool Font_cairo::operator==(const Font& ft) const {
-  const Font_cairo& f = static_cast<const Font_cairo&>(ft);
-  return _size == f._size && _style == f._style && _family == f._family;
+bool Font_cairo::operator==(const Font& f) const {
+    const Font_cairo& o = static_cast<const Font_cairo&>(f);
+    return _size == o._size && _style == o._style && _family == o._family && _file == o._file;
 }
 
-bool Font_cairo::operator!=(const Font& f) const {
-  return !(*this == f);
+bool Font_cairo::operator!=(const Font& f) const { return !(*this == f); }
+
+FT_Library& Font_cairo::ftLibrary() {
+    static FT_Library lib = nullptr;
+    static bool inited = false;
+    if (!inited) {
+        if (FT_Init_FreeType(&lib) != 0) {
+            lib = nullptr;
+        }
+        inited = true;
+    }
+    return lib;
 }
 
-Font* Font::create(const string& file, float size) {
-  return new Font_cairo(file, size);
+static std::string sizeKey(float size) {
+    // 26.6 fixed point key is stable across float formatting noise
+    int s = (int)std::lround(size * 64.0);
+    std::ostringstream os;
+    os << s;
+    return os.str();
 }
 
-sptr<Font> Font::_create(const string& name, int style, float size) {
-  return sptrOf<Font_cairo>(name, style, size);
+std::shared_ptr<Font_cairo::Face>
+Font_cairo::loadFaceForFileAndSize(const std::string& file, float size) {
+    struct Cache {
+        std::map<std::string, std::weak_ptr<Face>> faces;
+    };
+    static Cache cache;
+
+    const std::string key = file + "|" + sizeKey(size);
+
+    auto it = cache.faces.find(key);
+    if (it != cache.faces.end()) {
+        if (auto sp = it->second.lock())
+            return sp;
+    }
+
+    FT_Library& lib = ftLibrary();
+    if (!lib) return nullptr;
+
+    std::shared_ptr<Face> face(new Face());
+    face->file = file;
+
+    if (FT_New_Face(lib, file.c_str(), 0, &face->ft_face) != 0) {
+        return nullptr;
+    }
+
+    // Set size for HarfBuzz/FT metrics. 72 dpi is typical for "points".
+    // Adjust DPI if your coordinate system is different.
+    FT_Set_Char_Size(face->ft_face, 0, (FT_F26Dot6)std::lround(size * 64.0), 72, 72);
+
+    // Cairo font face from FT_Face
+    face->cairo_face = cairo_ft_font_face_create_for_ft_face(face->ft_face, 0);
+
+    // HarfBuzz font from FT_Face
+    face->hb_font = hb_ft_font_create_referenced(face->ft_face);
+
+    // Ensure HB uses same scale (26.6)
+    hb_font_set_scale(face->hb_font,
+                      (int)std::lround(size * 64.0),
+                      (int)std::lround(size * 64.0));
+
+    // Optional: store family name from FT (not required)
+    if (face->ft_face->family_name)
+        face->family = face->ft_face->family_name;
+
+    cache.faces[key] = face;
+    return face;
 }
 
-/**************************************************************************************************/
+// bridge methods required by tex::Font
+Font* Font::create(const std::string& file, float size) {
+    return new Font_cairo(file, size);
+}
+sptr<Font> Font::_create(const std::string& name, int style, float size) {
+    return sptr<Font>(new Font_cairo(name, style, size));
+}
 
-Cairo::RefPtr<Cairo::Context> TextLayout_cairo::_img_context;
+// ---------------- TextLayout_cairo (HarfBuzz) ----------------
 
-TextLayout_cairo::TextLayout_cairo(const wstring& src, const sptr<Font_cairo>& f) {
-  if (!_img_context) {
-    auto surface = Cairo::ImageSurface::create(Cairo::FORMAT_ARGB32, 1, 1);
-    _img_context = Cairo::Context::create(surface);
-  }
+TextLayout_cairo::TextLayout_cairo(const std::wstring& src, const sptr<Font> &font) {
+    auto f = std::static_pointer_cast<Font_cairo>(font);
+    if (!f || !f->getHbFont() || !f->getCairoFontFace()) {
+        // Degenerate: no shaping possible.
+        _width = 0; _height = 0; _ascent = 0; _descent = 0;
+        return;
+    }
 
-  _layout = Pango::Layout::create(_img_context);
+    // Shape into cairo_glyph_t
+    std::vector<cairo_glyph_t> glyphs;
+    double advance_x = 0;
 
-  Pango::FontDescription fd;
-  fd.set_family(f->getFamily());
-  fd.set_absolute_size(f->getSize() * Pango::SCALE);
-  fd.set_style(Pango::STYLE_NORMAL);
-  fd.set_weight(Pango::WEIGHT_NORMAL);
+    // Use helper from Graphics2D_cairo to avoid duplication
+    // (Could be factored out into a shared free function.)
+    std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
+    std::string utf8 = conv.to_bytes(src);
 
-  switch (f->getStyle()) {
-    case BOLD:
-      fd.set_weight(Pango::WEIGHT_BOLD);
-      break;
-    case ITALIC:
-      fd.set_style(Pango::STYLE_ITALIC);
-      break;
-    case BOLDITALIC:
-      fd.set_style(Pango::STYLE_ITALIC);
-      fd.set_weight(Pango::WEIGHT_BOLD);
-      break;
-  }
+    Graphics2D_cairo::shapeUtf8ToCairoGlyphs(*f, utf8, glyphs, advance_x);
+    _glyphs.swap(glyphs);
+    _width = (float)advance_x;
 
-  _layout->set_text(wide2utf8(src));
-  _layout->set_font_description(fd);
+    // Metrics: use Cairo’s font extents for baseline metrics
+    cairo_surface_t* tmp_surf = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 1, 1);
+    cairo_t* tmp_cr = cairo_create(tmp_surf);
 
-  _ascent = (float) (_layout->get_baseline() / Pango::SCALE);
+    cairo_set_font_face(tmp_cr, f->getCairoFontFace());
+    cairo_set_font_size(tmp_cr, f->getSize());
+
+    cairo_font_extents_t fe;
+    cairo_font_extents(tmp_cr, &fe);
+    _ascent  = (float)fe.ascent;
+    _descent = (float)fe.descent;
+    _height  = (float)fe.height;
+
+    cairo_destroy(tmp_cr);
+    cairo_surface_destroy(tmp_surf);
 }
 
 void TextLayout_cairo::getBounds(Rect& r) {
-  int w, h;
-  _layout->get_pixel_size(w, h);
-  r.x = 0;
-  r.y = -_ascent;
-  r.w = (float) w;
-  r.h = (float) h;
+    r.x = 0;
+    r.y = -_ascent;
+    r.w = _width;
+    r.h = _ascent + _descent; // matches baseline notion used in your old code
 }
 
 void TextLayout_cairo::draw(Graphics2D& g2, float x, float y) {
-  // FIXME
-  // draw line, I don't know why the layout is shown in wrong position
-  // when line was not drawn
-  color old = g2.getColor();
-  g2.setColor(0x00000000);
-  g2.drawLine(x, y, x + 1, y);
-  // draw layout
-  g2.setColor(old);
-  g2.translate(x, y - _ascent);
-  auto& g = static_cast<Graphics2D_cairo&>(g2);
-  _layout->show_in_cairo_context(g.getCairoContext());
-  g2.translate(-x, -y + _ascent);
+    auto& g = static_cast<Graphics2D_cairo&>(g2);
+    cairo_t* cr = g.getCairoContext();
+
+    cairo_save(cr);
+    cairo_translate(cr, x, y);
+
+    if (!_glyphs.empty())
+        cairo_show_glyphs(cr, _glyphs.data(), (int)_glyphs.size());
+
+    cairo_restore(cr);
 }
 
-sptr<TextLayout> TextLayout::create(const wstring& src, const sptr<Font>& font) {
-  sptr<Font_cairo> f = static_pointer_cast<Font_cairo>(font);
-  return sptrOf<TextLayout_cairo>(src, f);
+sptr<TextLayout> TextLayout::create(const std::wstring& src, const sptr<Font>& font) {
+    return sptr<TextLayout>(new TextLayout_cairo(src, font));
 }
 
-/**************************************************************************************************/
+// ---------------- Graphics2D_cairo ----------------
 
-Font_cairo Graphics2D_cairo::_default_font("SansSerif", PLAIN, 20.f);
+Font_cairo Graphics2D_cairo::_default_font("", PLAIN, 20.f);
 
-Graphics2D_cairo::Graphics2D_cairo(const Cairo::RefPtr<Cairo::Context>& context)
-  : _context(context) {
-  _sx = _sy = 1.f;
-  setColor(BLACK);
-  setStroke(Stroke());
-  setFont(&_default_font);
+Graphics2D_cairo::Graphics2D_cairo(cairo_t* cr) : _cr(cr) {
+    _stroke = Stroke();
+    setColor(BLACK);
+    setStroke(_stroke);
+    setFont(&_default_font);
 }
 
-const Cairo::RefPtr<Cairo::Context>& Graphics2D_cairo::getCairoContext() const {
-  return _context;
-}
+cairo_t* Graphics2D_cairo::getCairoContext() const { return _cr; }
 
 void Graphics2D_cairo::setColor(color c) {
-  _color = c;
-  const double a = color_a(c) / 255.;
-  const double r = color_r(c) / 255.;
-  const double g = color_g(c) / 255.;
-  const double b = color_b(c) / 255.;
-  _context->set_source_rgba(r, g, b, a);
+    _color = c;
+    const double a = color_a(c) / 255.0;
+    const double r = color_r(c) / 255.0;
+    const double g = color_g(c) / 255.0;
+    const double b = color_b(c) / 255.0;
+    cairo_set_source_rgba(_cr, r, g, b, a);
 }
 
-color Graphics2D_cairo::getColor() const {
-  return _color;
-}
+color Graphics2D_cairo::getColor() const { return _color; }
 
 void Graphics2D_cairo::setStroke(const Stroke& s) {
-  _stroke = s;
-  _context->set_line_width((double) s.lineWidth);
+    _stroke = s;
+    cairo_set_line_width(_cr, s.lineWidth);
 
-  // convert abstract line cap to platform line cap
-  Cairo::LineCap c;
-  switch (s.cap) {
-    case CAP_BUTT:
-      c = Cairo::LINE_CAP_BUTT;
-      break;
-    case CAP_ROUND:
-      c = Cairo::LINE_CAP_ROUND;
-      break;
-    case CAP_SQUARE:
-      c = Cairo::LINE_CAP_SQUARE;
-      break;
-  }
-  _context->set_line_cap(c);
+    cairo_line_cap_t cap = CAIRO_LINE_CAP_ROUND;
+    switch (s.cap) {
+        case CAP_BUTT:   cap = CAIRO_LINE_CAP_BUTT; break;
+        case CAP_ROUND:  cap = CAIRO_LINE_CAP_ROUND; break;
+        case CAP_SQUARE: cap = CAIRO_LINE_CAP_SQUARE; break;
+    }
+    cairo_set_line_cap(_cr, cap);
 
-  // convert abstract line join to platform line join
-  Cairo::LineJoin j;
-  switch (s.join) {
-    case JOIN_BEVEL:
-      j = Cairo::LINE_JOIN_BEVEL;
-      break;
-    case JOIN_ROUND:
-      j = Cairo::LINE_JOIN_ROUND;
-      break;
-    case JOIN_MITER:
-      j = Cairo::LINE_JOIN_MITER;
-      break;
-  }
-  _context->set_line_join(j);
-
-  _context->set_miter_limit((double) s.miterLimit);
+    cairo_line_join_t join = CAIRO_LINE_JOIN_ROUND;
+    switch (s.join) {
+        case JOIN_BEVEL: join = CAIRO_LINE_JOIN_BEVEL; break;
+        case JOIN_ROUND: join = CAIRO_LINE_JOIN_ROUND; break;
+        case JOIN_MITER: join = CAIRO_LINE_JOIN_MITER; break;
+    }
+    cairo_set_line_join(_cr, join);
+    cairo_set_miter_limit(_cr, s.miterLimit);
 }
 
-const Stroke& Graphics2D_cairo::getStroke() const {
-  return _stroke;
-}
+const Stroke& Graphics2D_cairo::getStroke() const { return _stroke; }
 
 void Graphics2D_cairo::setStrokeWidth(float w) {
-  _stroke.lineWidth = w;
-  _context->set_line_width((double) w);
+    _stroke.lineWidth = w;
+    cairo_set_line_width(_cr, w);
 }
 
-const Font* Graphics2D_cairo::getFont() const {
-  return _font;
-}
+const Font* Graphics2D_cairo::getFont() const { return _font; }
+void Graphics2D_cairo::setFont(const Font* font) { _font = static_cast<const Font_cairo*>(font); }
 
-void Graphics2D_cairo::setFont(const Font* font) {
-  _font = static_cast<const Font_cairo*>(font);
-}
-
-void Graphics2D_cairo::translate(float dx, float dy) {
-  _context->translate((double) dx, (double) dy);
-}
-
-void Graphics2D_cairo::scale(float sx, float sy) {
-  _sx *= sx;
-  _sy *= sy;
-  _context->scale((double) sx, (double) sy);
-}
-
-void Graphics2D_cairo::rotate(float angle) {
-  _context->rotate(angle);
-}
+void Graphics2D_cairo::translate(float dx, float dy) { cairo_translate(_cr, dx, dy); }
+void Graphics2D_cairo::scale(float sx, float sy) { _sx *= sx; _sy *= sy; cairo_scale(_cr, sx, sy); }
+void Graphics2D_cairo::rotate(float angle) { cairo_rotate(_cr, angle); }
 
 void Graphics2D_cairo::rotate(float angle, float px, float py) {
-  _context->translate((double) px, (double) py);
-  _context->rotate(angle);
-  _context->translate((double) -px, (double) -py);
+    cairo_translate(_cr, px, py);
+    cairo_rotate(_cr, angle);
+    cairo_translate(_cr, -px, -py);
 }
 
 void Graphics2D_cairo::reset() {
-  _context->set_identity_matrix();
-  _sx = _sy = 1.f;
+    cairo_identity_matrix(_cr);
+    _sx = _sy = 1.f;
 }
 
-float Graphics2D_cairo::sx() const {
-  return _sx;
-}
-
-float Graphics2D_cairo::sy() const {
-  return _sy;
-}
+float Graphics2D_cairo::sx() const { return _sx; }
+float Graphics2D_cairo::sy() const { return _sy; }
 
 void Graphics2D_cairo::drawChar(wchar_t c, float x, float y) {
-  wstring str = {c, L'\0'};
-  drawText(str, x, y);
+    std::wstring s;
+    s.push_back(c);
+    drawText(s, x, y);
 }
 
-void Graphics2D_cairo::drawText(const wstring& t, float x, float y) {
-  _context->set_font_face(_font->getCairoFontFace());
-  _context->set_font_size(_font->getSize());
-  _context->move_to(x, y);
-  _context->show_text(wide2utf8(t));
+std::string Graphics2D_cairo::wstringToUtf8(const std::wstring& w) {
+    std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
+    return conv.to_bytes(w);
+}
+
+void Graphics2D_cairo::applyFontToCairo(const Font_cairo& font) {
+    if (auto face = font.getCairoFontFace())
+        cairo_set_font_face(_cr, face);
+    cairo_set_font_size(_cr, font.getSize());
+}
+
+// Core shaping helper: HarfBuzz -> cairo_glyph_t[]
+void Graphics2D_cairo::shapeUtf8ToCairoGlyphs(const Font_cairo& font,
+                                              const std::string& utf8,
+                                              std::vector<cairo_glyph_t>& out_glyphs,
+                                              double& out_advance_x) {
+    out_glyphs.clear();
+    out_advance_x = 0.0;
+
+    hb_font_t* hb_font = font.getHbFont();
+    if (!hb_font) return;
+
+    hb_buffer_t* buf = hb_buffer_create();
+    hb_buffer_add_utf8(buf, utf8.c_str(), (int)utf8.size(), 0, (int)utf8.size());
+    hb_buffer_guess_segment_properties(buf);
+
+    hb_shape(hb_font, buf, nullptr, 0);
+
+    unsigned int count = 0;
+    hb_glyph_info_t* info = hb_buffer_get_glyph_infos(buf, &count);
+    hb_glyph_position_t* pos = hb_buffer_get_glyph_positions(buf, &count);
+
+    out_glyphs.resize(count);
+
+    double x = 0.0;
+    double y = 0.0;
+
+    for (unsigned int i = 0; i < count; i++) {
+        // HarfBuzz positions are 26.6; convert to double user units.
+        const double x_offset  = pos[i].x_offset  / 64.0;
+        const double y_offset  = pos[i].y_offset  / 64.0;
+        const double x_advance = pos[i].x_advance / 64.0;
+        const double y_advance = pos[i].y_advance / 64.0;
+
+        cairo_glyph_t& g = out_glyphs[i];
+        g.index = info[i].codepoint;
+        g.x = x + x_offset;
+        g.y = y - y_offset; // Cairo Y axis grows downward; HB offsets are typically upward-positive
+
+        x += x_advance;
+        y += y_advance;
+    }
+
+    out_advance_x = x;
+    hb_buffer_destroy(buf);
+}
+
+void Graphics2D_cairo::drawText(const std::wstring& t, float x, float y) {
+    if (!_font) return;
+
+    // If we have HB+FT face, render glyphs; otherwise fall back to cairo_show_text.
+    if (_font->getHbFont() && _font->getCairoFontFace()) {
+        applyFontToCairo(*_font);
+
+        std::vector<cairo_glyph_t> glyphs;
+        double advance_x = 0.0;
+        const std::string utf8 = wstringToUtf8(t);
+        shapeUtf8ToCairoGlyphs(*_font, utf8, glyphs, advance_x);
+
+        cairo_save(_cr);
+        cairo_translate(_cr, x, y);
+        if (!glyphs.empty())
+            cairo_show_glyphs(_cr, glyphs.data(), (int)glyphs.size());
+        cairo_restore(_cr);
+        return;
+    }
+
+    // Fallback TODO
+    cairo_move_to(_cr, x, y);
+    const std::string utf8 = wstringToUtf8(t);
+    cairo_show_text(_cr, utf8.c_str());
 }
 
 void Graphics2D_cairo::drawLine(float x1, float y1, float x2, float y2) {
-  _context->move_to(x1, y1);
-  _context->line_to(x2, y2);
-  _context->stroke();
+    cairo_move_to(_cr, x1, y1);
+    cairo_line_to(_cr, x2, y2);
+    cairo_stroke(_cr);
 }
 
 void Graphics2D_cairo::drawRect(float x, float y, float w, float h) {
-  _context->rectangle(x, y, w, h);
-  _context->stroke();
+    cairo_rectangle(_cr, x, y, w, h);
+    cairo_stroke(_cr);
 }
 
 void Graphics2D_cairo::fillRect(float x, float y, float w, float h) {
-  _context->rectangle(x, y, w, h);
-  _context->fill();
+    cairo_rectangle(_cr, x, y, w, h);
+    cairo_fill(_cr);
 }
 
 void Graphics2D_cairo::roundRect(float x, float y, float w, float h, float rx, float ry) {
-  double r = max(rx, ry);
-  double d = G_PI / 180.;
-  _context->begin_new_sub_path();
-  _context->arc(x + r, y + r, r, 180 * d, 270 * d);
-  _context->arc(x + w - r, y + r, r, -90 * d, 0);
-  _context->arc(x + w - r, y + h - r, r, 0, 90 * d);
-  _context->arc(x + r, y + h - r, r, 90 * d, 180 * d);
-  _context->close_path();
+    // Basic rounded rect (elliptical arcs)
+    const double x0 = x, y0 = y, x1 = x + w, y1 = y + h;
+    const double rrx = std::min<double>(rx, w * 0.5);
+    const double rry = std::min<double>(ry, h * 0.5);
+
+    cairo_new_sub_path(_cr);
+    cairo_arc(_cr, x1 - rrx, y0 + rry, std::min(rrx, rry), -M_PI_2, 0);
+    cairo_arc(_cr, x1 - rrx, y1 - rry, std::min(rrx, rry), 0, M_PI_2);
+    cairo_arc(_cr, x0 + rrx, y1 - rry, std::min(rrx, rry), M_PI_2, M_PI);
+    cairo_arc(_cr, x0 + rrx, y0 + rry, std::min(rrx, rry), M_PI, 3 * M_PI_2);
+    cairo_close_path(_cr);
 }
 
 void Graphics2D_cairo::drawRoundRect(float x, float y, float w, float h, float rx, float ry) {
-  roundRect(x, y, w, h, rx, ry);
-  _context->stroke();
+    roundRect(x, y, w, h, rx, ry);
+    cairo_stroke(_cr);
 }
 
 void Graphics2D_cairo::fillRoundRect(float x, float y, float w, float h, float rx, float ry) {
-  roundRect(x, y, w, h, rx, ry);
-  _context->fill();
+    roundRect(x, y, w, h, rx, ry);
+    cairo_fill(_cr);
 }
 
-#endif
+} // namespace tex

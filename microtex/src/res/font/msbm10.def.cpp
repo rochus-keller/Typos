@@ -1,6 +1,6 @@
 #include "res/font_def.res.h"
 
-DEF_FONT(msbm10, fonts/maths/msbm10.ttf, 0)
+DEF_FONT(msbm10, msbm10.ttf, 0)
 
 xHeight(0.462964) quad(1.0) space(0.300003)
 

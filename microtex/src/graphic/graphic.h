@@ -35,7 +35,7 @@ public:
   /** Check if current font not equals another */
   virtual bool operator!=(const Font& f) const = 0;
 
-  virtual ~Font() = default;;
+  virtual ~Font() = default;
 
   /**
    * Create font from file
