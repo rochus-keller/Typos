@@ -1,6 +1,6 @@
 #include "res/font_def.res.h"
 
-DEF_FONT(cmti10_unchanged, fonts/latin/optional/cmti10.ttf, 0)
+DEF_FONT(cmti10_unchanged, cmti10.ttf, 0)
 
 xHeight(0.430555) quad(1.022217) space(0.357776)
 

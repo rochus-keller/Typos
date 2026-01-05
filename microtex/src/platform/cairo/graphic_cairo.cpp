@@ -25,6 +25,7 @@
 #include <codecvt>
 #include <locale>
 #include <sstream>
+#include <iostream>
 
 namespace tex {
 
@@ -124,8 +125,15 @@ Font_cairo::loadFaceForFileAndSize(const std::string& file, float size) {
     face->file = file;
 
     if (FT_New_Face(lib, file.c_str(), 0, &face->ft_face) != 0) {
+        std::cerr << "WARNING: not found file " << file << std::endl;
         return nullptr;
     }
+#if 0
+    // Get the font from a byte string instead of a file
+    if( FT_New_Memory_Face(lib, (const FT_Byte*)font_data, (FT_Long)font_size, 0, &face->ft_face) != 0 ) {
+        return nullptr;
+    }
+#endif
 
     // Set size for HarfBuzz/FT metrics. 72 dpi is typical for "points".
     // Adjust DPI if your coordinate system is different.

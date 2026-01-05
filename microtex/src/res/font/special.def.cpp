@@ -1,6 +1,6 @@
 #include "res/font_def.res.h"
 
-DEF_FONT(special, fonts/maths/special.ttf, 0)
+DEF_FONT(special, special.ttf, 0)
 
 xHeight(0.233333) quad(1.000003)
 

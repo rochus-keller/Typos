@@ -979,9 +979,12 @@ let headers : SourceSet {
     ]
 }
 
+submod qt = ./LeanQt (HAVE_FILEIO, HAVE_COREAPP, HAVE_CMDLINE)
+
+
 let typos ! : Executable {
-    .configs += config;
-    .deps += [ zlib libpng harfbuzz cairo pixman freetype microtex ]
+    .configs += [ config qt.core_client_config ]
+    .deps += [ zlib libpng harfbuzz cairo pixman freetype microtex qt.core_sources ]
     .include_dirs += [
     ./cairo/src
     ./freetype/include
@@ -989,6 +992,6 @@ let typos ! : Executable {
     ./harfbuzz/harfbuzz-src/src
     ]
     .sources = [
-    ./tests/create_pdf_2.cpp
+    ./tests/qtmain.cpp
 	]
 }

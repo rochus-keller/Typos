@@ -1,6 +1,6 @@
 #include "res/font_def.res.h"
 
-DEF_FONT(cmss10, fonts/latin/optional/cmss10.ttf, 0)
+DEF_FONT(cmss10, cmss10.ttf, 0)
 
 xHeight(0.444445) quad(1.000003) space(0.333334)
 

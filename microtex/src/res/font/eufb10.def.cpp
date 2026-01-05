@@ -1,6 +1,6 @@
 #include "res/font_def.res.h"
 
-DEF_FONT(eufb10, fonts/euler/eufb10.ttf, 0)
+DEF_FONT(eufb10, eufb10.ttf, 0)
 
 xHeight(0.475342) quad(1.0) space(0.333333)
 

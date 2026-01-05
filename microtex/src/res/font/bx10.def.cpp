@@ -1,6 +1,6 @@
 #include "res/font_def.res.h"
 
-DEF_FONT(bx10, fonts/latin/bx10.ttf, 0)
+DEF_FONT(bx10, bx10.ttf, 0)
 
 xHeight(0.0) quad(1.000003) space(0.333334)
 

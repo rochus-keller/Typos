@@ -1,6 +1,6 @@
 #include "res/font_def.res.h"
 
-DEF_FONT(dsrom10, fonts/maths/optional/dsrom10.ttf, 0)
+DEF_FONT(dsrom10, dsrom10.ttf, 0)
 
 xHeight(0.462964) quad(1.0) space(0.300003)
 

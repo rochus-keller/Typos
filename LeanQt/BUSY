@@ -1,0 +1,573 @@
+# Copyright (C) 2022 Rochus Keller (me@rochus-keller.ch) for LeanQt
+# licensed under GPL/LGPL
+
+param HAVE_SHARED = false      # if true build shared instead of static libraries, and export marked symbols
+#param HAVE_DEBUG = false      # no longer supported; use -M debug instead
+#param HAVE_NOOPT = false	   # no longer supported; use -M nonoptimized instead
+
+param HAVE_GEOM = false 	   # include geometry classes like QRect, QPoint etc.
+param HAVE_JSON = false		   # include QJsonObject and friends
+param HAVE_XMLSTREAM = false   # include QXmlStreamWriter, QXmlStreamReader, etc.
+param HAVE_URL = false		   # include QUrl and support classes
+param HAVE_DSTREAM = false     # include QDataStream
+param HAVE_CMDLINE = false     # include QCommandLineParser and QCommandLineOption
+param HAVE_PROCESS = false     # include QProcess
+param HAVE_SHAREDMEM = false   # include QSharedMemory and QSystemSemaphore
+param HAVE_ZLIB = false        # include qCompress
+param HAVE_MIME = false		   # include QMimeType and QMimeDatabase
+
+param HAVE_THREADS = false     # include QThread and friends
+param HAVE_FILEIO = false      # include QFile, QFileInfo, QDir, QSettings etc. 
+param HAVE_COREAPP = false     # include QCoreApplication, QTranslator
+param HAVE_OBJECT = false	   # include QObject, QEvent, QEventDispatcher etc.
+param HAVE_LIBRARY = false     # include QLibrary
+param HAVE_PLUGINS = false     # include QPluginLoader
+param HAVE_RE = false 		   # include QRecularExpression, using pcre16
+
+param HAVE_CORE_ALL = false	   # switches on all flags which add code
+
+param HAVE_SSL = false         # include QSslSocket and friends; only OpenSSL dynamic loading supported so far
+param HAVE_LOCALSOCK = false   # include QLocalSocket and QLocalServer
+param HAVE_NETACCESS = false   # include QNetworkAccessManager and friends
+param HAVE_BEARER = false      # include QNetworkConfiguration, QNetworkSession and friends 
+param HAVE_AUTH = false        # include QAuthenticator
+
+param HAVE_NET_ALL = false	   # switches on all flags which add code
+param HAVE_NET_MINIMUM = false # takes care that core is compiled with HAVE_OBJECT and HAVE_URL support
+
+param HAVE_XML = false		   # takes care that libqt included QtXml classes
+param HAVE_CONCURRENT = false  # takes care that core is compiled with HAVE_THREADS support
+param HAVE_IMAGE = false       # takes care that core is compiled with HAVE_GEOM and HAVE_DSTREAM support
+param HAVE_GUI = false		   # takes care that core is compiled with HAVE_IMAGE and HAVE_OBJECT
+
+param HAVE_FONTCONFIG = false  # Linux GUI option; use fontconfig to locate fonts; otherwise use the path provided via QT_QPA_FONTDIR
+							   # environment variable, or applicationDirPath() + "/fonts", or QStandardPaths::FontsLocation; requires -lfontconfig
+param HAVE_SYS_FT = false      # Use the freetype library of the system instead of the integrated one; only relevant on Linuy
+
+param HAVE_WIDGETS = false     # takes care that GUI is enabled
+param HAVE_ITEMVIEWS = false   # takes care that WIDGETS is enabled
+param HAVE_GRAPHICS = false    # takes care that WIDGETS is enabled
+
+param HAVE_ALL = false		   # enbles all features
+
+
+# NOTE: not all possible combinations on all platforms have been tested; 
+#       patches are welcome, in case you find a combination which doesn't work
+
+if busy_version < "2023-02-12" {
+	error("this version of BUSY is not compatible with this build")
+}
+
+if HAVE_ALL {
+	HAVE_CORE_ALL = true; HAVE_NET_ALL = true; HAVE_XML = true; HAVE_CONCURRENT = true; 
+	HAVE_IMAGE = true; HAVE_GUI = true; HAVE_WIDGETS = true; HAVE_ITEMVIEWS = true; HAVE_GRAPHICS = true;
+}
+
+if HAVE_CORE_ALL {
+	HAVE_GEOM = true; HAVE_JSON = true; HAVE_XMLSTREAM = true; HAVE_URL = true; HAVE_DSTREAM = true
+	HAVE_FILEIO = true; HAVE_COREAPP = true; HAVE_OBJECT = true; HAVE_CMDLINE = true; HAVE_THREADS = true
+	HAVE_LIBRARY = true; HAVE_PROCESS = true; HAVE_SHAREDMEM = true; HAVE_PLUGINS = true; HAVE_ZLIB = true
+}
+
+if HAVE_NET_ALL {
+	HAVE_SSL = true; HAVE_LOCALSOCK = true; HAVE_NETACCESS = true; HAVE_BEARER = true; HAVE_AUTH = true
+}
+
+if HAVE_NET_MINIMUM || HAVE_SSL || HAVE_LOCALSOCK || HAVE_NETACCESS || HAVE_BEARER || HAVE_AUTH {
+	HAVE_NET_MINIMUM = true
+	if !HAVE_OBJECT || !HAVE_URL {
+		message("enabling HAVE_OBJECT and HAVE_URL required by the network module")
+		HAVE_OBJECT = true
+		HAVE_URL = true
+	}
+}
+
+if HAVE_GRAPHICS && !HAVE_WIDGETS {
+	message("enabling HAVE_WIDGETS required by HAVE_GRAPHICS")
+	HAVE_WIDGETS = true
+}
+
+if HAVE_ITEMVIEWS && !HAVE_WIDGETS {
+	message("enabling HAVE_WIDGETS required by HAVE_ITEMVIEWS")
+	HAVE_WIDGETS = true
+}
+
+if HAVE_WIDGETS && !HAVE_GUI {
+	message("enabling HAVE_GUI required by HAVE_WIDGETS")
+	HAVE_GUI = true
+}
+
+if HAVE_WIDGETS && (target_os == `macos) && !HAVE_LIBRARY {
+	message("enabling HAVE_LIBRARY required by QMacStyle")
+	HAVE_LIBRARY = true
+}
+
+if HAVE_GUI && !HAVE_IMAGE {
+	message("enabling HAVE_IMAGE required by HAVE_GUI")
+	HAVE_IMAGE = true
+}
+
+if HAVE_GUI && !HAVE_OBJECT {
+	message("enabling HAVE_OBJECT required by HAVE_GUI")
+	HAVE_OBJECT = true
+}
+
+if HAVE_GUI && !HAVE_FILEIO {
+	message("enabling HAVE_FILEIO required by HAVE_GUI")
+	HAVE_FILEIO = true
+}
+
+if HAVE_GUI && !HAVE_URL {
+	message("enabling HAVE_URL required by HAVE_GUI")
+	HAVE_URL = true
+}
+
+if HAVE_GUI && (target_os == `macos) && !HAVE_MIME {
+	message("enabling HAVE_MIME required by HAVE_GUI on macOS")
+	HAVE_MIME = true
+}
+
+if HAVE_IMAGE && !HAVE_DSTREAM {
+	message("enabling HAVE_DSTREAM required by HAVE_IMAGE")
+	HAVE_DSTREAM = true
+}
+
+if HAVE_IMAGE && !HAVE_GEOM {
+	message("enabling HAVE_GEOM required by HAVE_IMAGE")
+	HAVE_GEOM = true
+}
+
+if HAVE_CONCURRENT && !HAVE_THREADS {
+	message("enabling HAVE_TRHEADS required by HAVE_CONCURRENT")
+	HAVE_THREADS = true
+}
+
+if HAVE_BEARER && !HAVE_PLUGINS {
+	message("enabling HAVE_PLUGINS required by HAVE_BEARER")
+	HAVE_PLUGINS = true
+}
+
+if HAVE_SSL && !HAVE_LIBRARY {
+	message("enabling HAVE_LIBRARY required by HAVE_SSL")
+	HAVE_LIBRARY = true
+}
+
+if HAVE_SSL && !HAVE_AUTH {
+	message("enabling HAVE_AUTH required by HAVE_SSL")
+	HAVE_AUTH = true
+}
+
+if HAVE_AUTH && !HAVE_DSTREAM {
+	message("enabling HAVE_DSTREAM required by HAVE_AUTH")
+	HAVE_DSTREAM = true
+}
+
+if HAVE_NETACCESS && !HAVE_DSTREAM {
+	message("enabling HAVE_DSTREAM required by HAVE_NETACCESS")
+	HAVE_DSTREAM = true
+}
+
+if HAVE_NETACCESS && !HAVE_AUTH {
+	message("enabling HAVE_AUTH required by HAVE_NETACCESS")
+	HAVE_AUTH = true
+}
+
+if HAVE_PLUGINS && !HAVE_OBJECT {
+	message("enabling HAVE_OBJECT required by HAVE_PLUGINS")
+	HAVE_OBJECT = true
+}
+
+if HAVE_PLUGINS && !HAVE_LIBRARY {
+	message("enabling HAVE_LIBRARY required by HAVE_PLUGINS")
+	HAVE_LIBRARY = true
+}
+
+if HAVE_PLUGINS && !HAVE_JSON {
+	message("enabling HAVE_JSON required by HAVE_PLUGINS")
+	HAVE_JSON = true
+}
+
+if HAVE_SHAREDMEM && !HAVE_FILEIO {
+	message("enabling HAVE_FILEIO required by HAVE_SHAREDMEM")
+	HAVE_FILEIO = true
+}
+
+if HAVE_LIBRARY && !HAVE_FILEIO {
+	message("enabling HAVE_FILEIO required by HAVE_LIBRARY")
+	HAVE_FILEIO = true
+}
+
+if HAVE_SHARED && !HAVE_COREAPP {
+	message("enabling HAVE_COREAPP required by HAVE_SHARED")
+	HAVE_COREAPP = true
+}
+
+if HAVE_OBJECT && !HAVE_COREAPP {
+	message("enabling HAVE_COREAPP required by HAVE_OBJECT")
+	HAVE_COREAPP = true
+}
+
+if HAVE_OBJECT && !HAVE_THREADS {
+	message("enabling HAVE_THREADS required by HAVE_OBJECT")
+	HAVE_THREADS = true
+}
+
+######################################################################
+
+# NOTE: on Windows with HAVE_SHARED and HAVE_NOOPT VC2013 and 2017 generated qtwidgets.dll causes a crash on load
+# if the object files presented to the linker don't follow a specific order; the linker doesn't issue any warning or error;
+# same for x86 and x64. The crash can be avoided if the moc generated files precede the other object files in the order;
+# this can be done on BUSY file level by e.g. adding the Moc instance to the deps list of the other files SourceSet.
+# The order isn't relevant with HAVE_SHARED and no HAVE_NOOPT, or without HAVE_SHARED. 
+# The same applies to HAVE_DEBUG with HAVE_SHARED and the debug build in QtCreator with the generated qmake 
+# project files; in QtCreator the cdb.exe process simply crashes with no useful log output
+
+let root_path - = relpath()
+
+######################################################################
+submod core
+
+let _core_sources - = core.sources # see below for public core_sources
+
+let _core_config - = core.config
+
+let _core_linker_config - : Config {
+	if target_os == `win32 {
+		.lib_names = [
+			"Gdi32" "User32" "Shell32" "Comdlg32" "Advapi32" "Ole32" "Ws2_32"
+		]
+        if target_toolchain == `gcc {
+            # gcc on windows
+			.lib_names += [ "stdc++" "m" ]
+            .ldflags += "-shared-libgcc"
+		}
+	} else {
+		.lib_names += [ "stdc++" "m" ]
+        .ldflags += "-shared-libgcc"
+        if (target_os == `linux) && (
+            ((target_toolchain == `gcc) && (target_toolchain_ver >= 0600))
+            || ((target_toolchain == `clang) && (target_toolchain_ver >= 080000))) {
+            # some Linux with more recent gcc require to recognize an executable
+            .ldflags += "-no-pie"
+        }
+		if HAVE_THREADS || HAVE_PROCESS {
+			.lib_names += "pthread"
+		}
+		if HAVE_LIBRARY {
+			.lib_names += "dl"
+		}
+		if target_os == `macos {
+			.frameworks += [ "IOKit" "Foundation" "CoreServices" "AppKit" "ApplicationServices" "CoreFoundation" ]
+		}
+	}
+}
+
+let core_client_config * : Config {
+	.configs += [ _core_config _core_linker_config ]
+}
+
+######################################################################
+submod mime else ./missing.busy
+
+# mime is optional part of core
+
+######################################################################
+submod xml else ./missing.busy
+
+let xml_sources * = xml.sources
+
+let xml_client_config * = xml.config
+
+######################################################################
+submod net else ./missing.busy
+
+let net_sources * = net.sources 
+
+let _net_config - = net.config
+
+let _net_linker_config - : Config {
+	if target_os == `win32 {
+		.lib_names = [
+			"Dnsapi" "Iphlpapi"
+		]
+		if HAVE_SSL {
+			.lib_names += "Crypt32"
+		}
+	}
+	if target_os == `macos {
+		.frameworks += [ "SystemConfiguration" "Security" ]
+	}
+}
+
+let net_client_config * : Config {
+    .configs += [ _net_config _net_linker_config ]
+}
+
+######################################################################
+submod concurrent else ./missing.busy
+
+let concurrent_sources * = concurrent.sources
+
+let concurrent_client_config * = concurrent.config
+
+######################################################################
+submod image else ./missing.busy
+
+let image_sources * = image.sources
+
+let _image_config - = image.config
+
+# use either image_client_config or gui_client_config, but not both
+let image_client_config * = image.config
+
+######################################################################
+submod gui else ./missing.busy
+
+let _gui_sources = gui.sources # see below for public gui_sources
+
+let _gui_config - = gui.config
+
+let gui_client_config * : Config {
+	.configs += [ image_client_config _gui_config ]
+    if (target_os == `linux) && HAVE_SYS_FT {
+        .lib_names += "freetype"
+    }
+}
+
+######################################################################
+let QT_STYLE_OVERRIDE- = "fusion"
+
+submod widgets else ./missing.busy
+
+let widgets_sources * = widgets.sources
+
+let _widgets_config - = widgets.config
+
+let widgets_client_config * = widgets.config
+
+######################################################################
+submod itemviews else ./missing.busy
+
+let itemviews_sources * = itemviews.sources
+
+let itemviews_client_config * = itemviews.config
+
+######################################################################
+submod graphics else ./missing.busy
+
+let graphics_sources * = graphics.sources
+
+let graphics_client_config * = graphics.config
+
+######################################################################
+submod tools
+
+let copy_uic * : Copy {
+	.use_deps += `executable
+	.deps += tools.uic.exe;
+	.outputs += root_path + ./{{source_file_part}}
+}
+
+let copy_moc * : Copy {
+	.use_deps += `executable
+	.deps += tools.moc.exe;
+	.outputs += root_path + ./{{source_file_part}}
+}
+
+let copy_rcc * : Copy {
+	.use_deps += `executable
+	.deps += tools.rcc.exe;
+	.outputs += root_path + ./{{source_file_part}}
+}
+
+######################################################################
+
+let core_sources * : Group {
+	if HAVE_OBJECT {
+		.deps += copy_moc
+	}
+	.deps += _core_sources
+	if HAVE_MIME {
+		.deps += mime.sources
+	}
+}
+
+let gui_sources * : Group {
+	if (target_os == `macos) || (target_os == `win32) || HAVE_WIDGETS {
+		.deps += copy_rcc
+	}
+	if HAVE_ITEMVIEWS {
+		.deps += copy_uic
+	}
+	.deps += _gui_sources
+}
+
+######################################################################
+## Separate libraries
+
+let libqtcore * : Library {
+	.deps += core_sources 
+	if HAVE_SHARED {
+		.lib_type = `shared
+		.configs += core_client_config
+	}else{
+		.lib_type = `static
+	}
+	.name = "qtcore"
+}
+
+let libqtxml * : Library {
+	.deps += xml_sources
+	if HAVE_SHARED {
+		.lib_type = `shared
+		.configs += core_client_config;
+		.deps += libqtcore
+	}else{
+		.lib_type = `static
+	}
+	.name = "qtxml"
+}
+
+let libqtnetwork * : Library {
+	.deps += net_sources
+	if HAVE_SHARED {
+		.lib_type = `shared
+		.configs += [ core_client_config net_client_config ]
+		.deps += libqtcore
+	}else{ 
+		.lib_type = `static
+	}
+	.name = "qtnetwork"
+}
+
+let libqtconcurrent * : Library {
+	.deps += concurrent_sources
+	if HAVE_SHARED {
+		.lib_type = `shared
+		.configs += [ core_client_config concurrent_client_config ]
+		.deps += libqtcore
+	}else{ 
+		.lib_type = `static
+	}
+	.name = "qtconcurrent"
+}
+
+let libqtimage * : Library {
+	.deps += image_sources
+	if HAVE_SHARED {
+		.lib_type = `shared
+		.configs += [ core_client_config image_client_config ]
+		.deps += libqtcore
+	}else{ 
+		.lib_type = `static
+	}
+	.name = "qtimage"
+}
+
+# either use libqtgui or libqtimage, but not both
+let libqtgui * : Library {
+	.deps += [ image_sources gui_sources ]
+	if HAVE_SHARED {
+		.lib_type = `shared
+		.configs += [ core_client_config gui_client_config ]
+		.deps += libqtcore
+	}else{ 
+		.lib_type = `static
+	}
+	.name = "qtgui"
+}
+
+# use libqtwinmain for Windows applications (with both static or shared libqtgui)
+let libqtwinmain * : Library {
+	.sources += ./gui/windows/qtmain_win.cpp
+	.lib_type = `static
+	.name = "qtwinmain"
+	.configs += _core_config
+}
+
+let libqtwidgets * : Library {
+	.deps += widgets_sources
+	if HAVE_SHARED {
+		.lib_type = `shared
+		.configs += [ core_client_config gui_client_config widgets_client_config ]
+		.deps += [ libqtcore libqtgui ]
+	}else{ 
+		.lib_type = `static
+	}
+	if HAVE_ITEMVIEWS {
+		.deps += itemviews_sources 
+	}
+	if HAVE_GRAPHICS {
+		.deps += graphics_sources
+	}
+	.name = "qtwidgets"
+}
+
+######################################################################
+## All in one library
+
+# use this Config instead of the above X_client_config when you use libqt
+let qt_client_config * : Config {
+	.configs += core_client_config
+	if HAVE_XML {
+		.configs += xml_client_config
+	}
+	if HAVE_NET_MINIMUM {
+		.configs += net_client_config
+	}
+	if HAVE_CONCURRENT {
+		.configs += concurrent_client_config
+	}
+	if HAVE_IMAGE && !HAVE_GUI {
+		.configs += image_client_config
+	}
+	if HAVE_GUI {
+		.configs += gui_client_config
+	}
+	if HAVE_WIDGETS {
+		.configs += widgets_client_config
+	}
+	if HAVE_GRAPHICS {
+		.configs += graphics_client_config
+	}
+}
+
+# use this library instead of the above libqtX to ease deployment;
+# libqtwinmain is still required on Windows
+let libqt * : Library {
+	.deps += core_sources 
+	if HAVE_XML {
+		.deps += xml_sources
+	}
+	if HAVE_NET_MINIMUM {
+		.deps += net_sources
+	}
+	if HAVE_CONCURRENT {
+		.deps += concurrent_sources
+	}
+	if HAVE_IMAGE {
+		.deps += image_sources
+	}
+	if HAVE_GUI {
+		.deps += gui_sources
+	}
+	if HAVE_WIDGETS {
+		.deps += widgets_sources
+	}
+	if HAVE_ITEMVIEWS {
+		.deps += itemviews_sources 
+	}
+	if HAVE_GRAPHICS {
+		.deps += graphics_sources
+	}
+	if HAVE_SHARED {
+		.lib_type = `shared
+		.configs += qt_client_config
+	}else{
+		.lib_type = `static
+	}
+	.name = "qt"
+}
+
+
+

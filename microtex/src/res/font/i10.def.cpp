@@ -1,6 +1,6 @@
 #include "res/font_def.res.h"
 
-DEF_FONT(i10, fonts/latin/i10.ttf, 0)
+DEF_FONT(i10, i10.ttf, 0)
 
 xHeight(0.0) quad(1.000003) space(0.333334)
 

@@ -1,0 +1,542 @@
+# Copyright (C) 2022 Rochus Keller (me@rochus-keller.ch) for LeanQt
+# licensed under GPL/LGPL
+
+let lib_config : Config {
+	.defines += [
+		"QT_BUILD_CORE_LIB" # public, required to make resource system work at all
+	]
+}
+
+let config * : Config {
+	.include_dirs += [
+		../includes 
+		../includes/QtCore
+	]
+	# NOTE: most of the defines are visible in the public API and therefore have to be used by client apps
+	.defines += [
+	    "LEANQT"
+		# these are official Qt defines
+		#"QT_USE_QSTRINGBUILDER" # public, not used in the Qt installations I'm using; can be put locally in a file (before includes) if needed
+	]
+	
+	if build_mode != `debug {
+		.defines += "NDEBUG"
+	}
+	
+	if !^HAVE_PLUGINS {
+		.defines += "QT_NO_PLUGINS" # public
+	}
+	
+	if !^HAVE_LIBRARY {
+		.defines += "QT_NO_LIBRARY" # public
+	}
+	
+	if ^HAVE_SHARED {
+		.defines += "QT_SHARED" # public
+		# QT_STATIC is automatically set in qconfig.h
+	}
+	
+	if !^HAVE_GEOM {
+		.defines += "QT_NO_GEOM_VARIANT" # public
+	}
+	
+	if !^HAVE_URL {
+		.defines += "QT_NO_URL_VARIANT" # public
+	}
+
+	if !^HAVE_RE {
+		.defines += "QT_NO_REGULAREXPRESSION" # public
+	}
+	
+	if !^HAVE_JSON {
+		.defines += "QT_NO_JSON" # public
+	}
+	
+	if !^HAVE_DSTREAM {
+		.defines += "QT_NO_DATASTREAM" # public
+	}
+	
+	if !^HAVE_XMLSTREAM {
+		.defines += "QT_NO_XMLSTREAM" # private
+	}
+	
+	if !^HAVE_FILEIO {
+		.defines += "QT_NO_FILEENGINE"
+	}
+	
+	if !^HAVE_OBJECT {
+		.defines += "QT_NO_QOBJECT"
+	}
+	
+	if !^HAVE_COREAPP {
+		.defines += "QT_NO_COREAPPLICATION"
+	}
+	
+	if !^HAVE_THREADS {
+		.defines += "QT_NO_THREAD"
+	}
+	
+	if !^HAVE_PROCESS {
+		.defines += "QT_NO_PROCESS"
+	}
+	
+	if !^HAVE_ZLIB {
+		.defines += "QT_NO_COMPRESS"
+	}
+	
+	if target_os == `win32 {
+		.defines += [ "UNICODE" "_UNICODE" ]
+		if target_toolchain == `msvc {
+			# no longer "-Zc:strictStrings", because we don't need it and it triggers bug in MS C++ std library (xlocale and xdebug)
+			# when compiled with _DEBUG
+			.cflags_cc += [ "/EHsc" "/Zc:wchar_t"  "/GR" ]
+		}
+	}else if target_os == `linux {
+		if ^HAVE_SHARED {
+			.cflags += "-fPIC"
+		}
+	}else if target_os == `macos {
+        .defines += "QT_NO_THREADSAFE_CLOEXEC"
+    }
+}
+
+submod zlib = ../thirdparty/zlib else ../missing.busy
+submod pcre16 = ../thirdparty/pcre16 else ../missing.busy
+
+let run_moc : Moc {
+	.tool_dir = root_build_dir + ^root_path; # we explicitly add this here because more than one instance of LeanQt as a
+											 # submodule could exist in a build with arbitrary effects on global moc_path
+	.sources += [
+		./qbuffer.h
+		./qobject.h
+		./qthread.h
+		./qiodevice.h
+		./qcoreapplication.h
+		./qeventloop.h
+		./qabstracteventdispatcher.h
+		./qthreadpool.h
+		./qlocale.h
+		./qfuturewatcher.h
+		./qtranslator.h
+		./qtextstream_p.h
+		./qnamespace.h
+		./qsocketnotifier.h
+		./qtimer.h
+	]
+	if ^HAVE_OBJECT {
+		.sources += [ ./qcoreevent.h ./qsignalmapper.h ]
+	}
+	if ^HAVE_FILEIO {
+		.sources += [ 
+			./qfileselector.h 
+			./qfile.h
+			./qfiledevice.h
+			./qsettings.h
+			./qsavefile.h
+			./qtemporaryfile.h
+			./qfilesystemwatcher.h
+			./qfilesystemwatcher_p.h
+			./qfilesystemwatcher_polling_p.h
+		]
+		if target_os == `win32 {
+			.sources += [ ./qfilesystemwatcher_win_p.h ]
+		}else if target_os == `macos {
+			.sources += [ ./qfilesystemwatcher_kqueue_p.h ./qfilesystemwatcher_fsevents_p.h ]
+		}else{
+			.sources += [ ./qfilesystemwatcher_inotify_p.h ]
+		}
+	}
+	if ^HAVE_LIBRARY {
+		.sources += ./qlibrary.h
+	}
+	if ^HAVE_PROCESS {
+		.sources += ./qprocess.h
+	}
+	if ( ^HAVE_PROCESS || ^HAVE_LOCALSOCK ) && ( target_os == `win32 ) {
+		.sources += [
+			./qwindowspipereader_p.h
+			./qwindowspipewriter_p.h
+		]
+	}	
+	if ^HAVE_SHAREDMEM {
+		.sources += ./qsharedmemory.h
+	}
+	if target_os == `win32 {
+		.sources += [ ./qeventdispatcher_win_p.h ./qwineventnotifier.h ]
+	}else {
+		if target_os == `macos {
+			.sources += [ ./qeventdispatcher_cf_p.h ]
+		}
+		.sources += [ ./qeventdispatcher_unix_p.h ]
+	}
+	if ^HAVE_PLUGINS {
+		.sources += ./qpluginloader.h
+		.sources += ./qfactoryloader_p.h
+	}
+	
+	.defines += "QT_NO_GESTURES"
+}
+
+let sources* : SourceSet {
+	.sources += [
+		./qbytearray.cpp
+		./qarraydata.cpp
+		./qbytearraymatcher.cpp
+		./qbuffer.cpp
+		./qiodevice.cpp
+		./qlogging.cpp
+		./qloggingcategory.cpp
+		./qloggingregistry.cpp
+		./qstring.cpp 
+		./qglobal.cpp
+		./qglobalstatic.cpp
+		./qstring_compat.cpp
+		./qregexp.cpp
+		./qmap.cpp
+		./qlist.cpp
+		./qhash.cpp
+		./qtextstream.cpp
+		./qtextcodec.cpp
+		./qsimplecodec.cpp
+		./qutfcodec.cpp
+		./qlatincodec.cpp
+		./qcoreglobaldata.cpp
+		./qlocale.cpp
+		./qlocale_tools.cpp
+		./qdatetime.cpp
+		./qtimezone.cpp
+		./qtimezoneprivate.cpp
+		./qvariant.cpp
+		./qmetatype.cpp
+		./qdebug.cpp
+		./qipaddress.cpp
+		./qstringlist.cpp
+		./qdatetimeparser.cpp
+		./qnumeric.cpp
+		./qmalloc.cpp
+		./quuid.cpp
+		./qcryptographichash.cpp
+		./qbitarray.cpp
+		./qatomic.cpp
+		./qbytearraylist.cpp
+		./qcollator.cpp
+		./qcontiguouscache.cpp
+		./qelapsedtimer.cpp
+		./qhooks.cpp
+		./qmath.cpp
+		./qrefcount.cpp
+		./qscopedpointer.cpp
+		./qshareddata.cpp
+		./qsharedpointer.cpp
+		./qstack.cpp
+		./qstringbuilder.cpp
+		./qvector.cpp
+		./qversiontagging.cpp
+		./qqueue.cpp
+		./qvsnprintf.cpp
+		./qlinkedlist.cpp
+		./qsystemerror.cpp
+		./qsimd.cpp
+		./qringbuffer.cpp # also used by net module, not only be FILEIO and PROCESS
+	]
+	
+	if ^HAVE_GEOM {
+		.sources += [
+			./qline.cpp
+			./qpoint.cpp
+			./qrect.cpp
+			./qmargins.cpp
+			./qsize.cpp
+		]
+	}
+	
+	if ^HAVE_URL {
+		.sources += [
+			./qurl.cpp
+			./qtldurl.cpp
+			./qurlrecode.cpp
+			./qurlidna.cpp
+			./qurlquery.cpp
+			./qdataurl.cpp
+		]
+        if target_os == `macos {
+             .sources += ./qurl_mac.mm
+        }
+	}
+
+	if ^HAVE_RE {
+		.sources += ./qregularexpression.cpp
+		.deps += pcre16.sources;
+		.defines += pcre16.sources.defines
+	}
+	
+	if ^HAVE_JSON {
+		.sources += [
+			./qjsonarray.cpp  ./qjsondocument.cpp  ./qjsonparser.cpp  ./qjsonwriter.cpp
+			./qjson.cpp       ./qjsonobject.cpp    ./qjsonvalue.cpp
+		]
+	}
+
+	if ^HAVE_XMLSTREAM {
+		.sources += [
+			./qxmlstream.cpp ./qxmlutils.cpp
+		]
+	}
+	
+	if ^HAVE_DSTREAM {
+		.sources += ./qdatastream.cpp
+	}
+	
+	if ^HAVE_CMDLINE {
+		.sources += [
+			./qcommandlineoption.cpp ./qcommandlineparser.cpp
+		]
+	}
+	
+	if ^HAVE_FILEIO {
+		.sources += [
+			./qfile.cpp
+			./qdir.cpp
+			./qfileinfo.cpp
+			./qfiledevice.cpp
+			./qfilesystemengine.cpp
+			./qfilesystementry.cpp
+			./qabstractfileengine.cpp
+			./qtemporaryfile.cpp
+			./qfsfileengine.cpp 
+			./qfsfileengine_iterator.cpp
+			./qdiriterator.cpp
+			./qstandardpaths.cpp
+			./qlibraryinfo.cpp
+			./qsettings.cpp
+			./qlockfile.cpp
+			./qsavefile.cpp
+			./qresource.cpp
+			./qresource_iterator.cpp
+			./qtemporarydir.cpp
+			./qfileselector.cpp
+		]
+		if target_os == `win32 {
+			.sources += [ ./qfilesystemengine_win.cpp ./qfsfileengine_win.cpp ./qfilesystemiterator_win.cpp 
+						  ./qstandardpaths_win.cpp ./qsettings_win.cpp ./qlockfile_win.cpp ]
+		}else{
+		    .sources += [ ./qfilesystemengine_unix.cpp ./qfsfileengine_unix.cpp ./qfilesystemiterator_unix.cpp ./qlockfile_unix.cpp ]
+			if target_os == `macos {
+				.sources += [ ./qstandardpaths_mac.mm ./qsettings_mac.cpp ]
+		    }else{
+		        .sources += ./qstandardpaths_unix.cpp
+		    }
+		}
+	}
+	
+	if ^HAVE_PROCESS {
+		.sources += ./qprocess.cpp
+		if target_os == `win32 {
+			.sources += [
+				./qprocess_win.cpp
+			]
+		}else{
+			.include_dirs += ../thirdparty/forkfd
+			.sources += [ 
+				./qprocess_unix.cpp
+				./forkfd_qt.cpp
+			]
+		}
+	}
+	if ( ^HAVE_PROCESS || ^HAVE_LOCALSOCK ) && ( target_os == `win32 ) {
+		.sources += [
+			./qwindowspipereader.cpp
+			./qwindowspipewriter.cpp
+		]
+	}
+	
+	if ^HAVE_LIBRARY {
+		.sources += [
+			./qlibrary.cpp
+			./qelfparser_p.cpp
+			./qmachparser.cpp
+		]
+		if target_os == `win32 {
+			.sources += ./qlibrary_win.cpp
+		}else{
+			if target_os == `macos {
+			}else{
+			}
+			.sources += ./qlibrary_unix.cpp
+		}
+		
+	}
+	
+	if ^HAVE_COREAPP {
+		.sources += [
+			./qcoreapplication.cpp
+			./qtranslator.cpp
+		]
+		if target_os == `win32 {
+			.sources += ./qcoreapplication_win.cpp
+		}else if target_os == `macos {
+			.sources += ./qcoreapplication_mac.cpp
+		}
+	}
+	
+	if ^HAVE_THREADS {
+		.sources += [
+			./qthread.cpp
+			./qreadwritelock.cpp
+			./qmutex.cpp
+			./qthreadstorage.cpp
+			./qthreadpool.cpp
+			./qrunnable.cpp
+			./qexception.cpp
+			./qmutexpool.cpp
+			./qresultstore.cpp
+			./qsemaphore.cpp
+			./qfutureinterface.cpp
+		]
+		if ^HAVE_OBJECT {
+			.sources += [ ./qfuturewatcher.cpp ]
+		}
+		if target_os == `win32 {
+			.sources += [ ./qthread_win.cpp ./qwaitcondition_win.cpp ]
+		}else{
+			.sources += [ ./qthread_unix.cpp ./qwaitcondition_unix.cpp ]
+		}
+	}
+	
+	if ^HAVE_SHAREDMEM {
+		.sources += [ ./qsharedmemory.cpp ./qsystemsemaphore.cpp ]
+		if target_os == `win32 {
+			.sources += [ ./qsharedmemory_win.cpp ./qsystemsemaphore_win.cpp ]
+		}else{
+			.sources += [ 
+				./qsharedmemory_unix.cpp
+				./qsharedmemory_systemv.cpp
+				./qsharedmemory_posix.cpp
+				./qsystemsemaphore_unix.cpp
+				./qsystemsemaphore_systemv.cpp
+				./qsystemsemaphore_posix.cpp
+			]
+		}
+	}
+	
+	if ^HAVE_PLUGINS {
+		.sources += [
+			./qpluginloader.cpp
+			./qfactoryloader.cpp
+			./qfactoryinterface.cpp
+		]
+	}
+
+	if target_os == `linux {
+		.sources += [ 
+			./qtimezoneprivate_tz.cpp
+			./qlocale_unix.cpp
+			./qatomic_unix.cpp
+			./qcollator_posix.cpp
+			./qcore_unix.cpp
+			./qelapsedtimer_unix.cpp
+		]
+	}else if target_os == `win32 {
+		.sources += [ 
+			./qsystemlibrary.cpp
+			./qwindowscodec.cpp
+			./qlocale_win.cpp
+			./qcollator_win.cpp
+			./qelapsedtimer_win.cpp
+			./qtimezoneprivate_win.cpp
+		]
+		if target_toolchain == `msvc {
+			.sources += [
+				./qvector_msvc.cpp
+			]
+		}
+	}else if target_os == `macos {
+        .sources += [
+            ./qelapsedtimer_mac.cpp
+            ./qdatetime_mac.mm
+            ./qlocale_mac.mm
+            ./qstring_mac.mm
+            ./qtimezoneprivate_mac.mm
+            ./qcollator_macx.cpp
+            ./qcore_mac.cpp
+            ./qcore_mac_objc.mm
+ 	     ./qcore_unix.cpp
+	     ./qbytearray_mac.mm
+       ]
+    }
+    
+    if ^HAVE_OBJECT {
+		# includes events which don't seem to make sense without QObject
+		.sources += [
+			./qcoreevent.cpp
+			./qobject.cpp
+			./qmetaobject.cpp
+			./qeventloop.cpp
+			./qabstracteventdispatcher.cpp
+			./qsocketnotifier.cpp
+			./qbasictimer.cpp
+			./qtimer.cpp
+			./qfreelist.cpp
+			./qabstractnativeeventfilter.cpp
+			./qsignalmapper.cpp
+		]
+		if ^HAVE_FILEIO {
+			.sources += [ 
+				./qfilesystemwatcher.cpp
+				./qfilesystemwatcher_polling.cpp
+			]
+			if target_os == `win32 {
+				.sources += [ ./qfilesystemwatcher_win.cpp ]
+			}else if target_os == `macos {
+				.sources += [  
+					./qfilesystemwatcher_kqueue.cpp
+					./qfilesystemwatcher_fsevents.mm
+				]
+			}else{
+				.sources += [ ./qfilesystemwatcher_inotify.cpp ]
+			}
+		}
+		if target_os == `win32 {
+			.sources += [ 
+				./qeventdispatcher_win.cpp 
+				./qwineventnotifier.cpp 
+			]
+		}else{
+			if target_os == `macos {
+				.defines += "QT_NO_EVENTFD"
+				.sources += [ ./qeventdispatcher_cf.mm ./qcfsocketnotifier.cpp ]
+			}
+			.sources += [ 
+				./qeventdispatcher_unix.cpp 
+				./qtimerinfo_unix.cpp
+			]
+		}
+	}else{
+		.sources += [
+			./NoObject.cpp
+		]
+	}
+	
+	if ^HAVE_ZLIB {
+		.deps += zlib.sources;
+		.sources += [
+			./qcompress.cpp
+		]
+	}
+	
+	.configs += [ config lib_config ]
+	
+	if ^HAVE_OBJECT {
+		.deps += run_moc
+	}
+}
+
+
+/*
+# not supported
+qstorageinfo -> fileio, option
+*/
+
+
+
+

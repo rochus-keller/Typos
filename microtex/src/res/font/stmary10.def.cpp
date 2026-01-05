@@ -1,6 +1,6 @@
 #include "res/font_def.res.h"
 
-DEF_FONT(stmary10, fonts/maths/stmary10.ttf, 0)
+DEF_FONT(stmary10, stmary10.ttf, 0)
 
 xHeight(0.430555) quad(1.000003)
 
