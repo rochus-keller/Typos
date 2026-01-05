@@ -32,7 +32,8 @@ TeXRender::TeXRender(const sptr<Box>& box, float textSize, bool trueValues) {
 
 sptr<BoxGroup> TeXRender::wrap(const sptr<Box>& box) {
   sptr<BoxGroup> parent;
-  if (auto group = dynamic_pointer_cast<BoxGroup>(box); group != nullptr) {
+  auto group = dynamic_pointer_cast<BoxGroup>(box);
+  if (group != nullptr) {
     parent = group;
   } else {
     parent = sptrOf<HBox>(box);
@@ -55,7 +56,9 @@ void TeXRender::buildDebug(
       parent->addOnly(sptrOf<StrutBox>(box));
     }
   }
-  if (auto group = dynamic_pointer_cast<BoxGroup>(box); group != nullptr) {
+  auto group = dynamic_pointer_cast<BoxGroup>(box);
+  auto decor = dynamic_pointer_cast<DecorBox>(box);
+  if (group != nullptr) {
     const auto kern = sptrOf<StrutBox>(-group->_width, -group->_height, -group->_depth, -group->_shift);
     // snapshot of current children
     const auto children = group->descendants();
@@ -63,7 +66,7 @@ void TeXRender::buildDebug(
     for (const auto& child: children) {
       buildDebug(group, child, std::forward<BoxFilter>(filter));
     }
-  } else if (auto decor = dynamic_pointer_cast<DecorBox>(box); decor != nullptr) {
+  } else if (decor != nullptr) {
     const auto g = wrap(decor->_base);
     decor->_base = g;
     buildDebug(nullptr, g, std::forward<BoxFilter>(filter));

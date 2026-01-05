@@ -1,0 +1,31 @@
+% Test for Ligatures (standard TeX ligatures in cmr10)
+% Result: works, but well possible that Cairo does it
+\text{Ligatures: difficult waffle flow ffi ffl}
+\\
+% Test for Kerning (Visual check: V and a should be close)
+% Result: the boxes are close but not overlapping, so there is no kerning
+\text{Kerning: Va To Av LT P.}
+\\
+% Manual kerning
+\text{Kerning: V\kern-0.15em a T\kern-0.1em o A\kern-0.15em v L\kern-0.1em T P\kern-0.15em .}
+\\
+% Test for Line Breaking & Justification
+% (Note: MicroTeX is primarily a math engine, so text wrapping 
+% depends on the width you pass to the parser)
+% Result: it just prints on one line which exceeds the page width
+\text{The quick brown fox jumps over the lazy dog. 
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.}
+\\
+% \parbox is not implemented
+
+\begin{array}{l}
+  \text{The quick brown fox jumps over the lazy dog.} \\
+  \text{Lorem ipsum dolor sit amet, consectetur adipiscing} \\
+  \text{elit. Sed do eiusmod tempor incididunt ut labore.}
+\end{array}
+\\
+% Mixed Math and Text Kerning comparison
+% The italic 'f' in math mode often clashes with upright text if not handled.
+f(x) \text{ vs } \text{efficiency}
+

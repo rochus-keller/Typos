@@ -651,8 +651,8 @@ public:
     _type = base->_type;
     _base = base;
     _keepAspectRatio = keepAspectRatio;
-    auto[wu, w] = SpaceAtom::getLength(ws);
-    auto[hu, h] = SpaceAtom::getLength(hs);
+    auto wu_w = SpaceAtom::getLength(ws); auto wu = wu_w.first; auto w = wu_w.second;
+    auto hu_h = SpaceAtom::getLength(hs); auto hu = hu_h.first; auto h = hu_h.second;
     _wu = wu, _w = w;
     _hu = hu, _h = h;
   }

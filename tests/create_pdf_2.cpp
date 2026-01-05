@@ -23,8 +23,8 @@ int main(int argc, const char** argv)
 {
     const char *filename = "output.pdf";
     const int _padding = 20;
-    const float _text_size = 10.0f; // points
-    const int wrap_width = 0; // no wrapping
+    const float _text_size = 15.0f; // points
+    const int wrap_width = 500; // 0.. no wrapping
 
     std::string code;
 

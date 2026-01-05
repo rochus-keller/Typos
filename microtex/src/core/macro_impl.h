@@ -228,7 +228,7 @@ inline macro(binom) {
 
 inline macro(above) {
   auto num = tp.popFormulaAtom();
-  auto[unit, value] = tp.getLength();
+  auto unit_value = tp.getLength(); auto unit = unit_value.first; auto value = unit_value.second;
   auto den = Formula(tp, tp.getOverArgument(), false)._root;
   if (num == nullptr || den == nullptr)
     throw ex_parse("Both numerator and denominator of a fraction can't be empty!");

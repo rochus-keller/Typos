@@ -10,12 +10,12 @@ using namespace std;
 namespace tex {
 
 macro(kern) {
-  auto[unit, value] = tp.getLength();
+  auto unit_value = tp.getLength(); auto unit = unit_value.first; auto value = unit_value.second;
   return sptrOf<SpaceAtom>(unit, value, 0.f, 0.f);
 }
 
 macro(hvspace) {
-  auto[unit, value] = SpaceAtom::getLength(args[1]);
+  auto unit_value = SpaceAtom::getLength(args[1]); auto unit = unit_value.first; auto value = unit_value.second;
   return (
     args[0][0] == L'h'
     ? sptrOf<SpaceAtom>(unit, value, 0.f, 0.f)
@@ -24,9 +24,9 @@ macro(hvspace) {
 }
 
 macro(rule) {
-  auto[wu, w] = SpaceAtom::getLength(args[1]);
-  auto[hu, h] = SpaceAtom::getLength(args[2]);
-  auto[ru, r] = SpaceAtom::getLength(args[3]);
+  auto wu_w = SpaceAtom::getLength(args[1]); auto wu = wu_w.first; auto w = wu_w.second;
+  auto hu_h = SpaceAtom::getLength(args[2]); auto hu = hu_h.first; auto h = hu_h.second;
+  auto ru_r = SpaceAtom::getLength(args[3]); auto ru = ru_r.first; auto r = ru_r.second;
 
   return sptrOf<RuleAtom>(wu, w, hu, h, ru, -r);
 }
@@ -92,7 +92,7 @@ macro(genfrac) {
   R = dynamic_pointer_cast<SymbolAtom>(right._root);
 
   bool rule = true;
-  auto[unit, value] = SpaceAtom::getLength(args[3]);
+  auto unit_value = SpaceAtom::getLength(args[3]); auto unit = unit_value.first; auto value = unit_value.second;
   if (args[3].empty()) {
     unit = UnitType::em;
     value = 0.f;
@@ -119,7 +119,7 @@ sptr<Atom> _frac_with_delims(TeXParser& tp, Args& args, bool rule, bool hasLengt
   auto num = tp.popFormulaAtom();
   pair<UnitType, float> l;
   if (hasLength) l = tp.getLength();
-  auto[unit, value] = l;
+  auto unit_value = l; auto unit = unit_value.first; auto value = unit_value.second;
   auto den = Formula(tp, tp.getOverArgument(), false)._root;
 
   if (num == nullptr || den == nullptr)
@@ -313,9 +313,9 @@ macro(renewcommand) {
 }
 
 macro(raisebox) {
-  auto[ru, r] = SpaceAtom::getLength(args[1]);
-  auto[hu, h] = SpaceAtom::getLength(args[3]);
-  auto[du, d] = SpaceAtom::getLength(args[4]);
+  auto ru_r = SpaceAtom::getLength(args[1]); auto ru = ru_r.first; auto r = ru_r.second;
+  auto hu_h = SpaceAtom::getLength(args[3]); auto hu = hu_h.first; auto h = hu_h.second;
+  auto du_d = SpaceAtom::getLength(args[4]); auto du = du_d.first; auto d = du_d.second;
   return sptrOf<RaiseAtom>(Formula(tp, args[2])._root, ru, r, hu, h, du, d);
 }
 

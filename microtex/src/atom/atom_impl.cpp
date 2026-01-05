@@ -265,14 +265,14 @@ RotateAtom::RotateAtom(const sptr<Atom>& base, float angle, const wstring& optio
   }
   it = opt.find("x");
   if (it != opt.end()) {
-    auto[u, x] = SpaceAtom::getLength(it->second);
+    auto u_x = SpaceAtom::getLength(it->second); auto u = u_x.first; auto x = u_x.second;
     _xunit = u, _x = x;
   } else {
     _xunit = UnitType::point, _x = 0;
   }
   it = opt.find("y");
   if (it != opt.end()) {
-    auto[u, y] = SpaceAtom::getLength(it->second);
+    auto u_y = SpaceAtom::getLength(it->second); auto u = u_y.first; auto y = u_y.second;
     _yunit = u, _y = y;
   } else {
     _yunit = UnitType::point, _y = 0;
