@@ -43,7 +43,7 @@ without any dependency on fontconfig or other operating system font APIs. Next I
 
 This version includes a modified MicroTeX. It can print mathematical formulas written in a subset of LuaTeX to a PDF (see the formulaN.tex files in the 
 testcases directory). To make this work I had to re-implement the graphic_cairo.cpp/h so it uses HarfBuzz instead of Pango and accesses Cairo directly
-without C++ wrapper. Next I will remove the tinyxml2 dependency from MicroTex and reduce more unused fonts.
+without C++ wrapper. I also removed the tinyxml2 dependency from MicroTex and removed the font and formula parsers depending on it.
 
 ### How to build
 

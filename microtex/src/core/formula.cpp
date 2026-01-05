@@ -5,7 +5,8 @@
 #include "core/parser.h"
 #include "fonts/alphabet.h"
 #include "fonts/fonts.h"
-#include "res/parser/formula_parser.h"
+
+#include <iostream>
 
 using namespace std;
 using namespace tex;
@@ -170,9 +171,7 @@ FontInfos* Formula::getExternalFont(const UnicodeBlock& block) {
 }
 
 void Formula::addSymbolMappings(const string& file) {
-  TeXFormulaSettingParser parser(file);
-  parser.parseSymbol(_symbolMappings, _symbolTextMappings);
-  parser.parseSymbol2Formula(_symbolFormulaMappings, _symbolTextMappings);
+    std::cerr << "Formula::addSymbolMappings not supported" << std::endl;
 }
 
 void Formula::_free_() {

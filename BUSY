@@ -3,7 +3,8 @@ let config : Config {
     if target_toolchain == `gcc {
         .lib_names += [ "m" "stdc++" ]
         .ldflags += "-shared-libgcc"
-        .cflags_c += [ "-fno-strict-aliasing" "-fno-common" ]
+        .cflags_c += [ "-fno-strict-aliasing" "-fno-common" "-std=c99" ]
+        .cflags_cc += [ "-std=c++11" ]
     }else if target_toolchain == `msvc {
         # nothing to do
     }else {
@@ -452,8 +453,6 @@ let microtex : SourceSet {
     ./microtex/src/res/font/stmary10.def.cpp # not used
     ./microtex/src/res/font/tt10.def.cpp # not used
 
-    ./microtex/src/res/parser/font_parser.cpp
-    ./microtex/src/res/parser/formula_parser.cpp
     ./microtex/src/res/reg/builtin_font_reg.cpp
     ./microtex/src/res/reg/builtin_syms_reg.cpp
     ./microtex/src/res/sym/amsfonts.def.cpp
@@ -966,8 +965,6 @@ let headers : SourceSet {
     ./microtex/src/platform/cairo/graphic_cairo.h
     ./microtex/src/res/font_def.res.h
     ./microtex/src/res/symbol_def.res.h
-    ./microtex/src/res/parser/font_parser.h
-    ./microtex/src/res/parser/formula_parser.h
     ./microtex/src/res/reg/builtin_font_reg.h
     ./microtex/src/res/reg/builtin_syms_reg.h
     ./microtex/src/utils/dict_tree.h
@@ -991,7 +988,6 @@ let typos ! : Executable {
     ./microtex/src
     ./harfbuzz/harfbuzz-src/src
     ]
-    .lib_names += "tinyxml2"
     .sources = [
     ./tests/create_pdf_2.cpp
 	]

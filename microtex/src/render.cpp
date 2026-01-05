@@ -23,7 +23,7 @@ TeXRender::TeXRender(const sptr<Box>& box, float textSize, bool trueValues) {
   if (Box::DEBUG) {
     const auto group = wrap(box);
     _box = group;
-    BoxFilter filter = [](auto b) {
+    BoxFilter filter = [](const sptr<Box>& b) {
       return dynamic_cast<CharBox*>(b.get()) != nullptr;
     };
     buildDebug(nullptr, group, std::move(filter));

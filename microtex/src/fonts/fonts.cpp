@@ -2,12 +2,12 @@
 
 #include <cmath>
 #include <cassert>
+#include <iostream>
 
 #include "common.h"
 #include "fonts/symbol_reg.h"
 #include "graphic/graphic.h"
 #include "render.h"
-#include "res/parser/font_parser.h"
 
 using namespace std;
 using namespace tex;
@@ -62,12 +62,7 @@ void DefaultTeXFont::__push_symbols(const __symbol_component* symbols, const int
 
 void DefaultTeXFont::addTeXFontDescription(
   const string& base, const string& file) {
-  DefaultTeXFontParser parser(base, file);
-  parser.parseFontDescriptions();
-  parser.parseExtraPath();
-  const auto x = parser.parseTextStyleMappings();
-  _textStyleMappings.insert(x.begin(), x.end());
-  parser.parseSymbolMappings(_symbolMappings);
+    std::cerr << "DefaultTeXFont::addTeXFontDescription not supported" << std::endl;
 }
 
 void DefaultTeXFont::addAlphabet(
@@ -251,7 +246,7 @@ sptr<CharFont> DefaultTeXFont::getLigature(const CharFont& left, const CharFont&
 }
 
 int DefaultTeXFont::getMuFontId() {
-  return _generalSettings[DefaultTeXFontParser::MUFONTID_ATTR];
+  return _generalSettings["mufontid"]; // DefaultTeXFontParser::MUFONTID_ATTR];
 }
 
 Char DefaultTeXFont::getNextLarger(const Char& c, TexStyle style) {
@@ -262,7 +257,7 @@ Char DefaultTeXFont::getNextLarger(const Char& c, TexStyle style) {
 }
 
 float DefaultTeXFont::getSpace(TexStyle style) {
-  int spaceFontId = _generalSettings[DefaultTeXFontParser::SPACEFONTID_ATTR];
+  int spaceFontId = _generalSettings["spacefontid"]; // DefaultTeXFontParser::SPACEFONTID_ATTR];
   auto info = getInfo(spaceFontId);
   return info->getSpace(getSizeFactor(style) * Formula::PIXELS_PER_POINT);
 }

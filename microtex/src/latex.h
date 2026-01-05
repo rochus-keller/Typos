@@ -44,9 +44,9 @@ public:
    * Parse TeX formatted string to TeXRender
    *
    * @param tex the TeX formatted string
-   * @param width the width of the 2D graphics context
-   * @param textSize the text size
-   * @param lineSpace the line space
+   * @param width the width of the 2D graphics context (in pixels)
+   * @param textSize the text size (in point)
+   * @param lineSpace the space between two lines (in pixel)
    * @param fg the foreground color
    */
   static TeXRender* parse(const std::wstring& tex, int width, float textSize, float lineSpace, color fg);

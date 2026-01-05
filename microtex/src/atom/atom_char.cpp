@@ -1,6 +1,6 @@
 #include "atom/atom_char.h"
 #include "core/core.h"
-#include "res/parser/formula_parser.h"
+#include <iostream>
 
 using namespace tex;
 using namespace std;
@@ -56,8 +56,7 @@ sptr<Box> SymbolAtom::createBox(Environment& env) {
 //}
 
 void SymbolAtom::addSymbolAtom(const string& file) {
-  TeXSymbolParser parser(file);
-  parser.readSymbols(_symbols);
+    std::cerr << "SymbolAtom::addSymbolAtom not supported" << std::endl;
 }
 
 void SymbolAtom::addSymbolAtom(const sptr<SymbolAtom>& sym) {
