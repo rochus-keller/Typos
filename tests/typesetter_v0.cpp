@@ -19,6 +19,11 @@
 #include <cmath>
 #include <limits>
 
+// NOTE: this version assumes a text which has either no \n or at least no double \n\n. The latter would
+// mean a hard paragraph break, but this algorithm currently only supports a single paragraph, even if the
+// text can flow to more than one page.
+
+
 static double pt(double v) { return v; } // Cairo PDF uses points (user units).
 
 struct ShapedWord {
@@ -50,7 +55,11 @@ static QVector<QString> splitParagraphs(const QString& s) {
     QString normalized = s;
     normalized.replace("\r\n", "\n");
     normalized.replace("\r", "\n");
-
+#if 1
+    normalized.replace("\n\n", "\n");
+    return QVector<QString>() << normalized;
+#else
+    // not supported yet; we need something like \parfillskip, which requires an explicit item stream
     QStringList parts = normalized.split("\n\n", QString::KeepEmptyParts);
     QVector<QString> out;
     out.reserve(parts.size());
@@ -60,6 +69,7 @@ static QVector<QString> splitParagraphs(const QString& s) {
             out.push_back(t);
     }
     return out;
+#endif
 }
 
 static QStringList splitWordsSimple(const QString& para) {
