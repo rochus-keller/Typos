@@ -992,6 +992,6 @@ let typos ! : Executable {
     ./harfbuzz/harfbuzz-src/src
     ]
     .sources = [
-    ./tests/qtmain.cpp
+    ./tests/typesetter_v0.cpp
 	]
 }
