@@ -992,6 +992,6 @@ let typos ! : Executable {
     ./harfbuzz/harfbuzz-src/src
     ]
     .sources = [
-    ./tests/typesetter_v0.cpp
+    ./tests/typesetter_v1.cpp
 	]
 }

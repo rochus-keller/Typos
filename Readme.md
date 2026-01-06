@@ -15,7 +15,7 @@ required parts from TexLive. As a concession to feasibility, the system will onl
 - [x] Removed all autotools files and readme files thereof
 - [x] Implement a test application to show that the Cairo PDF backend works
 - [x] Integrate MicroTex and implement test application to show that formula PDF printing works in hight quality
-- [ ] Implement all required Knuth algorithms (paragraph, table and page layout)
+- [ ] Implement all required Knuth algorithms (paragraph, table and page layout) (WIP)
 - [ ] Specify a statically (gradually) typed typesetting language in the Oberon+/Luon or Typst lineage
 - [ ] Implement a new frontend 
 
@@ -44,6 +44,13 @@ without any dependency on fontconfig or other operating system font APIs. Next I
 This version includes a modified MicroTeX. It can print mathematical formulas written in a subset of LuaTeX to a PDF (see the formulaN.tex files in the 
 testcases directory). To make this work I had to re-implement the graphic_cairo.cpp/h so it uses HarfBuzz instead of Pango and accesses Cairo directly
 without C++ wrapper. I also removed the tinyxml2 dependency from MicroTex and removed the font and formula parsers depending on it.
+
+### Status on January 6, 2026
+
+There are now two typsetting applications implementing varying complexity levels. Both implement the Knuth-Plass algorithm. They helped me explore the 
+various APIs involved and served as proof of 
+concept that adequate quality can be achieved based on the libraries used. The second application (./tests/typesetter_v1.cpp) implements paragraphs and 
+text formatting (bold, italic); the input file assumes a minimal markdown syntax.
 
 ### How to build
 
