@@ -50,7 +50,7 @@ without C++ wrapper. I also removed the tinyxml2 dependency from MicroTex and re
 There are now two typsetting applications implementing varying complexity levels. Both implement the Knuth-Plass algorithm. They helped me explore the 
 various APIs involved and served as proof of 
 concept that adequate quality can be achieved based on the libraries used. The second application (./tests/typesetter_v1.cpp) implements paragraphs and 
-text formatting (bold, italic); the input file assumes a minimal markdown syntax.
+text formatting (bold, italic); the input file assumes a minimal markdown syntax. This is now the master branch.
 
 ### How to build
 
@@ -62,5 +62,16 @@ Win32 has not been tested yet and likely doesn't build without changes.
 
 ### Additional Credits
 
-TBD
+This work is available under **GPL 2.0** and uses the following open-source libraries and tools:
+
+- **[Cairo](https://www.cairographics.org/)** v. 1.16.0 under [LGPL 2.1](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html)
+- **[HarfBuzz](https://harfbuzz.github.io/)** v. 8.3.0 under [MIT (HarfBuzz License)](https://github.com/harfbuzz/arfbuzz/blob/main/COPYING)
+- **[FreeType](https://freetype.org/)** v. 2.13.3 under [GPL 2.0](https://www.gnu.org/licenses/old)
+- **[MicroTeX](https://github.com/Alvin-Zhong/MicroTeX)** by Aug 2024 under [MIT](https://github.com/Alvin-Zhong/MicroTeX/blob/master/LICENSE)
+- **[Pixman](https://www.pixman.org/)** v. 0.38.0 under [MIT](https://gitlab.freedesktop.org/pixman/pixman/-/blob/master/COPYING) [9] |
+- **[libpng](http://www.libpng.org/pub/png/libpng.html)** v. 1.6.43 under [libpng License](http://www.libpng.org/pub/png/src/libpng-LICENSE.txt)
+- **[zlib](https://zlib.net/)** v. 1.3.1 under [zlib License](https://zlib.net/zlib_license.html)
+- **[LeanQt Core](https://github.com/rochus-keller/LeanQt)** v. *Core* under [LGPL 2.1](https://github.com/rochus-keller/LeanQt)
+- **[BUSY](https://github.com/rochus-keller/BUSY)** *Build System* under [MIT](https://github.com/rochus-keller/BUSY) (includes Lua 5.1 components)
+
 
