@@ -16,7 +16,7 @@ required parts from TexLive. As a concession to feasibility, the system will onl
 - [x] Implement a test application to show that the Cairo PDF backend works
 - [x] Integrate MicroTex and implement test application to show that formula PDF printing works in hight quality
 - [ ] Implement all required Knuth algorithms (paragraph, table and page layout) (WIP)
-- [ ] Specify a statically (gradually) typed typesetting language in the Oberon+/Luon or Typst lineage
+- [ ] Specify a statically (gradually) semantic document language language in the Oberon+, DocBook and AsciiDoc lineage
 - [ ] Implement a new frontend 
 
 ### Initial Attempts from December 20 to 31, 2025
@@ -68,7 +68,7 @@ This work is available under **GPL 2.0** and uses the following open-source libr
 - **[HarfBuzz](https://harfbuzz.github.io/)** v. 8.3.0 under [MIT (HarfBuzz License)](https://github.com/harfbuzz/arfbuzz/blob/main/COPYING)
 - **[FreeType](https://freetype.org/)** v. 2.13.3 under [GPL 2.0](https://www.gnu.org/licenses/old)
 - **[MicroTeX](https://github.com/Alvin-Zhong/MicroTeX)** by Aug 2024 under [MIT](https://github.com/Alvin-Zhong/MicroTeX/blob/master/LICENSE)
-- **[Pixman](https://www.pixman.org/)** v. 0.38.0 under [MIT](https://gitlab.freedesktop.org/pixman/pixman/-/blob/master/COPYING) [9] |
+- **[Pixman](https://www.pixman.org/)** v. 0.38.0 under [MIT](https://gitlab.freedesktop.org/pixman/pixman/-/blob/master/COPYING)
 - **[libpng](http://www.libpng.org/pub/png/libpng.html)** v. 1.6.43 under [libpng License](http://www.libpng.org/pub/png/src/libpng-LICENSE.txt)
 - **[zlib](https://zlib.net/)** v. 1.3.1 under [zlib License](https://zlib.net/zlib_license.html)
 - **[LeanQt Core](https://github.com/rochus-keller/LeanQt)** v. *Core* under [LGPL 2.1](https://github.com/rochus-keller/LeanQt)

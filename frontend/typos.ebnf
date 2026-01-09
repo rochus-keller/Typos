@@ -1,0 +1,152 @@
+// Typos is a statically typed semantic document language (in the declarative specification languages category)
+
+
+Document ::= {space} Book
+
+Book ::= 'BOOK' title [Info] {FrontMatter} Body {BackMatter}
+
+Body ::= ( Division {Division} | Component {Component})
+
+Article ::= [Info] {Section} {BackMatter} // separate entity
+
+Division ::= Part | Reference
+
+Part ::= 'PART' Component {Component}
+    // partintro
+
+Reference ::= 'REFERENCE'
+            // refentry
+
+Component ::= Chapter | Appendix | Glossary | Bibliography | Topic
+              
+Chapter ::= 'CHAPTER'
+
+Appendix ::= 'APPENDIX'
+
+Preface ::= 'PREFACE'
+
+Glossary ::=
+
+Bibliography ::=
+
+Topic ::=
+
+Dedication ::=
+
+Acknowledgements ::=
+
+Colophon ::= 'COLOPHON'
+              
+Section ::= (FixSect | VarSect | SimpleSect | BridgeHead)
+
+SimpleSect ::=
+
+BridgeHead ::=
+              
+FixSect ::=  'SECT1' { 'SECT2' { 'SECT3' { 'SECT4' { 'SECT5' { 'SECT6' }}}}}       
+
+VarSect ::= 'SECTION' { VarSect } 'END'
+
+Block ::= Paragraph | List | Admonition | Verbatim | 
+          FormalObject | InformalObject | Synopsis | Specialized
+
+Paragraph ::= Para | SimplePara | FormalPara
+
+Para ::= 'PAR'
+
+SimplePara ::= 'SPAR'
+
+FormalPara ::= 'FPAR'
+
+List ::= ItemizedList | OrderedList | VariableList 
+        // | SegmentedList | SimpleList | CalloutList | GlossList | BiblioList
+    
+ItemizedList ::=
+
+OrderedList ::=
+
+VariableList ::=
+    
+Admonition ::= 
+
+Verbatim ::= ProgramListing | LiteralLayout     
+            // Screen | 
+            
+ProgramListing ::=
+LiteralLayout ::=
+
+FormalObject ::= (Figure | Table | Equation )
+                // Example | FormalGroup
+                
+Figure ::=
+
+Table ::=
+
+Equation ::=
+
+InformalObject ::= (InformalFigure | InformalTable | InformalEquation)
+                  // InformalExample
+InformalFigure ::=
+
+InformalTable ::= 
+   
+InformalEquation ::=
+         
+Synopsis ::=
+
+Specialized ::= BlockQuote | Epigraph | Sidebar
+                // MsgSet |  Address | Screenshot | QandASet | Task
+   
+BlockQuote ::=
+
+Epigraph ::=
+
+Sidebar ::=
+             
+Inline ::= lbrack (Emphasis | CrossRef | Footnote | Math | Indexing) rbrack
+            // Phrase | Quote | ForeignPhrase | WordAsWord | 
+
+Emphasis ::= ('BOLD'|'ITALIC'|'BOLDITALIC'|'UNDERLINE'|'STRIKETHROUGH') structured // TODO
+             
+             
+CrossRef ::= //XRef | Link | Anchor | OLink | BiblioRef | 
+             //Citation | CiteRefEntry | CiteTitle | 
+             //FirstTerm | GlossTerm
+             
+Footnote ::=
+
+             
+Math ::=
+
+Indexing ::=
+
+Info ::=
+
+FrontMatter ::= (Dedication | Toc | Lot | Preface | Acknowledgements)
+
+Toc ::= 'TOC' // table of contents tag
+Lot ::= 'LOT' // list of tables, list of Figures, Tables, Equations, etc.
+
+BackMatter ::= (Index | Colophon)
+
+Index ::=
+
+
+escape ::= bslash | bshash | bslbrack | bsdollar
+text ::= (word | number | others | escape) { space {space} (word | number | others | escape) }
+title ::= text hash
+structured ::= { text | Inline } hash
+
+// Lexer:
+space ::= // ' ', NBS (U+00A0), all other whitespace (LF, CR, \t, ...) is translated to ' '
+word ::= // Standard Latin characters (A-Z, a-z), accented characters (é, ö, ñ), and letters from other scripts like Greek (α, β) or Cyrillic (я)
+number ::= // digits 0-9 and their equivalents in other scripts, numeric symbols such as superscripts (²), subscripts (₃), or fractions (½)
+others ::= // encompassing all symbols ($, +, ≈, ☺) and punctuation marks (!, ?, -, “), including soft hyphen (U+00AD), besides the following
+hash ::= // '#'
+lbrack ::= // '['
+rbrack ::= // ']'
+dollar ::= // '$'
+bslash ::= // '\\'
+bshash ::= // \#
+bslbrack ::= // \[
+bsdollar ::= // \$
