@@ -26,7 +26,8 @@
 #if (defined(__linux__) && defined(_FEATURES_H)) || \
     (defined(_MSC_VER) && (defined(_INC_CRTDEFS) || defined(_OFF_T_DEFINED))) || \
     (defined(__MINGW32__) && defined(__MINGW_H))
-ptexlib.h must be included first!!!
+// RK: leads to strange errors; benefit unclear
+// ptexlib.h must be included first!!!
 #endif
 
 #ifdef HAVE_CONFIG_H

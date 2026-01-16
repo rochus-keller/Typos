@@ -1451,32 +1451,48 @@ let luaffi : SourceSet {
     ]
 }
 
-let loadfont : SourceSet {
+let loadfont : SourceSet { # obsolete, replaced by luaotfload
     .configs += [ config luaconfig ]
     .sources = [
     ./texk/web2c/luatexdir/load-font/font_loader.c
     ]
 }
 
-let luatex : Executable {
+let luaotfload : SourceSet {
     .configs += [ config web2c_config luaconfig ]
-    .include_dirs += [ ./libs/harfbuzz/harfbuzz-src/src ./libs/harfbuzz ]
-    .deps += [ zlib zziplib lua53 libpng kpathsea web2c dvi font image lang luabind fontforge
-                luafontloader luamd5 luapplib pdf slnunicode tex unilib utils mplibdir luapeg
-                libmd5 synctexdir luatexdir luafilesystem luasocket luazip luaffi
-                graphite2 harfbuzz luaharfbuzz loadfont ]
-    # NOTE: main is in luatex.c
-}
-
-let test ! : Executable {
-    .configs += [ config web2c_config luaconfig ]
-    .include_dirs += [ ./libs/harfbuzz/harfbuzz-src/src ./libs/harfbuzz ]
-    .deps += [ graphite2 harfbuzz  ]
+    .include_dirs += [ ./libs/harfbuzz/harfbuzz-src/src ./libs/harfbuzz ./texk/web2c/mplibdir ]
     .sources += [
     ./texk/web2c/luatexdir/luaotfload/luaotfload_database.c
     ./texk/web2c/luatexdir/luaotfload/luaotfload_parser.c
     ./texk/web2c/luatexdir/luaotfload/luaotfload_harf_provider.c
     ./texk/web2c/luatexdir/luaotfload/luaotfload_harf_shaper.c
-    ./texk/web2c/luatexdir/luaotfload/test_shape.c
+    ./texk/web2c/luatexdir/luaotfload/luaotfload_debug.c
+    ./texk/web2c/luatexdir/luaotfload/luaotfload_config.c
+    ./texk/web2c/luatexdir/luaotfload/luaotfload_log.c
+    ./texk/web2c/luatexdir/luaotfload/luaotfload_bridge.c
+    ./texk/web2c/luatexdir/luaotfload/luaotfload_core.c
+    ./texk/web2c/luatexdir/luaotfload/luaotfload_features.c
+    ./texk/web2c/luatexdir/luaotfload/luaotfload_io.c
+    ./texk/web2c/luatexdir/luaotfload/luaotfload_shaper_driver.c
+    ./texk/web2c/luatexdir/luaotfload/luaotfload_provider_bridge.c
+    ]
+}
+
+let luatex ! : Executable {
+    .configs += [ config web2c_config luaconfig ]
+    #.include_dirs += [ ./libs/harfbuzz/harfbuzz-src/src ./libs/harfbuzz ]
+    .deps += [ zlib zziplib lua53 libpng kpathsea web2c dvi font image lang luabind fontforge
+                luafontloader luamd5 luapplib pdf slnunicode tex unilib utils mplibdir luapeg
+                libmd5 synctexdir luatexdir luafilesystem luasocket luazip luaffi
+                graphite2 harfbuzz luaharfbuzz luaotfload ]
+    # NOTE: main is in luatex.c
+}
+
+let test : Executable {
+    .configs += [ config web2c_config luaconfig  ]
+    .include_dirs += [ ./libs/harfbuzz/harfbuzz-src/src ./libs/harfbuzz ]
+    .deps += [ graphite2 harfbuzz luaotfload ]
+    .sources += [
+    ./texk/web2c/luatexdir/luaotfload/test_utilities.c
     ]
 }

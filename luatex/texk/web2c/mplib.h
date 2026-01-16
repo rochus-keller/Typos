@@ -1,5 +1,5 @@
 /*3:*/
-#line 89 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 89 "../../../source/texk/web2c/mplibdir/mp.w"
 
 #ifndef MPLIB_H
 #define MPLIB_H 1
@@ -7,18 +7,18 @@
 #ifndef HAVE_BOOLEAN
 typedef int boolean;
 #endif
-#line 96 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 96 "../../../source/texk/web2c/mplibdir/mp.w"
 /*2:*/
-#line 78 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 78 "../../../source/texk/web2c/mplibdir/mp.w"
 
 #define metapost_version "2.10"
 
 /*:2*/
-#line 96 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 96 "../../../source/texk/web2c/mplibdir/mp.w"
 
 typedef struct MP_instance*MP;
 /*19:*/
-#line 411 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 411 "../../../source/texk/web2c/mplibdir/mp.w"
 
 typedef enum{
 mp_nan_type= 0,
@@ -222,7 +222,7 @@ m_interval_set_func m_interval_set;
 
 
 /*:19*//*47:*/
-#line 960 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 960 "../../../source/texk/web2c/mplibdir/mp.w"
 
 enum mp_filetype{
 mp_filetype_terminal= 0,
@@ -251,7 +251,7 @@ typedef void(*mp_file_writer)(MP,void*,const char*);
 typedef void(*mp_binfile_writer)(MP,void*,void*,size_t);
 
 /*:47*//*79:*/
-#line 1457 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 1457 "../../../source/texk/web2c/mplibdir/mp.w"
 
 typedef struct{
 unsigned char*str;
@@ -261,7 +261,7 @@ int refs;
 typedef mp_lstring*mp_string;
 
 /*:79*//*105:*/
-#line 1916 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 1916 "../../../source/texk/web2c/mplibdir/mp.w"
 
 enum mp_interaction_mode{
 mp_unspecified_mode= 0,
@@ -272,7 +272,7 @@ mp_error_stop_mode
 };
 
 /*:105*//*111:*/
-#line 1992 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 1992 "../../../source/texk/web2c/mplibdir/mp.w"
 
 enum mp_history_state{
 mp_spotless= 0,
@@ -283,12 +283,12 @@ mp_system_error_stop
 };
 
 /*:111*//*125:*/
-#line 2157 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 2157 "../../../source/texk/web2c/mplibdir/mp.w"
 
 typedef void(*mp_editor_cmd)(MP,char*,int);
 
 /*:125*//*169:*/
-#line 2865 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 2865 "../../../source/texk/web2c/mplibdir/mp.w"
 
 typedef enum{
 mp_math_scaled_mode= 0,
@@ -299,7 +299,7 @@ mp_math_interval_mode= 4
 }mp_math_mode;
 
 /*:169*//*306:*/
-#line 7163 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 7163 "../../../source/texk/web2c/mplibdir/mp.w"
 
 typedef struct mp_knot_data*mp_knot;
 typedef struct mp_knot_data{
@@ -323,7 +323,7 @@ unsigned char originator;
 
 
 /*:306*//*307:*/
-#line 7188 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 7188 "../../../source/texk/web2c/mplibdir/mp.w"
 
 typedef struct mp_gr_knot_data*mp_gr_knot;
 typedef struct mp_gr_knot_data{
@@ -347,7 +347,7 @@ unsigned char originator;
 
 
 /*:307*//*310:*/
-#line 7297 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 7297 "../../../source/texk/web2c/mplibdir/mp.w"
 
 enum mp_knot_originator{
 mp_program_code= 0,
@@ -355,12 +355,12 @@ mp_metapost_user
 };
 
 /*:310*//*900:*/
-#line 22349 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 22349 "../../../source/texk/web2c/mplibdir/mp.w"
 
 typedef int(*mp_makempx_cmd)(MP mp,char*origname,char*mtxname);
 
 /*:900*//*1068:*/
-#line 30567 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 30567 "../../../source/texk/web2c/mplibdir/mp.w"
 
 #undef term_in
 #undef term_out
@@ -382,16 +382,16 @@ struct mp_edge_object*edges;
 }mp_run_data;
 
 /*:1068*//*1290:*/
-#line 35369 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 35369 "../../../source/texk/web2c/mplibdir/mp.w"
 
 typedef void(*mp_backend_writer)(MP,void*);
 
 /*:1290*/
-#line 98 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 98 "../../../source/texk/web2c/mplibdir/mp.w"
 
 typedef struct MP_options{
 /*31:*/
-#line 787 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 787 "../../../source/texk/web2c/mplibdir/mp.w"
 
 int error_line;
 int half_error_line;
@@ -404,7 +404,7 @@ int ini_version;
 int utf8_mode;
 
 /*:31*//*48:*/
-#line 987 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 987 "../../../source/texk/web2c/mplibdir/mp.w"
 
 mp_file_finder find_file;
 mp_file_opener open_file;
@@ -419,73 +419,73 @@ mp_file_writer write_ascii_file;
 mp_binfile_writer write_binary_file;
 
 /*:48*//*55:*/
-#line 1070 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 1070 "../../../source/texk/web2c/mplibdir/mp.w"
 
 int print_found_names;
 
 /*:55*//*57:*/
-#line 1088 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 1088 "../../../source/texk/web2c/mplibdir/mp.w"
 
 int file_line_error_style;
 
 /*:57*//*73:*/
-#line 1332 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 1332 "../../../source/texk/web2c/mplibdir/mp.w"
 
 char*command_line;
 
 /*:73*//*106:*/
-#line 1925 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 1925 "../../../source/texk/web2c/mplibdir/mp.w"
 
 int interaction;
 int noninteractive;
 int extensions;
 
 /*:106*//*126:*/
-#line 2160 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 2160 "../../../source/texk/web2c/mplibdir/mp.w"
 
 mp_editor_cmd run_editor;
 
 /*:126*//*158:*/
-#line 2663 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 2663 "../../../source/texk/web2c/mplibdir/mp.w"
 
 int random_seed;
 
 /*:158*//*170:*/
-#line 2874 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 2874 "../../../source/texk/web2c/mplibdir/mp.w"
 
 int math_mode;
 
 /*:170*//*202:*/
-#line 4191 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 4191 "../../../source/texk/web2c/mplibdir/mp.w"
 
 int troff_mode;
 
 /*:202*//*867:*/
-#line 21792 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 21792 "../../../source/texk/web2c/mplibdir/mp.w"
 
 char*mem_name;
 
 /*:867*//*880:*/
-#line 21987 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 21987 "../../../source/texk/web2c/mplibdir/mp.w"
 
 char*job_name;
 
 /*:880*//*901:*/
-#line 22352 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 22352 "../../../source/texk/web2c/mplibdir/mp.w"
 
 mp_makempx_cmd run_make_mpx;
 
 /*:901*//*1291:*/
-#line 35372 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 35372 "../../../source/texk/web2c/mplibdir/mp.w"
 
 mp_backend_writer shipout_backend;
 
 /*:1291*/
-#line 100 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 100 "../../../source/texk/web2c/mplibdir/mp.w"
 
 }MP_options;
 /*22:*/
-#line 726 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 726 "../../../source/texk/web2c/mplibdir/mp.w"
 
 extern MP_options*mp_options(void);
 extern MP mp_initialize(MP_options*opt);
@@ -494,25 +494,25 @@ extern boolean mp_finished(MP mp);
 extern void*mp_userdata(MP mp);
 
 /*:22*//*123:*/
-#line 2129 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 2129 "../../../source/texk/web2c/mplibdir/mp.w"
 
 extern void mp_error(MP mp,const char*msg,const char**hlp,boolean deletions_allowed);
 extern void mp_warn(MP mp,const char*msg);
 
 
 /*:123*//*140:*/
-#line 2425 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 2425 "../../../source/texk/web2c/mplibdir/mp.w"
 
 extern void mp_fatal_error(MP mp,const char*s);
 
 
 /*:140*//*204:*/
-#line 4216 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 4216 "../../../source/texk/web2c/mplibdir/mp.w"
 
 int mp_troff_mode(MP mp);
 
 /*:204*//*237:*/
-#line 4982 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 4982 "../../../source/texk/web2c/mplibdir/mp.w"
 
 double mp_get_numeric_value(MP mp,const char*s,size_t l);
 int mp_get_boolean_value(MP mp,const char*s,size_t l);
@@ -520,7 +520,7 @@ char*mp_get_string_value(MP mp,const char*s,size_t l);
 mp_knot mp_get_path_value(MP mp,const char*s,size_t l);
 
 /*:237*//*386:*/
-#line 9278 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 9278 "../../../source/texk/web2c/mplibdir/mp.w"
 
 int mp_close_path_cycle(MP mp,mp_knot p,mp_knot q);
 int mp_close_path(MP mp,mp_knot q,mp_knot first);
@@ -543,7 +543,7 @@ int mp_solve_path(MP mp,mp_knot first);
 void mp_free_path(MP mp,mp_knot p);
 
 /*:386*//*388:*/
-#line 9315 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 9315 "../../../source/texk/web2c/mplibdir/mp.w"
 
 #define mp_knot_left_curl mp_knot_left_x
 #define mp_knot_left_given mp_knot_left_x
@@ -564,17 +564,17 @@ double mp_number_as_double(MP mp,mp_number n);
 
 
 /*:388*//*1067:*/
-#line 30544 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 30544 "../../../source/texk/web2c/mplibdir/mp.w"
 
 void mp_set_internal(MP mp,char*n,char*v,int isstring);
 
 /*:1067*//*1076:*/
-#line 30885 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 30885 "../../../source/texk/web2c/mplibdir/mp.w"
 
 extern mp_run_data*mp_rundata(MP mp);
 
 /*:1076*//*1084:*/
-#line 31043 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 31043 "../../../source/texk/web2c/mplibdir/mp.w"
 
 int mp_run(MP mp);
 int mp_execute(MP mp,char*s,size_t l);
@@ -582,13 +582,13 @@ int mp_finish(MP mp);
 char*mp_metapost_version(void);void mp_show_library_versions(void);
 
 /*:1084*//*1251:*/
-#line 34552 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 34552 "../../../source/texk/web2c/mplibdir/mp.w"
 
 double mp_get_char_dimension(MP mp,char*fname,int n,int t);
 
 
 /*:1251*//*1307:*/
-#line 35630 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 35630 "../../../source/texk/web2c/mplibdir/mp.w"
 
 int mp_memory_usage(MP mp);
 int mp_hash_usage(MP mp);
@@ -596,10 +596,10 @@ int mp_param_usage(MP mp);
 int mp_open_usage(MP mp);
 
 /*:1307*/
-#line 102 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 102 "../../../source/texk/web2c/mplibdir/mp.w"
 
 /*208:*/
-#line 4346 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 4346 "../../../source/texk/web2c/mplibdir/mp.w"
 
 enum mp_color_model{
 mp_no_model= 1,
@@ -611,7 +611,7 @@ mp_uninitialized_model= 9
 
 
 /*:208*//*308:*/
-#line 7210 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 7210 "../../../source/texk/web2c/mplibdir/mp.w"
 
 enum mp_knot_type{
 mp_endpoint= 0,
@@ -623,26 +623,26 @@ mp_end_cycle
 };
 
 /*:308*//*466:*/
-#line 11261 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 11261 "../../../source/texk/web2c/mplibdir/mp.w"
 
 enum mp_graphical_object_code{
 /*468:*/
-#line 11301 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 11301 "../../../source/texk/web2c/mplibdir/mp.w"
 
 mp_fill_code= 1,
 
 /*:468*//*472:*/
-#line 11386 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 11386 "../../../source/texk/web2c/mplibdir/mp.w"
 
 mp_stroked_code= 2,
 
 /*:472*//*479:*/
-#line 11589 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 11589 "../../../source/texk/web2c/mplibdir/mp.w"
 
 mp_text_code= 3,
 
 /*:479*//*483:*/
-#line 11687 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 11687 "../../../source/texk/web2c/mplibdir/mp.w"
 
 mp_start_clip_code= 4,
 mp_start_bounds_code= 5,
@@ -651,20 +651,20 @@ mp_stop_bounds_code= 7,
 
 
 /*:483*//*1281:*/
-#line 35067 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 35067 "../../../source/texk/web2c/mplibdir/mp.w"
 
 mp_special_code= 8,
 
 /*:1281*/
-#line 11263 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 11263 "../../../source/texk/web2c/mplibdir/mp.w"
 
 mp_final_graphic
 };
 
 /*:466*/
-#line 103 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 103 "../../../source/texk/web2c/mplibdir/mp.w"
 
 #endif
-#line 105 "../../../source/texk/web2c/mplibdir/mp.w"
+// #line 105 "../../../source/texk/web2c/mplibdir/mp.w"
 
 /*:3*/

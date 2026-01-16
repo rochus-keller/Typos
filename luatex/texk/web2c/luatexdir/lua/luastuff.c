@@ -192,6 +192,7 @@ static const luaL_Reg lualibs[] = {
 #ifdef LUATEX_HARFBUZZ_ENABLED
     { "luaharfbuzz", luaopen_luaharfbuzz },
 #endif
+    { "luaotfload_core", luaopen_luaotfload_core },
     { NULL,        NULL }
 };
 
@@ -389,7 +390,7 @@ void luainterpreter(void)
     luaopen_pdf(L);
     luaopen_pdfe(L);
     luaopen_pdfscanner(L);
-    luaopen_fontloader(L);
+    // luaopen_fontloader(L);
     if (!lua_only) {
         luaopen_img(L);
     }
